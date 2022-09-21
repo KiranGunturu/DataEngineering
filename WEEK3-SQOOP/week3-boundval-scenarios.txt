@@ -1,0 +1,127 @@
+scenario one:
+in my sql table there are values from 1 to 10,000 and an outlier 20000 came in. then which mapper will do major work.
+
+1 to 10,000  and then 20,000
+
+min 1 
+max 20,000
+
+20,000 / 4 - 5,000
+
+1 to 5,000 M1
+5001 to 10,000 M2
+10,000 to 15,000 M3 - no rows
+15,001 to 20,000 - M4 1 rows
+
+scenario two:
+
+in my sql table there are values from 1 to 10,000 and an outlier 20000 came in.
+
+1 to 10,000 and then 20,000
+
+where clause > 9500
+
+min 9500 and max 20,000
+
+20,000 - 9500 = 10,500 / 4 = 2625 is the split size
+
+each mapper will process 2625 records
+
+501 records total
+
+now lets add 2625
+
+9500 - 12125 = 500 records
+12166 - 14791 - 0 records
+14791 - 17417 - 0 records
+17418 - 20043 - 1 record
+
+scenario three:
+
+in my sql table there are values from 1 to 10,000 and where clause > 9500.
+
+min - 9500
+max - 10000
+
+split size = 10000 -9500 = 500 / 4 = 125
+
+9500 - 9625 = M1 (125 records)
+9626 - 9750 = M2 (125 records)
+9751 - 9875 = M3 (125 records)
+9876 - 10000 = M4 (125 records)
+
+scenario four:
+
+in my sql table there are values from 1 to 10,000 and outlier 12000 also where clause < 20000.
+
+Min - 1
+Max - 12000
+
+split size - 12000 /4 = 3000
+
+
+1 to 3000 - M1 (3000 records)
+3001 to 6000 - M2 (3000 records)
+6001 t0 9000 - M3 (3000 records)
+9001 to 12000 - M4 (1001 Records)
+
+
+------------------
+
+1,2,3,4,5
+
+min 1
+max 5
+5-1 = 4/4 =1
+
+split size 1
+
+ m1 1
+ m2 2
+ m3 3
+ m4 4
+ 
+ here may be our records are devided into 5 different blocks
+ 
+
+ 
+ ----------
+ 
+ min 1
+ max 100
+ outlier 555
+ bound val query given as "select 1,100"
+ 
+ min 1
+ max 100
+ 
+100/4 25
+ 
+ split size - 25
+ 
+ m1 = 1-25
+ m2 = 26-50
+ m3 = 51-75
+ m4 = 76-100
+ 
+ in this outlier will not be imported
+ 
+ if we want to have all rows processed including an outlier then do not hardcode bound vals
+ 
+ min 1
+ max 100
+ outlier 555
+ 
+ split size = 554/4=139
+ 
+ m1 - 1-139 (here all 100 records are imported
+ m2 - 140 - 279 = 0 records
+ m3 = 280 - 419 = 0 records
+ m4 = 420 - 555 = 1 record
+ 
+ 
+
+
+
+
+
