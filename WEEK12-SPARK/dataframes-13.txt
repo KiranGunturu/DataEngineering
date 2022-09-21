@@ -1,0 +1,31 @@
+how to refer a columns in dataframe
+===================================
+
+refer dataframes-13.py
+
+1. column string
+
+df.select("order_id","order_status")
+
+2. column object
+
+df.select(column("order_id"),column("order_status")).show()
+
+but we can't mix these two things
+
+df.select("order_id", column("order_status)).show() - will not work
+
+column expression
+==================
+
+df.select("order_id","concat("order_status",'_STATUS')").show() - this will not work.
+
+we cannot mix column strings with expressions but we can mix column objects with column expressions.
+
+there is a way to convert column expression to column object
+
+df.select("order_id",expr("concat(order_status,'_STATUS')")).show()
+
+better way to above
+
+df.selectExpr("order_id","concat(order_status,'_STATUS')").show()

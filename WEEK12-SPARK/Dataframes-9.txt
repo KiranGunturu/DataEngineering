@@ -1,0 +1,63 @@
+refer Dataframes-writer-9.py
+
+1. we read the data from a source and create a dataframe
+2. we do bunch of tranformations and actions - processing
+3. we write the output to target location
+
+
+3. we write the output to target location
+==========================================
+
+1. Append - putting the file in the existing folder)
+2. overwrite - first delete the existing folder, and then it will create a new file
+3. errorIfExists - will give error if output folder already exists
+4. ignore - if folder already exists then it will simply ignore
+
+
+normally when we are writing a dataframe to our target then we have few options to control the file layout.
+
+spark file layout:
+===================
+1. repartition - to control the number of files and file size.
+2. partitioning and bucketing
+3. sorted data - sortBy
+
+Note: number of output files is equal to the no of partitions in a dataframe in our dataframe.
+
+
+repartition:
+===========
+
+1. it can help us increase the parallelism.
+
+df.repartition(4)
+
+with our normal repartition we wont be able to skip some of the partitions for performance improvement.
+
+partition pruning is not possible.
+
+2. PartitionBy 
+
+	it is equivalent to hive partitioning.
+	
+	it provides partition pruning
+	
+3. bucketBy
+
+	bucketBy(4,"order_id")
+	
+4. maxRecordsPerFile
+
+5. if we want to save files in avro format by default spark will not support for that we got to add jar file 
+
+the way we search is that we type spark spark version and pythoon/ scala version
+
+ex: spark avro 2.4.4 2.11
+
+2.4.4 is the spark version
+2.22 is the scala version
+
+
+
+
+
