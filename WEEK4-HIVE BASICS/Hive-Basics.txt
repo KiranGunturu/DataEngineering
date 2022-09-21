@@ -1,0 +1,693 @@
+===============
+Transactional
+=============== 
+
+Analyzes individaul entries
+
+access to recent data
+
+updates data
+
+
+fast real time access
+
+usually a single data source
+
+============
+Analytical
+============
+
+analyzes large datasets
+
+access to older data
+
+only reads data
+
+long running jobs
+
+multiple data sources
+
+-------
+
+Hive is an open-source datawarehouse and it is part of the larger hadoop ecosystem
+
+hive runs on top of hadoop core.
+
+hive stores its data in HDFS.
+
+hive runs all processes in the form of MR jobs under the hood.
+
+hive will translate the query to MR tasks and run them on hadoop (cluster)
+
+MR will process files on HDFS and return results to hive.
+
+Data - HDFS in the form of files
+Metadata (schema) - in metastore (database)
+
+when we query the table then this schema is imposed on the data and we see a tabular view.
+
+Any database with JDBC driver can be used as a metastore.
+
+=============
+Hive VS RDBMS
+==============
+======                             =============
+Hive                                RDBMS       
+=======                            ===============
+
+Large datasets						Small datasets
+
+parallel computations				serial computations
+
+high latency						low latency
+
+read operations						read/write operations
+
+not ACID compliant by default		ACID compliant
+
+HiveQL								SQL
+
+schema-on-read						schema-on-write
+
+seek time - time taken to fetch one individaul record.
+
+low latency - if seek time is less then we say low latency operations. (RDBMS)
+
+high latency - if seek time is high (data warehouses)
+
+rdbms is schema on write
+
+1. we create a table in mysql
+2. we insert the data.
+
+while writing the data in table, it is validating the things.
+
+hive is schema on read
+
+1. we already have the data in the form of files
+2. we create the table stracture on top of above data to see in tabular format.
+
+=============
+Hive Concepts
+=============
+
+our data by default is stored in the warehouse directory 
+
+/user/hive/warehouse - default location
+
+/user/hive/warehouse/qvoice.db/employee
+
+hive.metastore.warehouse.dir = /user/hive/warehouse property in hive-site.xml
+
+/user/hive/warehouse/employee - when we have employee table in default database
+
+Hive metadata is stored in metastore - a rdbms (preferably a mysql)
+
+==================
+complex data types
+==================
+
+Array
+Map
+Struct
+
+
+Array
+
+Collection data type
+No fixed size
+Entities of same type
+only arrays of premitive types allowed
+
+['Kiran','James','Michael']
+
+Map
+
+collection of unordered key value pairs
+
+1,Kiran
+2,James
+3,Michael
+4,John
+6,KIm
+5,Shyam
+
+remember: the keys should not repeat
+
+Struct
+
+it is like a class
+
+
+student struct {
+	student_rollno int,
+	student_name varchar,
+	student_marks varchar
+	}
+
+all the hive built-in functions fall under 3 categories
+
+UDF (user defined function)
+UDAF (user defined aggregate function)
+UDTF (user defined table generating function)
+
+UDF :
+
+works on single input row
+
+outputs a singlw row
+
+hello 5
+how 3
+are 3
+you 3
+
+trim() , concat(), length(), round(), floor()
+
+UDAF:
+
+works on multiple rows and outputs a single rows
+
+count(*), max(), min(), avg()
+
+UDTF:
+
+works on single rows and outputs a multiple rows
+
+[1,2,3,4]
+
+1
+2
+3
+4
+
+explode(), posexplode()
+
+explode() - flatten the data in array and maps
+
+================
+Lateral views
+================
+
+manager 	reporting
+Larry		[sundar,Eric,Jon]
+
+Larry	sundar
+Larry 	Eric
+Larry 	Jon
+
+=======================
+set operations in hive
+=======================
+
+union
+minus
+intersect
+
+in union only union is supported
+
+======
+VIEW
+======
+virtual table which holds a subset of table data
+
+employee table with 100 columns
+
+60 columns out 0f 100 which are relevant to the employee
+
+data security
+
+hide complex logic by putting that as a view.
+
+we can create different logical paths from table data depends on the use case.
+
+=============
+Normalization
+=============
+
+when we talk about traditional databases , what is the problem with duplicate data or redundancy?
+
+if same data is kept at multiple places and if we do update and forget to update that value at one place then data will become inconsistent.
+
+
+it is the process of dividing a bigger table into multiple smaller tables with an intention to remove redundancy data.
+
+1NF
+2NF
+3NF
+BCNF
+4NF
+
+positives if Normalization.
+
+no inconsistency issues.
+less storage required as we are removing the duplicate data (redundancy)
+
+negatives of Normalization.
+
+you have to join multiple tables.
+joining is very complex and time consuming activity.
+
+=====Hive====
+
+Normalization is not preferred in Hive.
+
+Denormalization is preferred in hive.
+
+Denormalization : store the data not in granular form rather bigger tables even if redundancy is there.
+
+do not worry about redundancy
+rather worry about storing the data in less number of tables
+
+if we make updates we can run into data inconsistency issues?
+
+	hive is not a system meant to do updates.
+	since we do not update the data we won't run into inconsistency issues.
+	
+	but as we are maintaining redundancy it takes more space but that is ok as storage space is very cheap and if we spend little more storage then its not a big deal.
+	
+advantage to keep data in denormalized way in hive is that we do not have to operate the joins.
+
+out intention is to minimize the joins because joins take time.
+
+=======
+Denormalized storage
+===========
+
+disk space is very cheap
+no foreign key constraints.
+read operations , no data updates
+
+optimize the number of disk seeks (as there are not many tables joining)
+do not worry about redundancy but minimize joins.
+
+=============
+practicals
+==============
+
+use databasename;
+and do the activity otherwise they will go to the default batabase.
+describe formatted customers;
+
+
+In hive - inserts takes more time. ( not performant) as hive is not transactional system
+
+inserts into one row - 15 seconds where as same one will only takes microseconfs in rdbms - only mapper as there is no aggregation involved.
+
+
+where exactly the data is stored by default?
+
+A hive table has 2 things
+
+1. data - is stored in hdfs ( /user/hive/warehouse)
+2. schema or metadata - stored in a rdbms database (ex: metastore database in mysql)
+	 connect to the metastore by loggining into mysql -u cloudera -p
+	 use metastore;
+	 show tables;
+	why?
+	 becuase the schema has to be updated freqently and moreover quick access to this schema is required.
+	 
+
+/user/hive/warehouse/qvoice.db/
+/user/hive/warehouse/drive.db/project/
+/user/hive/warehouse/drive.db/orders/  orders table in drive database
+/user/hive/warehouse/orders/ - orders table in default database
+
+different ways to connect to hive:
+
+hive terminal
+hue - hadoop user experience.
+beeline - most prefered choice
+
+beeline gives you better view and also it is secured.
+
+beeline -u jdbc://hive2://
+
+to come out of beeline use : !q
+to come out of hive: exit;
+
+beeline -u jdbc:hive2:// -e "select *from db.tablename"
+
+run multiple scripts from outside of hive or beeline terminal
+
+beeline -u jdbc:hive2:// -f /user/cloudea/myfile.hql
+
+run multiple scripts from hive or beeline terminal
+
+source /home/cloudera/myfile.hql;
+
+to see hdfs files from hive terminal
+
+dfs -ls /user/hive/warehouse/drive.db/orders/
+
+show databases like 'tr*';
+
+========================================================================
+what are the ways are there to insert the data in a managed table:
+========================================================================
+
+1. insert commands ( these run mapreduce and takes a lot of time. this is not an efficient way)
+2. loading the data from files.
+
+	i) load the data from HDFS
+	
+		load data inpath '/data/products.csv into table products;
+		
+		now it is like cut and paste - file is no longer available in /data folder but it will be moved under /user/hive/warehouse/products/
+		
+	ii)load the data from local file system
+	
+		lets say we have the file in local system and create a table to store the data in hive.
+		
+		--create table
+		
+		create table if not exists products (
+			id string,
+			title string,
+			cost float
+			)
+		row format delimited
+		fields terminated by ','
+		stored as textfile;
+		
+		-- run below command in hive terminal to load the data
+		
+		load data local inpath 'home/cloudera/Downloads/products.csv into table products;
+		
+		--to overwrite the table data.
+		
+		load data local inpath 'home/cloudera/Downloads/products.csv overwrite into table products;
+		
+		if we dont mention local then it will treat it as hdfs path
+		
+		it is like copy and paste - we will have the file in local even after data loading.
+		
+		since we did not mentioned the db name when creating the table , data will goto default path /user/hive/warehouse
+		
+3. load the data from one table to another.
+
+	create table if not exists products (
+				id string,
+				title string,
+				cost float
+				)
+			row format delimited
+			fields terminated by ','
+			stored as textfile;
+
+	create table if not exists products_2 (
+				id string,
+				title string,
+				cost float
+				)
+			row format delimited
+			fields terminated by ','
+			stored as textfile;
+	
+	insert into products_2 select *from products;
+
+
+
+
+=================
+Types of tables
+=================
+
+Managed table
+
+	table is by default managed table.
+	Managed table is the one where hive manages the data and schema
+	hve has the complete control of your data also.
+	if we drop the table , both the data and metadata is deleted.
+	
+External table
+
+	hive do not control the data.
+	
+	hive will not have permissions to delete the data.
+	
+	when we drop the table, only the metadata will be deleted and data remains stays.
+	
+	when to refer the data path outside of hdfs such as S3
+
+==========
+explode:
+==========
+
+select explode(book_names) from authors; - works
+
+select author_name,explode(book_names) from authors; this will not work so we have to use lateral view
+
+the exploded column should be made as virtual table (lateral view) and this is then joined with actual table
+
+
+select author_name, b.name from authors lateral view explode(book_names) book_virtual_table as b_name;
+
+table1: authors
+join: lateral view
+table2: explode(book_names)
+alias name of table2 is book_table
+b_name is the column name in virtual table (book_table)
+
+
+=============================
+complex data types in hive
+=============================
+
+int
+string
+float 
+
+all the above will only hold one value but where as complex data types lile below can hold more than one value
+
+Array
+	collection of homogenious data types
+	
+	create table mobilephones (
+		id string,
+		title string,
+		cost float,
+		colors array<string>,
+		screen_size array<float>
+	);
+	
+	insert into table mobilephones
+	select "redminote7","Redmi Note 7",300,array("white","silver","black"), array(float(4.5))
+	UNION ALL
+	select "motoGplus", "Moto G Plus"", "200", array("black", "gold"), array(float(4.5), float(5.5));
+	
+	id			title			cost	colors						screen_size
+	redminote7	Redmi Note 7	300		["white","silver","black"]	[4.5]
+	motoGplus	Moto G Plus		200		["black", "gold"]			[4.5,5.5]
+	
+	select id,	colors[0] from mobilephones;
+	redminote7	white
+	motoGplus	black
+
+	lets say if we are loading the data from file to the table and array values are seperated by " # " in the file then use the following property
+	while creating the table.
+
+	row format delimited by ','
+	collection items terminated by '#';
+	
+	once the file is loaded to the file array values will be shown to us as coma seperated values though they are seperated with '#' in file.
+
+
+	my file has 7 columns 
+
+	however my table has just 5 columns
+
+	what wil happen?
+
+	it will only consider first 5 columns from file and it will ignore last two columns.
+	
+	
+
+
+	
+	
+Map
+
+	collection of key value pairs.
+	keys should be unique
+	keys and values have their own data types.
+	
+	create table mobilephones (
+		id string,
+		title string,
+		cost float,
+		colors array<string>,
+		screen_size array<float>,
+		features map<string, boolean>
+		
+	)
+	row format delimited by ','
+	collection items terminated by '#';
+	map keys terminated by ':';
+	
+	insert into table mobilephones
+	select "redminote7","Redmi Note 7",300,array("white","silver","black"), array(float(4.5)),camera:true#dualsim:false
+	UNION ALL
+	select "motoGplus", "Moto G Plus"", "200", array("black", "gold"), array(float(4.5), float(5.5)),autofocus:true;
+	
+	id			title			cost	colors						screen_size		features
+	redminote7	Redmi Note 7	300		["white","silver","black"]	[4.5]			{"camera":true,"dualsim":false}
+	motoGplus	Moto G Plus		200		["black", "gold"]			[4.5,5.5]		{"autofocus":true}
+	
+	select id, features[camera] from mobilephones;
+	
+	redminote7	true
+	motoGplus	NULL
+	
+Struct
+
+	A struct is somewhat like a class
+	
+	this can hold elements of different datatypes
+	
+	student struct
+	
+	student_id
+	student_name
+	student_marks
+	
+	create table mobilephones (
+		id string,
+		title string,
+		cost float,
+		colors array<string>,
+		screen_size array<float>,
+		features map<string, boolean>,
+		information struct<battery:string,camera:string>
+		
+	)
+	row format delimited by ','
+	collection items terminated by '#';
+	map keys terminated by ':';
+
+
+	insert into table mobilephones
+	select "redminote7","Redmi Note 7",300,array("white","silver","black"), array(float(4.5)),camera:true#dualsim:false,24 hours#2MP
+	UNION ALL
+	select "motoGplus", "Moto G Plus"", "200", array("black", "gold"), array(float(4.5), float(5.5)),autofocus:true,12 Hours;
+	
+	
+	id			title			cost	colors						screen_size		features							information
+	redminote7	Redmi Note 7	300		["white","silver","black"]	[4.5]			{"camera":true,"dualsim":false}		{"battery":"24 Hours:,"camera":"2MP"}
+	motoGplus	Moto G Plus		200		["black", "gold"]			[4.5,5.5]		{"autofocus":true}					{"battery":"12 Hours:,"camera":null}
+	
+	select id,features,information from mobilephones;
+	
+	redminote7	{"camera":true,"dualsim":false}		{"battery":"24 Hours:,"camera":"2MP"}
+	motoGplus	{"autofocus":true}					{"battery":"24 Hours:,"camera":null}
+	
+	select id,colors[0],features[camera],information.battery from mobilephones;
+	
+	redminote7	white		true	24 Hours
+	motoGplus	black		null	12 Hours
+	
+	
+===========
+Hive UDF
+===========
+
+trim(), concat() etc - sys defined functions
+
+
+if we want to customize something the we need to write UDF.
+
+consider you have a table called sample_table with 2 columns
+
+col1 - name
+col2 - count
+
+name (string), count(int)
+
+Kiran	200
+Krish	300
+James	400
+Michael 500
+
+
+lets convert all the names to upper case.
+
+we will be writing a UDF to convert all the names to upper case.
+
+write below java code and create jar file.
+
+
+package udf_example;
+
+import org.apache.hadoop.hive.ql.exec.UDF;
+
+public class DataStandardization extends UDF {
+
+public String evaluate (String input) {
+
+if(input==null)
+{
+retun null;
+}
+return (input.toString().toUpperCase());
+}}
+
+now we gor the jar file called udf_example.jar
+
+now we need to add this jar on hive.
+
+
+In hive terminal, we need to add the jar and also we need to register the function
+
+Add JAR /localpath/udf_example.jar
+
+create temporary function standardize as 
+'udf_example.DataStandardization';
+
+
+select standardize(name) from sample_table;
+
+KIRAN
+KRISH
+JAMES
+MICHAEL
+
+this jar and function is only valid for that perticular hive session as it is of temporary. if we open new hive session then this will not work.
+
+how do we make this permanant?
+
+we need to move the jar file to hdfs then we need to define permanant function not the temporary one.
+
+create function standardize as 
+'udf_example.DataStandardization' using JAR 'hdfs://localhost:8020/user/cloudea/udf_example.jar';
+
+select standardize(name) from sample_table;
+
+KIRAN
+KRISH
+JAMES
+MICHAEL
+
+
+
+
+
+
+
+	
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
