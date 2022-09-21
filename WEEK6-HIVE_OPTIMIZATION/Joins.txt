@@ -1,0 +1,397 @@
+================================
+Join / query level optimization
+================================
+
+Trades table
+
+Symbol	open	High	Low		close	day
+GOOG	820		840		818		829		1-1-2022
+
+Names table
+
+symbol		Name
+GOOG		Google
+AAPL		Apple
+MSFT		Microsoft
+
+
+Revenues
+
+symbol		Name		Revenue
+GOOG		Google		90B
+AAPL		Apple		215B
+MSFT		Microsoft	85B
+
+select *from names join trades
+on names.symbol = trades.symbol - since there is just one join column , there will be one MR job will run.
+
+select *from names join trades
+on names.symbol = trades.symbol
+join Revenues on names.symbol = Revenues.symbol - even in this case there will be only one MR job will run.
+
+select *from names join trades
+on names.symbol = trades.symbol
+join Revenues on names.Name = Revenues.Name - since there are two join column are involved, there will be two MR jobs.
+
+internally a join is executed as a MR job.
+mapper will give the join columns as the Key.
+and mapper gives all the other columns as the values.
+Key - Join column
+value - all the remaining columns.
+
+1. try to minimize the number of join columns if possible. because if we minimize the join columns there will less MR jobs.
+2. both bucketing & partitioning helps you to optimize the jobs. try to do it join columns.
+
+Join has 2 scenarios
+
+Map
+Reduce
+
+but certain queries can be stractured to have no reduce phase. such joins where mapper can do all the work are called Map side joins.
+
+Map side joins are performant as mappers gets us the parallesim and there is no need for data shuffling and sorting.
+
+first condition:
+all tables except one should be small enough to fit in memory
+
+1 table is small and the other 1 is big.
+2 tables should be small and 1 is big.
+
+except one table all the other tables should be small . (we should have atlest one big table)
+
+left table 					right table
+small						big
+
+1							1
+							2
+3
+4
+5
+6
+7
+8
+.
+.
+.
+100							100000 rows (lets say 512 MB)
+
+small tabel has 100 rows
+big table has 100000 rows
+
+N1	Block 1 of big table with 25000 rows and all 100 rows from small table 
+N2	Block 2 of big table with 25000 rows and all 100 rows from small table
+N3	Block 3 of big table with 25000 rows and all 100 rows from small table
+N4	Block 4 of big table with 25000 rows and all 100 rows from small table
+
+it means part of the big table is spread across 4 machines
+
+and complete small table is moved to all the nodes.
+
+Question:
+
+can a inner join be treated as a map side join provided the left table is small enough to fit in memory and the right table is large?
+
+each machine is having complete names table(small) and parts of the trades table(big)
+
+Machine1
+
+Names table								Trades table
+symbol		Name						symbol
+GOOG		Google						GOOG
+AAPL		Apple
+MSFT		Microsoft
+
+Machine2
+
+Names table								Trades table
+symbol		Name						symbol
+GOOG		Google						AAPL
+AAPL		Apple
+MSFT		Microsoft
+
+Machine3
+
+Names table								Trades table
+symbol		Name						symbol
+GOOG		Google						MSFT
+AAPL		Apple
+MSFT		Microsoft
+
+
+sine the inner join is only gives us the matching records.
+
+we can directly get GOOG as the machine1
+we can directly get AAPL as the machine2
+we can directly get MSFT as the machine3
+
+Mappers run on entire names table and part of trades table.
+
+the output of all mappers will form the required output and no reducers are required.
+
+so the conclusion is inner join can be treated as map side join.
+
+
+Question:
+
+can a left join be treated as a map side join provided the left table is small enough to fit in memory and the right table is large?
+
+each machine is having complete names table(small) and parts of the trades table(big)
+
+left join: all the matching rows from both the table and non-matching rows from left table padded with nulls on right side.
+
+select *from names left join trades on names.name = trades.name
+
+Machine1
+
+Names table								Trades table
+symbol		Name						symbol
+GOOG		Google						GOOG
+AAPL		Apple
+MSFT		Microsoft
+
+Machine2
+
+Names table								Trades table
+symbol		Name						symbol
+GOOG		Google						AAPL
+AAPL		Apple
+MSFT		Microsoft
+
+Machine3
+
+Names table								Trades table
+symbol		Name						symbol
+GOOG		Google						MSFT
+AAPL		Apple
+MSFT		Microsoft
+
+when first mapper is working on machine 1 , 
+
+it will give GOOG as output and it doesn't have a way to tell if AAPL can also be the output with null padded on right side.
+
+and mapper 1 do not know if AAPL can be there in other machines.
+
+so the conclusion is when left table is small we can't treat left join as map side join.
+
+Question:
+
+can a right join be treated as a map side join provided the left table is small enough to fit in memory and the right table is large?
+
+right join: all the matching rows from both the table and non-matching rows from right table padded with nulls on left side.
+
+Machine1
+
+Names table								Trades table
+symbol		Name						symbol
+GOOG		Google						GOOG
+AAPL		Apple						ADOBE
+MSFT		Microsoft
+
+Machine2
+
+Names table								Trades table
+symbol		Name						symbol
+GOOG		Google						AAPL
+AAPL		Apple
+MSFT		Microsoft
+
+Machine3
+
+Names table								Trades table
+symbol		Name						symbol
+GOOG		Google						MSFT
+AAPL		Apple
+MSFT		Microsoft
+
+when first mapper is working on machine 1 , 
+
+it will give GOOG as output and it can also give ADOBE as the output padded with null on left side.
+
+because if mapper 1 can't match adobe with left table it will never match on the other machines as well as we got the complete left table.
+
+conclusion is when left table is small , right join can be treated as map side join.
+
+
+
+Question:
+
+can a full outer join be treated as a map side join provided the left table is small enough to fit in memory and the right table is large?
+
+conclusion is NO as full outer join is combination of left and right outer.
+
+if anyone of them do not work(left join) then full outer join can't be treated as map side join.
+
+
+WHEN LEFT TABLE IS SMALL------
+
+INNER JOIN CAN BE MAP-SIDE JOIN.
+LEFT JOIN CANNOT BE MAP-SIDE JOIN.
+RIGHT JOIN CAN BE MAP-SIDE JOIN.
+FULL OUTER JOIN CANNOT BE MAP-SIDE JOIN.
+
+WHEN RIGHT TABLE IS SMALL------
+
+INNER JOIN CAN BE MAP-SIDE JOIN.
+LEFT JOIN CAN BE MAP-SIDE JOIN.
+RIGHT JOIN CANNOT BE MAP-SIDE JOIN.
+FULL OUTER JOIN CANNOT BE MAP-SIDE JOIN.
+
+==============
+Map side join
+==============
+
+before the MR job is executed, there is local task which is executed.
+
+1.this local task will take the small table and create a hashtable for this small table.
+
+2.once the hashtable is created it will be put of hdfs.
+
+3.from hdfs this hashtable is broadcasted to all the nodes.
+
+4.when this hashtable is copied on the nodes, it will be existing in the local disk of each node. this sometimes also called as distributed cache.
+
+5.hashtable is loaded in memory of the each node. so from local disk on each node it is loaded in memory.
+
+after all the above steps, MR job starts after this.
+
+constraint here is that entire small table is loaded into memory.
+
+
+================
+BUCKET MAP JOIN
+================
+
+1.unlike Map side join it can be done on 2 big tables also
+2.both the tables should be bucketed on join column.
+3.Number of buckets in one table should be integral multiple of other table.
+
+table1		table2
+2 buckets 	4 buckets
+4 buckets	8 buckets
+
+table1					table2
+0	- 4,8,12,16,20		0
+1	- 1,5,9,13,17					1
+2						2
+3						3
+						4
+						5
+						6
+						7
+
+
+this means -
+
+in table1 - bucket 0 corresponds to bucket 0 and and 4 in table 2.
+
+			
+
+4.Only the required buckets are loaded in memory thats the advantage over the map side join. this will make sure our memory utilization is not going high.
+
+
+==========================
+SORT MERGE BUCKET MAP JOIN
+==========================
+
+1.unlike map side join it can be done on 2 big tables also.
+2.both the tables should be sorted on join column.
+3.both the tables should be bucketed on join column.
+4.number of buckets in both the tables should be exactly equal.
+5.there will be one to one mapping between buckets in both the tables and 
+a quick joining can be performed as both the buckets have sorted data.
+
+table1				table2
+
+bucket 1			bucket 1
+bucket 2			bucket 2
+bucket 3			bucket 3
+bucket 4			bucket 4
+
+
+
+===================================
+HIVE JOIN OPTIMIZATIONS PRACTICALS
+===================================
+
+MAP SIDE JOIN:
+There is no reduce phase. the entire joining activity will happen at the mapper end.
+
+can we always have a join as map side join?
+
+however if certain criteris match then we can go for mapside join.
+
+we want to join 2 tables.
+
+=> out of 2 tables , one should be smaller so that it can fit in memory of datanode.
+
+we want to join 3 or more tables.
+
+all the tables except one or smaller to fit in memory.
+
+now consider we have 2 tables.
+
+1.orders
+2.customers
+
+one of them is big table and other is small.
+
+1) sqoop import to get orders and customers table data from mysql to hdfs.
+2) create external tables on top of that data.
+
+
+select count(*) from orders - 68894
+select count(*) from customers - 12435
+
+set hive.auto.convert.join; it will give what is the current value of this property.
+
+set hive.auto.convert.join=false; setting it to false to avoid map side join by default so we can see if it is invoking any reducers.
+
+now try running the below query
+
+select c.customer_id,c.customer_fname,c.customer_lname,o.order_id,o.order_date from orders o join customers c on
+(o.order_customer_id = c.customer_id) limit 10;
+
+now this will take 2 mappers and 1 reduce.
+
+now let us try to execute inner join as map side join
+
+set hive.auto.convert.join=true;
+
+select c.customer_id,c.customer_fname,c.customer_lname,o.order_id,o.order_date from orders o join customers c on
+(o.order_customer_id = c.customer_id) limit 10; - now the reducers are 0 as system wil automatically convert the join to map side if it can accomdate the small table into 
+memory.
+
+what is the definition of small table?
+
+by default less than 25mb is considered to be small table.
+
+set hive.mapjoin.smalltable.filesize;
+25000000
+
+in the previous case since we set the property then hive was automatically converting the join as map side join.
+
+but what if we do not want to go with automatic conversion rather we want to specify using some hints.
+
+set hive.auto.convert.join=false;
+set hive.ignore.mapjoin.hint=false; - we are disabling the auto join feature by setting these two params but we will use hint.
+
+/*+ MAPJOIN(o) */ -- hint to the system.
+
+select /*+ MAPJOIN(o) */ c.customer_id,c.customer_fname,c.customer_lname,o.order_id,o.order_date from orders o join customers c on
+(o.order_customer_id = c.customer_id) limit 10;
+
+
+--------------- to know more details on query execution
+
+ EXPLAIN EXTENDED select c.customer_id,c.customer_fname,c.customer_lname,o.order_id,o.order_date from orders o join customers c on
+(o.order_customer_id = c.customer_id) limit 10;
+
+
+
+
+
+
+
+
+
+
