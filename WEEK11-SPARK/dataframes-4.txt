@@ -1,0 +1,10 @@
+whenever we are working with dataframes or datasets we are dealing with higher level programming constructs.
+
+when we were working with rdd that was a low level code.
+
+your spark compiler will convert your high level code (dataframe code) to low level rdd code.
+
+driver		bunch of executors
+
+driver will convert your high level into low level rdd code and then it will send the low level code to the executors.
+

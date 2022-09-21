@@ -1,0 +1,21 @@
+difference between DAG and lineage
+=======================================
+
+lineage is nothing but the dependeny graph.
+
+shows dependeny of various rdds. Its a logical plan.
+
+rdd.toDebugString
+
+DAG is only available when we call an action. its a acyclic graph.
+
+DAG will shows us the jobs, stages, tasks.
+
+how to execute a jar file
+==========================
+
+jar is at the project level so when we export the jar it will have all the classes (all different programs) so thats why we have to mention what specific file we want to run using --class
+
+
+
+spark-submit --class wordcount /path/word.jar 
