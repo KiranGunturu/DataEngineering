@@ -1,0 +1,9 @@
+%sh
+export HTTP_PROXY="http://bcproxypac.ndc.nna"
+export HTTPS_PROXY="http://bcproxypac.ndc.nna"
+export AWS_ACCESS_KEY_ID="EnterHere"
+export AWS_SECRET_ACCESS_KEY="AoEiX+EnterHere"
+export AWS_SESSION_TOKEN="EnterHere"
+aws s3 ls
+aws s3 cp s3://bucketpath /hdfs/datapath/
+ls -lrt /hdfs/datapath/

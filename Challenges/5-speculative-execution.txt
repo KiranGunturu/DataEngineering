@@ -1,0 +1,61 @@
+###Speculative Execution 
+
+If set to "true", performs speculative execution of tasks. This means if one or more tasks are running slowly in a stage, they will be re-launched.
+
+Ex: lets say we have a Job
+
+Job 
+	Stage 1
+		Task 1
+		Tasl 2
+	Stage 2
+		Task 3
+		Task 4
+		
+
+Cluster
+
+
+WorkerNode 1				WorkerNode 2
+
+TASK 1 Completed			TASK3 Completed
+
+TASK 2 still running		TASK4 Completed
+
+
+when Speculative Execution is enabled 
+
+Cluster
+
+
+WorkerNode 1				WorkerNode 2
+
+TASK1 Completed				TASK3 Completed
+
+TASK2 still running			TASK4 Completed
+
+							TASk2 running here as well
+							
+TASK2 will be killed in either of the worker node when its completes the process in either of the node.
+
+to enable :
+
+spark.speculation=True
+spark.speculation.interval = 200ms - how often spark will check for tasks to speculate
+spark.speculation.multiplier = 5 
+
+	total tasks 4
+	median of completed tasks(3) = 3ms
+	pending tasks(1) - 2 ms
+
+so spark.speculation.multiplier = 5 this will act as 15 5*3(median of completed tasks)
+
+meaning , if the median of completed tasks is greater than the pending tasks total time , then speculation execution will be enabled automatically.
+
+spark.speculation.quantile=0.75 - Fraction of tasks which must be complete before speculation is enabled for a particular stage.
+
+spark.speculation.minTaskRuntime=100ms - Minimum amount of time a task runs before being considered for speculation. This can be used to avoid launching speculative copies of tasks that are very short.
+
+
+	
+

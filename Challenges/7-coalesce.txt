@@ -1,0 +1,22 @@
+#### How coalesce will work
+
+df.rdd.getNumPartitions()
+
+o/p : 10
+
+df_col=df.coalesce(4)
+
+df_col.rdd.getNumPartitions()
+
+o/p : 4
+
+df_col2=df.coalesce(15)
+
+df_col2.rdd.getNumPartitions()
+
+o/p = 10
+
+
+
+
+

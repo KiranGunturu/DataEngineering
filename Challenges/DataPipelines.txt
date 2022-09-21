@@ -1,0 +1,54 @@
+1) External Vehicle Status Data Automation - NHTSA Reporting
+
+Data Processing:
+
+	Data Pipeline One : Vendor --> SFTP --> Unix Box --> Edge Node to HDFS(Python) --> Spark --> Hive (Current and History tables) --> Tableau --> End Users
+	
+	Challenges : Varying Schema, .xlsx files from vendors
+	Load Evaluation : Today's file count in hive vs file count in hdfs landing , Schema Evaluation in spark
+	
+	
+Image Processing:
+
+	Data Pipeline Two : Vendor --> SFTP --> S3 --> AWS Lambda S3 Event --> AWS Sec Manager --> Decrypt --> Target S3 Bucket --> End Users
+	
+	Challenges : File Size , Lambda \tmp Memory cap
+	
+	
+2) Issue Prediction and Assist Field Level Technician
+
+	Data pipeline : Incr Claims pulls from Hive --> Spark --> ML Random forest --> Parquet Files --> Hive --> Oracle Stage Layer --> Stage to App layer (Informatica)--> Java UI
+	
+	Challenges : Performance , HDFS I/o latency , Character Encoding, Giving the data at 730am , Adjust other data feeds
+
+3) Nissan's Global Data to North America
+
+	Data Pipeline One : JSON Data In S3 --> EdgeNode -- > Spark - Hive
+	
+	
+
+4) Tagging 
+
+	Data Pipeline One : IBM MQ --> SQS -- > AWS Lambda -->S3 -> EMR Hive
+	
+	Challenges : Distributed nature of SQS , for vs while to capture required pack of messages and create files in S3 
+
+5) Data Sharing to outside vendors
+
+	Into HDFS : AWS Storage Gateway - Edge Node - Cron Jobs - HDFS
+	Out to SFTP : Hive - File split - Encryption - Vendor SFTP Unix
+
+6) IICS : On-prem oracle to AWS Aurora using IICS
+
+7) snowflake to BDE Hive using spark JDBC
+
+
+	
+	
+	
+
+
+
+
+
+	

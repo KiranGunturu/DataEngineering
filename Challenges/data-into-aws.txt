@@ -1,0 +1,17 @@
+Real Time - Immediate Actions
+	Kinesis Data Streams KDS
+		AWS Kinesis service for low-latency streaming and data ingestion at scale.
+		Option for configuring storage for one to seven days.
+	SQS
+	Iot
+	
+Near Real Time -Reactive Actions
+	Kinesis Data Firehouse
+		Data transfer service for loading streaming data into Amazon S3, Splunk, ElasticSearch, and RedShift.
+		No facility for data storage.
+	Database Migration Service
+	
+Batch - Historical Analysis
+	Snowball
+	Data Pipeline
+	

@@ -1,0 +1,71 @@
+Spark Streaming
+===================
+
+when we talk about hadoop
+
+HDFS + MR + YARN
+
+MR is a framwork to process data.
+
+MR can only handle batch jobs
+
+batch process is where we store the files and process them as batches on certain schedules.
+
+MR cannot handle streaming or real time data.
+
+how do we process real time streaming data?
+
+Apache spark both batch and streaming data.
+
+In spark we have a module called as spark streaming.
+
+how is the data stored in spark?
+
+data is stored in the form of RDD.
+
+when we load the files
+
+val baseRdd = sc.textFile("file path")
+
+if the file size is of 500 mb & if the default block size is in hdfs is 128 Mb then our baseRdd will have 4 partitions
+
+when there is no concept of static file then how do we visualize our rdd?
+
+consider a water tap which is continously flowing
+
+tap is running for 1 hour then size of my stream is 1 hour 
+
+every 2 mins you are filling one water ballon then 30 water ballons will be collected in an hour.
+
+this means a new rdd is framed every 2 minutes.(30 rdds will be created)
+
+
+some ballons might have more data than other ballons based on flow of water in 2 mins interval.
+
+here this 2 mins is called as batch interval.
+
+consider whatever 30 ballons that we have filled we are putting then in a tub.( Dstream)
+
+so basically
+
+DStream - Rdds - Messages (Entitites)
+
+1  - 30 rdd's - each rdd can have lot of messages.
+
+we need to operate at DStream level
+
+DStream is nothing but a sequence of RDDs
+
+emtities in a stream are grouped into batches.
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,33 @@
+Kiran|BE|8|BigData|603218000|Ramesh|BTech|3|Java|6032180000|Kishore|ME|4|Dotnet|6032180000
+
+df=spark.read.csv("/data/caret/raw/breakevery5thoccurance.txt")
+
+df1=df.withColumn("check",regexp_replace("_c0","(.*?\\|){5}","$0-"))
+
+df2=df1.withColumn("col_explode",explode(split("check",'\|-'))).select("col_explode")
+
+|col_explode                   |
++------------------------------+
+|Kiran|BE|8|BigData|603218000  |
+|Ramesh|BTech|3|Java|6032180000|
+|Kishore|ME|4|Dotnet|6032180000|
++------------------------------+
+
+df2.select("col_explode").rdd.map(lambda x: x[0].split("|")).show(5,False)
+
+rdd_df=df2.select("col_explode").rdd.map(lambda x: x[0].split("|"))
+
+rdd_df.toDF(["Name","Edu","YearsOfExp","Technology","MobNum"]).show(5,False)
+
++-------+-----+----------+----------+----------+
+|Name   |Edu  |YearsOfExp|Technology|MobNum    |
++-------+-----+----------+----------+----------+
+|Kiran  |BE   |8         |BigData   |603218000 |
+|Ramesh |BTech|3         |Java      |6032180000|
+|Kishore|ME   |4         |Dotnet    |6032180000|
++-------+-----+----------+----------+----------+
+
+
+
+
+

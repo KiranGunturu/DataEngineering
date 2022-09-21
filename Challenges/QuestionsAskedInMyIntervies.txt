@@ -1,0 +1,31 @@
+HiveToOracle
+OracleToHive
+OracleToAWSHive
+PushDownOptimization
+how to get records only from tableA which are not in tableAb using joins
+Max Size if int in python - 24
+data types in python
+list comprehension
+1 table with index and another one with non-index, which table will gets data loaded fast?
+performance optimization - explain plan
+python main functon syntax 
+	if __name__ == "__main__":
+Indexing pros and cons
+Exception Handling
+Python Lists,dict, tuples
+decorators
+daily time contribution to diff aspects like coding,documenting, req gathering
+NVL
+COALESCE
+Diff between sub query and corelated sub query
+union and union all
+third highest salary
+what are non-region AWS services - IAM
+difference ways to connect to AWS
+hive table properties to skip header - TBLPROPERTIES ("skip.header.line.count"="1");
+pros and cons of hive
+Actions in spark - take,show,first,reduce,collect
+repartition and coalesce and what is preferable
+windowfunctions.com
+NVL and coalesce
+

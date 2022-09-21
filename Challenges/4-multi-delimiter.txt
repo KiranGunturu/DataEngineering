@@ -1,0 +1,28 @@
+#Input
+
+Name~|Age
+Kiran, Kumar~|25
+Michael, Clarke~|26
+Virat, Kohli~|27
+Andrew, Simond~|28
+Adam, James~|29
+
+df=spark.read.text("input.csv")
+
+df.show(truncate=0)
+
+	Name~|Age
+	Kiran, Kumar~|25
+	Michael, Clarke~|26
+	Virat, Kohli~|27
+	Andrew, Simond~|28
+	Adam, James~|29
+
+header=df.first()[0]
+	--Name~|Age
+
+schema=header.split('~|')
+	['Name', 'Age']
+
+df_input=df.filter(df[value]!=header).rdd.map(lambda x: x[0].split('~|').toDF(schema)
+

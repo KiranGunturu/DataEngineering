@@ -1,0 +1,17 @@
+MODE - PERMISSIVE
+MODE - FAILFAST
+MODE - DROPMALFORMED
+
+df=spark.read.csv("input.csv",header=True) by default mode is PERMISSIVE
+
+df=spark.read.option("mode","FAILFAST").csv("input.csv",header=True) it will fail when it finds corrupted records
+
+df=spark.read.option("mode","DROPMALFORMED").csv("input.csv",header=True.schema=Defineschema) - Bad / corrupted records will be dropped , but all the valid records will be loaded to dataframe
+
+Defineschema=StructType([
+        StructField("ID",StringType(),True),
+        StructField("NAME",StringType(),True),
+        StructField("DpetName",StringType(),True)
+        ])
+        
+

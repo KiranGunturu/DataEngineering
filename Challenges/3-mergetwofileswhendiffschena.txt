@@ -1,0 +1,96 @@
+# Merge two Dataframes when they have different schema
+
+Threre are 4 different approaches to solve this.
+
+	1)  WithColumn and then Union
+	2)  Define Schema and then union
+	3)  Apply Outer Join
+    4)  Automated Approach
+	
+File 1:
+
+Name	Age
+Kiran	25
+Kishore	26
+Murali	32
+
+File 2:
+
+Name	Age		Gender
+James	30		Male
+Adam	31		Male
+Michael	32		Male
+
+
+####Approach one : WithColumn and Union####
+
+from pyspark.sql.functions import *
+df=spark.read.csv("file1.csv")
+df_add=df.withColumn("Gender",lit("Null"))
+df_Add.show()
+
+Name	Age		Gender
+Kiran	25		Null
+Kishore	26		Null
+Murali	32		Null
+
+
+df_add.union(df2).show()
+
+
+Name	Age		Gender
+Kiran	25		Null
+Kishore	26		Null
+Murali	32		Null
+James	30		Male
+Adam	31		Male
+Michael	32		Male
+
+####Approach two : Define Schema and Union####
+
+
+Defineschema=StructType([
+        StructField("Name",StringType(),True),
+        StructField("Age",StringType(),True),
+        StructField("Gender",StringType(),True)
+        ])
+
+df1=spark.read.option("delimiter","|").csv("file1.csv",header=True,schema=Defineschema)
+df2=spark.read.option("delimiter","|").csv("file12.csv",header=True,schema=Defineschema)
+
+df1.union(df2)
+
+
+#####Approach Three : Apply outer Join####
+
+
+df1=spark.read.option("delimiter","|").csv("file1.csv",header=True,schema=Defineschema)
+df2=spark.read.option("delimiter","|").csv("file12.csv",header=True,schema=Defineschema)
+
+df1.join(df2,on=["Name","Age"],how="outer")
+
+#####Approach Four : Automated Process#####
+
+df1=spark.read.format("csv").option("delimiter","|").option("header",True).load("/data/caret/raw/file1.csv")
+df2=spark.read.format("csv").option("delimiter","|").option("header",True).load("/data/caret/raw/file2.csv")
+
+listA=list(set(df1.columns)-set(df2.columns)) - to get columns which are not there in df2, but there in df1
+listB-list(set(df2.columns)-set(df1.columns)) - to get columns which are not there in df1, but there in df2
+
+for i in listA:
+    df2.withColumn(i,lit("null"))
+
+for i in listB:
+    df1.withColumn(i,lit("null"))
+    
+    
+df1.union(df2)
+
+
+
+
+
+
+
+
+

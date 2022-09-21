@@ -1,0 +1,91 @@
+-------------------------
+ORDER OF EXECUTION IN SQL
+-------------------------
+ORDERS - ORDER_ID
+CUSTOMERS - CUSTOMER_ID
+COMMON - CUSTOMER_ID
+
+SELECT ORDER_ID,CUSTOMER_ID
+FROM ORDER_ID 
+WHERE ORDER_ID=5
+
+
+SEEK AND SCAN
+
+SEEK - QUITE IS GENERALLY FASTER THAN SCAN (when there is an index)
+SCAN - when there is not an index it will go for full table scan.
+
+clustered index:
+
+orders table (order_id is the PK)
+
+PK - by default clustered unique index
+
+lets say we inserted order_id=5 first,order_id=4 second then order_id=6
+
+order_id=4
+order_id=5
+order_id=6
+
+it will make sure that physical order of the data is maintained and sorted in assecnding.
+
+clustered vs non-clustered:
+
+PK is on order_id
+PK can be on (order_id,customer_id) and it is of composite PK.
+when we serach on order_id, our serach will be faster as it is having index on it.
+if we also want to have more freqent searches then we can create non-clustered index on it - where the indexing info will be maintained in a different place than 
+where the actual data is present.
+non-clustered will require little extra storage.
+
+only one clustered index is possible on table because we can't have more than one type of maintaning physical order or the table.
+
+
+select city,count(*) as total
+from orders
+inner join customers
+on orders.customer_id = customers.customer_id
+where order_status!='PENDING_PAYMENT'
+group by city
+having count(*) > 10
+order by total desc
+
+from,join
+
+where (where can happen after from as well)
+
+group by
+
+having
+
+select (cols listed and all the aliases will happen here)
+
+order by
+
+limit
+
+
+select city,count(*) as total
+from orders
+inner join customers
+on orders.customer_id = customers.customer_id
+where order_status!='PENDING_PAYMENT'
+group by city
+having city='Franklin'
+order by total desc
+
+
+from,join
+
+where (where can happen after from as well)
+
+group by
+
+select (cols listed and all the aliases will happen here)
+
+order by
+
+limit
+
+here there is no having clause because system will push the filter after from clause.(predicate pushdown) wheare as in above class it can'table
+as aggregation should happen first( count(*) )
