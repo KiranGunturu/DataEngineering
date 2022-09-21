@@ -1,0 +1,124 @@
+Big data - to process huge amounts of data which traditional systems are not capable of processing
+volume, velocity, variety
+Storage
+Processing
+Scalability
+
+Google - GFS whitepapter 2003
+Google - MAPREDUCE whitepapter 2004
+YaHOO - yahoo implemented above to HDFS - MAPREDUCE 2006
+hadoop came under apache software - 2009
+apache released hadoop 2.0 with few enhacnements - 2013
+
+hdfs - distributed storage
+mapreduce - distributed computing
+
+Hadoop 1.0 
+	HDFS --> MAPREDUCE
+Hadoop 2.0
+	HDFS --> MAPREDUCE --> YARN
+	
+Monolithin vs distributed
+vertical vs horizontal
+hadoop - it is a framework to solve big data problems
+
+1.0 - block size - 68 MB
+2.0 - block size - 128 MB
+
+Hadoop is works on pricipal of data locality - Data is processed where it is kept.
+
+send the code where the data is and not bring the data where the code is being executing.
+
+HDFS 
+	Data node
+	heart beat
+	Name node
+	data node failure
+		replication factor
+	name node failure
+		fsimage and edit logs are sent to shared folder where secondary name have access to.
+		checkpointing for 30 secs
+	rack awareness - group of data nodes sitting in different geographical regios
+		one block will be stored in one region (rack) and another 2 copies of same block will be stored in another region(rack)
+	black reporting - data nodes will send block information to name node at perticular time.
+	
+
+cd . - current directory
+cd .. - parent directory
+cd ~ - goto home directory
+cd - - go back to the previous directory
+cd ../.. back to two directories
+ls -a - list files along with hidden fiiles
+ls -lt - long list the files with sorted timestamp
+ls -R - long list the files in all the directories
+ls -Ra - long list the files , hidden files in all directories
+ls -latR - long list the files , hidden files, with newest timestamp recursively in all the folders
+ls -ltr - long list the files with sorted by timestamp in a reverse way (z to a)
+touch - create a file and change the timestamp of file(use case trigger job)
+find /path -type f -exec touch {} + - to update the timestamp of all files and folders in a directory OR
+cd to the folder and run dos2unix prefix*
+mkdir - create a directory
+rmdir - used to remove a directory when it is empty
+rm - removes files or directories
+rm file1 - remove a file
+rm -R dir2 - remove a directory recursively
+cp file1 file2 - copying the file1 contents to file2
+cp file2 dir3 - copying the file2 to dir3
+cp -R dir5 dir6 - copy complete dir5 into directory dir6
+mv - move file from one location to another (cut and paste)
+mv file1 file8 - rename file1 to file8
+mv file1 dir6 - move file1 to directory called dir6 (cut and paste)
+mv dir3 dir6 - move directory dir3 to directory dir6 (cut and paste)
+cat file.txt
+-write the content and hit cntl_d to save
+cat file1.txt > file2.txt - copy file1 contents to file2
+cat file1.txt >> file2.txt - concatenate two files
+sed '1d' file2.txt > tmpfile; mv tmpfile file12.txt - remove the header or first line from file
+du -h . - to know the size of all objects in human readable format
+du -h ./qvoice - to know the size occupied by qvoice folders
+grep my *.txt - it will display in what all the lines "my" is there
+-------
+hdfs dfs - list all available commands
+hdfs dfs -help -ls - help on ls commands
+hdfs dfs -ls --sort by filename
+hdfs dfs -ls -C /hdfspath -- Display the paths of files
+hdfs dfs -ls -t /hdfspath -- sort files by time
+hdfs dfs -ls -h /hdfspath -- display size in human readable format
+hdfs dfs -ls -S /hdfspath -- sort files by their size
+hdfs dfs -ls -h -S /hdfspath -display size in human readable format and sort by size
+hdfs dfs -ls -R /hdfspath
+hdfs dfs -ls -R /hdfspath | grep ipsos -- recursively travel thru the folders and serach for work called ipsos
+hdfs dfs -mkdir -p /hdfspath/folder1/folder2 - create folders along with parent directory (instead creating folder1 and folder2 in two separate commands)
+hdfs dfs -rmdir /hdfspath - rmdir can only delete when directory is empty
+hdfs dfs -rm /hdfspath/file.txt - remove file1.txt file
+hdfs dfs -rm -R /hdfspath/folder1 - to remove all files recursively in the mentioned hdfs folder1
+hdfs dfs -copyFromLocal file1.txt /hdfspath or hdfs dfs -put file1.txt - local to hdfs
+hdfs dfs -copyToLocal file1.txt /hdfspath or hdfs dfs -get file1.txt
+hdfs dfs -tail /hdfspath/file1.txt - to view last 10 lines
+hdfs dfs -cat /hdfspath/file1.txt | more - to view first 10 lines
+hdfs dfs -cat /hdfspath/file1.txt | head -10
+hdfs dfs -cp /hdfspath /hdfspath - hdfs to hdfs (copy and paste)
+hdfs dfs -mv /hdfspath /hdfspath - hdfs to hdfs (cut and paste / rename a file)
+hdfs dfs -df -h
+Filesystem        Size    Used  Available  Use%
+hdfs://bdedev  226.0 T  43.3 T    170.4 T   19%
+hdfs dfs -du -h /projects/qvoice
+57       171      /projects/qvoice/cnfl
+26.9 M   80.6 M   /projects/qvoice/conf
+11.2 K   33.6 K   /projects/qvoice/oozie
+128.8 K  386.3 K  /projects/qvoice/scripts
+hdfs dfs -du -s -h /projects/qvoice - sum up above
+27.0 M  81.0 M  /projects/qvoice
+hdfs dfs -Ddfs.replication=5 -put file1.txt /hdfspath/ - dynamically change replication factor for specific file.
+hdfs fsck /hdfspath/file.txt - to know how many blocks this file has and replication factor and ip addresses of data nodes where all these individual blocks kept.
+
+
+
+
+
+
+
+
+
+
+
