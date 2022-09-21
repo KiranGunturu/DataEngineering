@@ -1,0 +1,157 @@
+RDD
+========
+
+The basic unit which holds the data in spark is called as RDD.
+
+resilient distributed dataset.
+
+List is distributed into 4 machine and together it is called as an RDD.
+
+RDD is nothing but in-memeory distributed collection.
+
+rdd1 = sc.textFile("/data/file.txt")
+rdd2 = rdd1.map
+rdd3 = rdd2.filter
+rdd3.collect()
+
+rdd1 = sc.textFile("/data/file.txt") - when executed entry will be addded in the DAG
+rdd2 = rdd1.map - when executed entry will be addded in the DAG
+rdd3 = rdd2.filter - when executed entry will be addded in the DAG
+rdd3.collect() - when executed things will start execute.
+
+directed Acyclic graph - (no loops)
+
+there are 2 kind of operations in sprak
+
+1. Transformations
+2. Actions
+
+rdd1 = sc.textFile("/data/file.txt") - Transformation
+rdd2 = rdd1.map - Transformation
+rdd3 = rdd2.filter - Transformation
+rdd3.collect() - Action
+
+Transformations are lazy.
+
+Action are not.
+
+consider we have a 4 node hadoop cluster and we have a dataset of 500mb - 4 blcoks
+
+data will be sitting in hdfs and 4 blocks will be sitting in 4 different nodes
+
+rdd1 = sc.textFile("/data/file.txt")
+
+when we run above code those 4 blcoks will be loaded into memory from hdfs (hard disk) of same worker nodes. and rdd1 will have 4 partitions in memeory.
+
+Blocks are distributed across disk.
+
+RDDs are distributed across memeory.
+
+what is resilient: resilient to failure: meaning ability to recreate lost RDDs during execution cycle.
+
+if we loose an rdd we can again recover it back.
+
+so replicas are out of question as we cannot keep multiple copies of same data in memory as memory is expensive.
+
+we were doing that in hdfs as storage is cheap.
+
+
+	RDD1
+	 || MAP
+	 ||
+	RDD2
+	 || FILTER
+	 ||
+	RDD3
+	
+	IF RDD3 is lost then it will check for its parent RDD (rdd2) using the lineage graph and it will qucikly apply the tranformations on rdd2 to get rdd3
+
+===========
+Immutable
+===========
+
+once we load rdd with data we cannot change
+
+rdd1 = sc.textFile("/data/file.txt") - Transformation
+rdd2 = rdd1.map - Transformation
+rdd3 = rdd2.filter - Transformation
+rdd3.collect() - Action
+
+RDDs are immutable so we can't chnage the rdd once it is materialized.
+
+why immutable?
+
+assume we muted rdds like below
+
+rdd1 = sc.textFile("/data/file.txt") - Transformation
+rdd1 = rdd1.map - Transformation
+rdd1 = rdd2.filter - Transformation
+rdd1.collect() - Action
+
+so now what happens if we lost rdd1 then we lost everything.
+
+Immutability and lineage allows to regenerate the RDD during failure.
+
+=============================
+why tranformations are lazy?
+=============================
+
+assume that tranformations are not lazy.
+
+consider we have 1gb file in hdfs
+
+rdd1 = sc.textFile("data/file.txt")
+rdd1.take(1).foreach(println)
+
+now as soon as first line executed we have complete 1gb file loaded into the memory but our second line says print only one line.
+
+is it fare enough to load 1gb file in memry to print one line? ofcourse NOT
+
+this is what happens when spark is not lazy.
+
+now consider the actual truth that spark is lazy.
+
+rdd1 = sc.textFile("data/file.txt")
+rdd1.take(1).foreach(println)
+
+now when first line is executed nothing happens but just an entry added to the DAG
+
+since it knows the complete plan it only load the one line into the memory and print that line.
+
+
+case2:
+
+consider we have file1 in hdfs with 10 lakh rows
+
+rdd1 = sc.textFile("/data/file.txt")
+rdd2 = rdd1.map
+rdd3 = rdd2.filter
+rdd3.collect()
+
+when spark is not lazy.
+
+rdd1 will be loaded/materialized
+
+10 lakh rows will be processed as we are doing map 
+
+map is nothing but when there are 100 Input rows we will get 100 output rows.
+
+and lets say we are filtering for 5 rows.
+
+
+when spark is lazy.
+
+rdd1 = sc.textFile("/data/file.txt")
+rdd2 = rdd1.map
+rdd3 = rdd2.filter
+rdd3.collect()
+
+since it has complete execution plan it will push the filter prior to map operation.
+
+so now instead of processing 10 lakh rows it will process 5 records as it applies the filter tranformation prior to map tranformation.
+
+if filter is moving to early stage then it is now called as predicate pushdown.
+
+
+
+
