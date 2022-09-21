@@ -1,0 +1,269 @@
+MAPREDUCE - PROCESS OF DATA IN A DISTRIBUTED MANNER
+
+2 PHASES
+- MAP
+- REDUCE
+
+BOTH THESE MAP AND REDUCE WORKS ONLY ON KEY VALUE PAIRS
+
+(RNO,NAME)
+(1,JOHN)
+(2,JAMES)
+
+(K,V) --> MAP --> (K,V) (K,V) --> REDUCER -- (K,V)
+
+MAPREDUCE IS A PROGRAMING PARADIGM
+
+TRADITINAL PROGRAMING WORKS WHEN DATA IS KEPT ON A SINGLE MACHINE. 
+
+AND WHEN WE HAVE DATA KEPT ON MULTIPLE MACHINES IN A DISTRIBUTED MANNER THEN WE REQUIRE NEW PROGRAMING MODEL TO SOLVE THE PROBLEM AS NONE OF OUR
+TRADITINAL PROGRAMING MODELES WORK WELL.
+
+WHAT IS A MAP? 
+
+PROGRAM THAT IS RUNNING ON EACH NODE IS CALLED A MAP
+
+HADOOP WORKS ON PRINICIPLE OF DATA LOCALITY.
+
+THE DATA IS PROCESSED WHERE IT IS KEPT.
+
+MY CODE IS GOING TO THE DATA.
+
+AND DATA IS NOT COMING TO THE CODE.
+
+DATA - 100MB BUT CODE MIGHT BE OF 10KB SO MOVING THE CODE IS EAISER THAN DATA.
+
+MAPPER GETS US THE PARALLERSIM
+
+REDUCER - TO DO AGGREGATIONS
+
+RECOD READER - IT WILL TAKE EACH AS INPUT AND CONVERT EACH LINE INTO KEY VALUE PAIR
+
+FILE.TXT
+
+HELLO HOW ARE YOU
+HELLO WORLD
+HI THERE
+
+RECORD READER WILL TAKES THE ABOVE INPUT AND GIVE KEY VALUE PAIRS AS OUTPUT (ASSIGNING THE RANDOM ADDRESS AS A KEY TO EACH LINE)
+
+(123438,HELLO HOW ARE YOU)
+(898894,HELLO WORLD)
+(785654,HI THERE)
+
+INPUT - RECOD READER - MAPPER - REDUCER
+
+DATA MOVEMENT BETWEEN MAPPER MACHINES TO REDUCER MACHINES - SHUFFLING
+
+AFTER SHUFFLING , SORTING WILL HAPPEN ON REDUCER MACHINE BEFORE IT IS GIVEN TO REDUCER TASK
+
+SHULLE AND SORTING WILL BE TAKEN CARE BY HADOOP FRAMWORK.
+
+INPUT TO THE REDUCER PROGRAM IS SOMETHING LIKE BELOW.(AFTER SHUFFLE AND SORT)
+
+(ARE,{1})
+(HELLO,{1,1})
+(HI,{1})
+(THERE,{1})
+(YOU,{1})
+
+OUTPUT FROM REDUCER WILL BE LIKE BELOW AFTER DOING THE AGGREGATIONS.
+
+(ARE,1)
+(HELLO,2)
+(HI,1)
+(THERE,1)
+(YOU,1)
+---------
+500 MB 
+
+EACH BLOCK - 128 MB 
+
+SO 500/128 - 4 BLOCKS
+
+SO FOR EACH BLOCK WE HAVE 3 REPLICAS SO NOW OUR BLOCKS WILL BE 4*3 = 12 BLOCKS
+
+SO NO OF MAPPERS = NO OF BLOCKS.
+
+4 = 4( MAPPERS WILL RUN ON ONLY ONE BLOCK)
+
+--------
+EX: 
+
+FILE SIZE - 5GB 
+5*1024 = 5120 MB
+5120 / 128 = 40 BLOCKS
+
+ITEM								NODE1		NODE2			NODE3 			NODE4
+NO OF BLOCKS						10BLOCKS	10BLOCKS		10BLOCKS		10BLOCKS
+NO OF CORES							4CORES		4CORES			4CORES			4CORES
+NO OF MAPPERS CAN RUN PARALLELLY	4MAPPERS	4MAPPERS    	4MAPPERS    	4MAPPERS
+
+How many reduces are launched :
+
+No of reduces are controlled by a developper
+
+by default we have only one reducer
+
+but as a a developper we can even change the number of reducers..
+
+we can even make it 0 or we can make it more than 1
+
+--------------------
+
+changing number of reducers
+
+----------------------
+
+when should we consider increase the number of reducers?
+
+5 mappers are completed in 2 mins and 1 reducer is taking 10 mins..
+
+total mins - 12 mins
+
+lets say we added more work to mappers
+
+5 mappers are completed in 3 mins and 1 reducer is taking 5 mins..
+
+total 8 mins..
+
+what if we increase reducers?
+ mappers will take 3 mins and 2 reducers took 2.5 mins each
+ 
+ total time : 5.5 mins as reducers also ran parallelly.
+ 
+ when to make no of reducer to zero? there can be few jobs which do not require aggregations (Ex: filter)
+ 
+ shuffle and sort only happends when we have 1 or more reducer.
+ 
+ when the no of reducers is zero then our mappers output will be the final output
+ 
+ refer word doc too.
+ 
+ -------Combiner---------
+ 
+ Date,Time,Temp
+12/12/2015,00:00,50
+12/12/2015,01:00,52
+12/12/2015,02:00,49
+12/13/2015,00:00,48
+12/13/2015,01:00,54
+12/13/2015,02:00,55
+ 
+ result give me max temp for each day
+ 
+ 12/12/2015,01:00,52
+ 12/13/2015,02:00,55
+ 
+ 
+ assume we have 300 mb file and devided into 3 blocks
+ 
+ DN1 - B1
+12/12/2015,00:00,50
+12/12/2015,01:00,52
+
+O/P FROM MAPPER IS
+12/12/2015,50
+12/12/2015,52
+
+ DN2 - B2
+12/12/2015,02:00,49
+12/13/2015,00:00,48
+
+O/P FROM MAPPER IS
+12/12/2015,49
+12/13/2015,48
+
+ DN3 - B3
+12/13/2015,01:00,54
+12/13/2015,02:00,55
+ 
+O/P FROM MAPPER IS
+12/13/2015,54
+12/13/2015,55
+
+NOW ALL THESE 6 ENTRIES GOES TO REDUCER MACHINE AND AFTER SORTED
+
+12/12/2015,50
+12/12/2015,52
+12/12/2015,49
+12/13/2015,48
+12/13/2015,54
+12/13/2015,55
+
+(12/12/2015,{50,52,49})
+(12/13/2015,{48,54,55})
+
+AFTER REDUCER
+
+(12/12/2015,52)
+(12/13/2015,55)
+
+IDEALLY WE WANT MAPPERS TO DO MORE WORK.
+
+IN THIS ABOVE CASE MAPPER DOES THE BARE MINIMUM
+
+refer word doc too
+
+------google search case--------
+
+google actually used MR for their exisitng web search
+
+A lot of crawlers are working day and night to crawl the web to have the indexing assigned
+
+Key					Value
+flipkart.com 		clothes handbag laptop
+amazon.com			clothes mobile purse
+myntra.com 			purse clothes tv
+
+
+search: clothes
+
+flipkart.com
+amazon.com
+myntra.com
+
+search: purse
+
+amazon.com
+myntra.com
+
+but above key value pairs are not good for search uses so google solved this issue by using MR.
+
+Key			Value
+clothes 	flipkart.com, amazon.com, myntra.com
+purse		amazon.com,myntra.com
+
+input data:
+Key					Value
+flipkart.com 		clothes handbag laptop
+amazon.com			clothes mobile purse
+myntra.com 			purse clothes tv
+
+output data:
+
+Key			Value
+clothes 	flipkart.com, amazon.com, myntra.com
+purse		amazon.com,myntra.com
+
+
+output from the mappers
+Key		value
+clothes flipkart.com
+handbag	flipkart.com
+laptop  flipkart.com
+clothes	amazon.com
+mobile  amazon.com
+purse   amazon.com
+
+after shuffle and sort
+
+(clothes,{flipkart.com, amazon.com,myntra.com})
+(purse,{amazon.com,myntra.com})
+
+------------session on MR code explanation----------
+
+if a class defined as public then class name and file name has to be same.
+
+class name = mymapper
+filename = mymapper.java
