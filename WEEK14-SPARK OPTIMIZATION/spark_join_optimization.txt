@@ -1,0 +1,109 @@
+Join optimizations
+====================
+
+we have two things which we work for.
+
+1.we always to avoid or minimize the shuffling.
+2. we want to increase the parallelism
+
+1. one large and one small table. - can go with broadcast join.
+	-> no shuffling is required
+	
+2. two large tables. there is no way to completely avoid the shuffling but we can think of minimizing.
+
+	1) filter early
+	===============
+
+		try to filter and do aggregations ASAP that means cut down the data size before the shuffling takes place.
+	
+	2) Increase parallelism
+	=====================
+	
+	100 node cluster each worker node having 64 Gb ram and 16 cpu cores
+	
+	2.1) how many cpu cores we are grabbing?
+	
+	lets say we requested 50 executors with 5 cores each then we have 250 total cpu cores. ( at the max 250 tasks can be run parallelly)
+	
+	2.2) whenever shuffling happens in case of structured APIs we get 200 partitions by default.
+	
+	spark.sql.shuffle.partitions=200 - this can be changed but by default it is 200. (at the max 200 tasks running in parallel even though we have 250 cpu cores)
+	
+	2.3) in your data we have 100 distinct keys on join column then we know that after the shuffle then 100 partitions will be full and others are empty.
+	
+	(at the max 100 tasks will be running parallel though we have 250 cpu cores)
+	
+	it means - 
+	
+	min(total cpu cores, number of shuffle partitions, no of distinct keys)
+	
+	min(250,200,100) = 100 
+	
+	we can try increasing the cardinality which is 100 in this case by chaning the join column or salting.
+	
+	we can increase the number of shuffle partitions if required
+	
+	we can try grabbing more resources if required.
+	
+	
+	
+	3) Skew Partitions
+	================
+
+	CA orders compared to different states in US.
+
+	which ever task is working on this heavily loaded partiiton will be very slow and other tasks will complete quickly.
+
+	in this case our job is dependent on the slowest performing task.
+
+	so there shouldn't be partition skew, else the job will be delayed.
+
+	to avoid this issue , we can do salting for only CA data / key
+
+
+	4) bucketing & sorting the datasets on join column.
+	
+	orders into 32 buckets -- 32 files
+	customers into 32 buckets. -- 32 files
+	
+	32 is just random number.
+	
+	with this approach, even with SMB there wont be shuffling becuase the data is shuffled when we create the bucketing(one time effort)
+	
+	================================
+	
+	
+	simple example
+	==================
+	
+	if you are not doing bucketing & sorting and you are doing a plain join
+	
+	say our join takes - 30 minutes
+	and we are joinin our tables 1000 times in different use cases then
+	30 minutes * 1000 = 30000 minutes
+	
+	assume bucketing & sorting done on join column
+	
+	60 minutes to do bucketing & sorting
+	
+	now our join may take - 5 minutes
+	
+	so 5 * 1000 = 5000 minutes and we saved 25000 minutes of time.
+	
+	
+	
+	
+
+
+	
+	
+	
+	
+	
+	
+	
+	
+
+
+
+

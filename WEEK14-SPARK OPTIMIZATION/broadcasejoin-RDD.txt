@@ -1,0 +1,71 @@
+Broadcast join can be used when we have 1 large dataset and 1 small dataset and we want to join these.
+
+RDD (lower level API)
+=======================
+
+we will have 2 RDDs
+
+one of them will be large RDD and one of them will be smaller.
+
+spark2-shell --conf spark.dynamicAllocation.enabled=false --master yarn
+--num-executors 6
+--executor-memory 3G
+--executor-cores 2
+--conf spark.ui.port=4063 (if not available, it will try for next one)
+
+val rdd1 = sc.textFile("bigLognew.txt") - 1.4GB
+rdd1.getNumPartitions = 11
+
+//input
+
+WARN: Fri Feb 02 10:37:51 GMT 2017
+ERROR: Mon Feb 03 09:47:51 GMT 2019
+
+val rdd2=rdd1.map(x => (x.split(":")(0),x.split(":")(1)))
+
+//output
+
+(WARN,Fri Feb 02 10:37:51 GMT 2017) //Paired RDD and it is very big rdd
+(ERROR,Mon Feb 03 09:47:51 GMT 2019)
+
+rdd2 is large
+
+rdd3 is small
+
+("ERROR",0)
+("WARN",1)
+
+val a = ARRAY(
+("ERROR",0),
+("WARN",1)
+)
+
+array is local so lets crate an rdd out of a
+
+val rdd3 = sc.parallelize(a)
+
+val rdd4 = rdd2.join(rdd3)
+
+(WARN,(Fri Feb 02 10:37:51 GMT 2017,1))
+(ERROR,(Mon Feb 03 09:47:51 GMT 2019,0))
+
+rdd4.saveAsTextFile("joinresults1.txt") - it took 1.3 mins with normal join in 3 stages.
+
+now lets try to broadcast this join
+===================================
+
+val a = ARRAY(
+("ERROR",0),
+("WARN",1)
+)
+
+val keyMap = a.toMap
+
+val bcast = sc.broadcast(keyMap) //bcast is the broadcast variable
+
+val rdd2=rdd1.map(x => (x.split(":")(0),x.split(":")(1)))
+
+val rdd3 = rdd2.map(x => (x._1,x._2,bcast.value(x._1)))
+
+rdd3.saveAsTextFile("joinresults2") - now the job is done is 6 secs in one stage.
+
