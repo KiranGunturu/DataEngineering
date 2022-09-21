@@ -1,0 +1,16 @@
+Partitioning
+bucketing
+cache & persist
+coalesce & repartition
+avoid/minimize shuffling data
+filter data as early as possible
+try to have even distribution on key columns. if not, consider salting
+	select id, count(*) from table
+	group by id
+broadcast Join
+join optimizations
+using reduceBykey instead groupByKey
+thin vs fat executor: Balanced Approach
+dynamic and statics resource allocation
+choosing the right file formats: Orc, Avro, Parquet
+

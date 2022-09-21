@@ -1,0 +1,124 @@
+SHUFFLE SORT MERGE JOIN - WHEN BOTH ARE LARGE TABLES
+=====================================================
+
+- MAP & REDUCE CONCEPT
+- DATA SHUFFLING IS REQUIRED
+
+SMB TO WORK PROPERLY
+======================
+
+- TRY TO HAVE EVEN DISTRIBUTION ON THE KEYS
+
+SELECT ID, COUNT(*) FROM SALES
+GROUP BY ID
+
+- ADEQUATE NUMBER OF DISTINT KEYS FOR PARALLESIM
+- FILTER THE DATA AS EARLY AS POSSIBLE SO LESS SHUFFLING IS INVOLVED.
+
+LETS SEE WHEN WE DO NOT HAVE ABOVE BOTH MET.
+
+SELECT *FROM 
+PEOPLE_IN_THE_USA P
+JOIN
+STATES S ON P.STATE = S.STATE
+
+IN THIS CASE ALL THE DATA FOR THE USA WILL BE SHUFFLED INTO ONLY 50 KEYS FOR EACH OF THE STATES AND STATE LIKE NH CAN TAKE VERY LESS TIME AND CA MIGHT BE TAKING 
+VERY LONG TIME (SKEW)
+
+EVEN IF WE SCALE OUR CLUSTER TO MORE THAN 50 NODES IT IS STILL NOT GOING TO SOLVE THIS PROBLEM BECAUSE WE ONLY GOT 50 KEYS.
+
+
+NODE 1 / EXECUTOR 1
+=======
+1,JAMES,MICHAEL,TN
+2,JOHN, HENRY,TX
+
+NODE 2 / EXECUTOR 2
+========
+1,10000,500
+2,20000,1000
+
+SINE WE HAVE JOIN KEYS ON TWO DIFFERENT EXECUTORS WE CANNOT JOIN AND JOIN PERFORMS IN TWO STAGES
+
+1. FIRST STAGE - EACH EXECUTOR MAP THESE RECORDS BASED ON THE JOIN KEY AND SEND IT TO THE EXCHANGE AND THAT IS MAP PHASE OF MR IMPLEMENTATION
+
+NODE 1 / EXECUTOR 1 - EXCHAGE OR RECORD BUFFER AT THE EXECUTOR
+
+(1,{JAMES,MICHAEL,TN})
+(2,{JOHN, HENRY,TX})
+
+NODE 2 / EXECUTOR 2 - EXCHAGE OR RECORD BUFFER AT THE EXECUTOR
+
+(1,{10000,500})
+(2,{20000,1000})
+
+NOW SPARK FRAMRWORK PICK THESE RECORDS AND SEND THEM TO THE REDUCE EXCHAGE BUT SAME KEYS GOES TO THE SAME REDUCER.
+AND THESE EXCHAGES ARE KNOWN AS SHUFFLE PARTITIONS.
+
+IT IS UPTO US TO DEFINE THE SHUFFLE PARTITIONS DEPEDNDS ON THE KEYS.
+
+ALL THE DATA FROM MAP EXCHANGE TO THE REDUCE EXCHAGE IS WHAT WE CALL A SHUFFLE.
+
+spark.conf.set("spark.sql.shuffle.partitions",2) - this will give us 2 reduce excahnges as we have 2 distinct keys
+
+
+NODE 3 = REDUCER
+=================
+
+(1,{JAMES,MICHAEL,TN})
+(1,{10000,500})
+
+
+NODE 4 = REDUCER
+=================
+
+(2,{JOHN, HENRY,TX})
+(2,{20000,1000})
+
+NOW SINCE WE HAVE SAME KEYS TOGETHER SORTING AND JOIN CAN HAPPEN.
+
+====================
+
+lets says we have 2 dataframes df1 and df2
+
+df1 - 3 partitions
+df2 - 3 partitions
+
+df1.read - 1 job, 1 statge and 3 tasks (as we have 3 partitions)
+df2.read - 1 job, 1 statge and 3 tasks (as we have 3 partitions)
+spark.conf.set("spark.sql.shuffle.partitions",2)
+joindf = df1.join(df2,join_condition,join_type) - 1 job, 3 stages (2 are map stages writing data to the map excahnge and 
+other one is readuce excahnge which is reading from map excahnge) and 9 tasks total (6 from 2 map excahnges and 3 are reducer tasks as we 
+configured shuffle partitions to 3)
+
+
+optimize a join
+================
+1. Do not code like a novice.
+
+	filter and aggregate before joining
+	
+2. shuffle partitions and parallelism
+
+	2.1 shuffle partitions
+	2.2 number of executors
+	
+		what is the maximum possible parallelism?
+		
+		executors = 500
+		shuffle partitions = 400 
+		unique keys = 200 (takes prioriy)
+		
+3. Key distribution
+		
+	SELECT STATE, COUNT(*) FROM SALES
+	GROUP BY STATE
+	
+4. Identify long running partitions / tasks.
+
+5. salting to increase the unique keys.
+
+
+
+
+
