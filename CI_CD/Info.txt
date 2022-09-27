@@ -1,0 +1,71 @@
+CI /CD Pipeline - Jenkins
+==================
+
+
+
+Pipfile - where we list all dependencies
+=======
+
+all dependencies like version , database details etc
+
+.gitignore - where we list something that we dont wana check-in
+
+testdata
+	accounts
+		accounts_sample.csv
+	parties
+		party_samples.csv
+	results
+		final_df.json
+
+test_pytest_sbdl.py - some unit test cases
+
+sbdl_main.py - main code
+
+lib
+	__init__.py
+	utils.py
+	logger.py
+
+log4j.properties
+
+conf
+	sbdl.conf
+	spark.conf
+	
+sbdl_submit.sh
+
+Jenkinsfile
+
+===================
+
+
+Master - PROD
+
+	Release  - QA / Testing
+	
+		DEV - Development
+		
+			Feature - 1
+			Feature - 2
+			Feature - 3
+			
+if we have CI / CD pipeline then the moment we check-in our code in dev it will automatically deploy our code to DEV env.
+
+how will it be in prod? is it after we create a pull request?
+should there be one jenkinsfile for each branch? or one is enough?
+
+SRC control - Git
+Automation server - Jenkins
+	
+git clone /url
+
+git status - gives the branch we are in
+
+git checkout - b release
+
+git status - release
+
+git commit -m 'created release branch'
+
+git push
