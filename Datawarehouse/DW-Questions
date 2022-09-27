@@ -1,0 +1,177 @@
+1) what is a data warehouse
+============================
+
+BI is the process by which we collects the data about the business, analyze the data and then take required actions.
+
+DW is the technology that supports business intelligence.
+
+DW is like a relational database designed for analytical needs and it is a central location where consolidated data from multiple locations are stored.
+
+2) what is the very basic difference between a data warehouse and an operational database.
+===========================================================================================
+
+speedomater: shows what is our current speed.
+
+what happens if speedomater stops working? its a real hazard. 
+
+we could be operating vehicle beyond posted speed limit or
+
+we could be breaking the speed limit in that territory
+
+so speedomater is nothing but a operational / transactional system because it helps us to run the business.
+
+DB is mainly for writes.
+
+oddometer: it is showing us the historical information like how much miles we drove
+
+oddometer is nothing but a data warehouse as it is helping us to analyze the business.
+
+even if oddometer stops working there wont be any hurdle.
+
+Warehouse is mainly for reads.
+
+==================
+point of sale ex / last few transactions - OLTP
+sales manager / link to statements - OLAP
+
+3) What is a dimension table
+=============================
+
+assume that you are a area sales manager and intrested to know how the sales are going.
+
+somebody mentioned to you that yes today we soled 10,000 units of several products
+
+just the number 10,000 doesn't add any value so we really can't understand wheather we are doing good or bad and what is the room for improvement.
+
+this is where we need some context by which this number 10,000 can be divided.
+
+so we will natureally ask questions like.
+
+if my today's sale is 10,000 , how much was the sale yesterday?
+what are my top 5 products?
+what are my top 3 stores?
+who are my top 10 customers?
+
+the entities by which we divide the data becomes the dimensions and the measurement itself is the fact.
+
+like.
+
+customer:
+id, name, address
+product:
+product_id,product_name,type
+date:
+order_Date,shipment_Date,delivery_date
+
+dimensions will answer 7 questions.
+
+who
+what
+when
+where
+why
+how
+how many
+
+4) what is fact table
+======================
+
+fact is the business event
+
+fact represents the grain of the business event that is to be measured.
+
+how much is the product
+tax amount
+discount amount
+
+dimensions can be independent where as facts are not.
+
+when you walk into a store and purchased a product and finally get them billed.
+
+here the transaction is created.
+
+that moment when bill is generated , there are couple of things that are happen.
+
+you as a customer walked into the store,
+picked couple of products
+
+before the business event is occured, these dimensions are already exists and it just that they are not related to each other.
+
+only because of the sale , all of these dimensions came together (customer, product, store)
+
+5) grain of fact table
+========================
+
+grain is the level at which the business event occures.
+
+sales can be stored at day level.
+==================================
+	
+	today's sale - 5000 usd
+	yday's sale - 6000 usd
+
+here by attaching time dimension table to sales fact table is enougfh
+	
+in this case , we can't answer few questions.
+
+	what are my top 5 products
+	who are my top 10 customers
+
+this is when we need to lower the grain.
+	
+we can maintain at transaction level.
+=======================================
+
+for every transaction, there is sales id generated
+
+	if we think sales id is the grain of the fact then we could be mistaken because 
+	
+	one customer can order multiple products and multiple units of same product.
+	
+	so real grain could be of combination of both sales id and customer id
+	
+here we need to attach few of the other dimensions like customer, product and store.
+
+
+6) what is the difference between Additive, Semi-Additive and Non-additive facts?
+==================================================================================
+
+An additive fact is a measure in a fact table that can be fully summed across any of the dimensions associated with it.
+
+show me sales amount per day
+show me sales amount per customers
+show me sales amount per store
+
+so here sales amount is measure that can be aggregated across any of the dimensions like time, customer,store.
+
+A semi-additive fact is a measure in a fact table that can be summed across few dimensions associated with it, but not all.
+
+daily average balance of a bank account. this number can be summed up across customer dim but not with time dimension
+
+because lets say my dialy average balance as of yday is 50$ and my daily avg balance for today is 60$ so if I want to do
+
+a summation of it over the time it would mean 50 + 60 = 110 which is not right as we want the average.
+
+A non-additive fact is a measure in a fact table that cannot be summed across any dimensions associated with it.
+
+pre-calculated discount amount.
+
+10) factless fact table
+========================
+
+it is a fact table which do not contain numeric fact column in the fact table.
+
+charity account where we dont charge money but give products for free.
+
+11) conformed dimension -- reusable dimension - time dimension
+========================
+
+A dimension table which is used by more than one fact table is known as conformed dimension.
+
+
+	
+
+
+
+
+
