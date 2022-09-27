@@ -1,0 +1,47 @@
+Big 0 = way of comparing two sets of code.
+===========================================
+
+lets say code1 & code2 accomplish exactly the samething
+
+how would you compare one against the other?
+
+code1 might be more readable
+
+code2 might be more concise
+
+code might only take few lines and faster then code is better
+
+big 0 is comparing code1 and code2 mathematically about how efficient they run.
+
+time complexity
+===============
+
+code1 - 15 secs
+code2 - 60 secs based on this we say code1 is better and this is called time complexity
+
+but time complexity it is not measured in terms of time because if we run code1 and code2 on different machine where it has more
+resources then execution time varies - in this case its not the code is efficient but machine is efficient.
+
+space complexity
+================
+
+code1 - 15 secs but takes lot of memory
+code2 - 60 secs but it may take less memory
+
+it all depends on what we are trying to solve and based on that our approach differs.
+
+three different things
+=======================
+
+
+Theta
+O
+
+lets say we have a list 
+
+1 2 3 4 5 6 7
+
+lets say we are looking for 1 then it is our best case scenario - Omega
+lets say if we are looking for 7 then it is worst case scenario as we have to iterate thru entire list. - Big O
+lets say if we are looking for 4 then it is average case scenario - 
+
