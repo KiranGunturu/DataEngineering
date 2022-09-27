@@ -1,0 +1,24 @@
+Google Spam - Classification Model
+OLA AND UBER pricing distancing - clustreing model
+uber 
+
+
+Supervised (Labled Data) Like we give bunch of images of cat and we lable those images as cat and next time if we pass the diff image it will predict what the image is. (prediction model)
+	Regression 	: whenever your data is continous 	
+				ex: like house price can be 50L , 100L , 1cr , 2cr
+				ex: like student marks.
+				ex: price of iphone
+				ex: predicting the covid cases
+													
+	
+	Classification : when the data is categrocal 
+					ex: like either student can pass or fail and
+					ex: gender can be male or female
+					ex: I can buy the phone or not buy
+					ex: will covid cases increase or decrease
+	
+Unsupervised :
+	Clustreing : where we put similar data without labeling but baseed on certain similaties
+				ex: putting different newspapers in separate buckets with the help of algorithams like K-means
+	
+	
