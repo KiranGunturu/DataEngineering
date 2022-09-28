@@ -53,9 +53,9 @@ df.isna() - will return df with true or false.
 df.fillna(0) - replace all NaN with 0 for numeric calculations.
 df['Age']=df['Age'].astype(float)
 df['Age'].mean()
-============
-outliers
-=========
+================================
+outliers via standard deviation
+================================
 
 age = 1000
 import pandas as pd
@@ -69,3 +69,89 @@ upper_limit = df.height.mean() + 3*df.height.std()
 upper_limit = 77.91
 lower_limit = df.height.mean() - 3*df.height.std()
 lower_limit = 54.82
+df[(df.height>upper_limit) | (df.height<lower_limit)] - outliers
+df_no_outliers = df[df.height<upper_limit) & (df.height>lower_limit)]
+df_no_outliers.shape //(9993, 2)
+df.shape[0] - df_no_outliers.shape[0] //7
+
+
+====================
+outliers via z-score - how many standard deviations data element is away from the mean
+====================
+
+df['zscore'] = df.height - df.height.mean() / df.height.std()
+
+df[df['zscore']>3] - gives us rows which are 3 std away from the mean.
+
+============
+sorting data
+============
+
+df.sort_values(by='last_name',ascending=False)
+
+df.sort_values(by=['last_name','first'],ascending=False)
+
+df.sort_values(by=['last_name','first'],ascending=[False, True])
+
+df.sort_values(by=['last_name','first'],ascending=[False, True],Inplace=True)
+
+
+
+==================
+Reading & writing
+==================
+
+csv
+=====
+df= pd.read_csv('/data/public.csv')
+flt = (df['country']=='India')
+india_df = df.loc[flt]
+india_df.head()
+india_df.to_csv('/data/modified.csv')
+
+tab delimited
+==============
+
+df= pd.read_csv('/data/public.tsv', sep='\t')
+
+excel
+======
+
+pip install xlwt
+pip install openpyxl
+pip install xlrd
+
+india_df.to_excel('/data/modified.xlsx')
+
+
+databases
+===========
+
+pip install SQLAlchemy
+pip install psycopg2
+
+from SQLAlchemy import create_engine
+import psycopg2
+
+engine = create_engine('postgresql://dbuser:dbpass@localhost:5432/sample_db')
+
+india_df.to_sql('sample_table',engine)
+
+india_df.to_sql('sample_table',engine, if_exists='replace') //by default it will give error if table already exists
+
+//read from sql table
+=====================
+
+sql_df = pd.read_sql('sample_table',engine)
+
+add columns & rows
+===================
+
+
+
+
+
+
+
+
+
