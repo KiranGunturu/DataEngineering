@@ -169,7 +169,176 @@ charity account where we dont charge money but give products for free.
 A dimension table which is used by more than one fact table is known as conformed dimension.
 
 
-	
+OLTP & OLAP
+=============
+
+OLTP: My name is Online Transaction Processing
+OLAP: My name is Online Analytical Processing
+
+OLTP: I work on individual entries 
+OLAP: I can analyze large batches of data
+
+OLTP: I can access recent data, from the last few hours or days
+OLAP: I can access older data going back months, or even years 
+
+OLTP: I can update the data also
+OLAP: I can only read data
+
+OLTP: I support fast real-time access 
+OLAP: I support long running jobs 
+
+OLTP: I work with single data source 
+OLAP: I work with multiple data sources 
+
+Data Lakehouse
+===============
+
+A data lakehouse combines the best of both data lakes & data warehouses.
+
+Data lake benefits -
+flexibility
+cost-efficiency
+scalability 
+can hold all kinds of data
+
+Data lake cannot offer -
+ACID guarantees 
+Schema enforcement
+
+A Data lake can be used for ML kind of use cases but cannot serve a BI use case. 
+
+A BI use case is better served by a Datawarehouse
+
+Data warehouse benefits -
+ACID guarantees
+support schema enforcement
+
+Data warehouse drawbacks -
+proprietary format (ML not supported)
+
+A Datawarehouse is used for BI kind of usecases but cannot serve ML use case because of proprietary file formats.
+
+Earlier we used to have all our data in Data Lake & then a subset of this data used to go in Datawarehouse for serving BI use cases.
+
+But the problem is that - 
+we have to maintain 2 different systems
+It is costly
+A separate ETL activity is required
+
+To solve this problem Databricks gave a paper on Lakehouse which proposed the solution by just having a single system that manages both the things.
+
+Databricks have solved this using Delta Lake. They introduced metadata (transaction logs) on top of data lake which gives us datawarehouse like features.
+
+Lakehouse is a concept and can have various implementations. Delta Lake is just one of these implementations.
+
+Normalization and denormalization
+====================================
+
+Normalization vs Denormalization
+
+Normalization is a process of dividing the data into multiple smaller tables with an intent to reduce data redundancy & inconsistency. 
+
+However, Denormalization is totally opposite of above idea. 
+Denormalization is the technique of combining the data into a big single table. This definitely leads to redundancy in the data.
+
+Note: Redundancy causes inconsistency -
+Consider that same data is repeated 2 times and when updating you update at one place and forget to do at second place. This leads to inconsistent state.
+
+When retrieving data from Normalized tables we need to read many tables and perform join which is a costly operation.
+However, when reading the data from denormalized tables it's quite fast as no joins are required.
+
+When to use Normalized tables vs Denormalized ones?
+when we talk about OLTP systems (Online Transaction Processing) where we deal with lot of insert, delete and updates then you should go for Normalized tables.
+
+However, when you talk about OLAP (Online Analytical Processing) systems where you need to analyse historical data then Denormalized tables are best fit. 
+Since you wont be doing updates on data here, even though after having redundancy we wont end up in inconsistent state.
+
+Let's take a simple Example - when you make purchase on amazon then it requires a OLTP system (a rdbms kind of database). Here the tables should be normalized.
+
+when amazon is doing data analysis of historical data, they will create denormalized tables just to make sure analysis is faster and costly joins can be avoided.
+
+Data Lake
+============
+
+What is Delta Lake?
+
+Before talking about Delta Lake we first need to understand Data Lake & its challenges.
+
+Data Lake provides a very cost effective & scalable way to store any kind of data in form of raw files. 
+
+Example of Data Lake is amazon s3, azure datalake gen2 etc.
+
+The challenge with Data Lakes is that they do not provide ACID guarantees. (ACID properties are explained in my previous post)
+
+1) There can be a job failure while overwriting existing data or appending new data. This will break Atomicity & Consistency guarantees.
+
+2) Simultaneous read/write can also lead into inconsistent results as there is no Isolation.
+
+3) Moreover there is no schema enforcement in Data Lake.
+
+4) Also Data Lake does not offer updates & deletes.
+
+5) we cannot maintain version history. 
+
+and there are a few more limitations with Data Lake.
+This is where Delta Lake comes for rescue..
+
+So, what is Delta Lake?
+it's nothing but a slight salt that we add along with parquet files.
+
+what is this magic salt?
+It is nothing but transaction logs stored in _delta_log (subfolder)
+
+so delta format is nothing but a combination of:
+parquet + transaction logs
+
+Just by adding these transaction logs we are able to tackle all above limitations & we can get ACID features.
+
+ACID
+========
+
+A stands for Atomicity 
+C stands for Consistency
+I stands for Isolation
+D stands for Durability
+
+but I could not relate things and understand this at all.
+
+
+Let's assume you have a BOFA saving bank account & You have 25k in your account.
+
+Minimum balance in account should be 5k
+
+Consider, you are trying to transfer some amount to your friends account.
+
+This involves 2 activities -
+1. money deducted from your account
+2. money added to your friends account
+
+what if first activity succeeds and second one fail?
+
+Money will be deducted from your account,
+also your friend has not yet received the amount.
+
+this will lead the system in a wrong/inconsistent state
+
+1) Atomicity: It says either both the above activities happen as a whole or none of the activity happens. so that we never end up in an inconsistent state.
+
+2) Consistency: lets say you want to transfer Rs 25000,
+if the transaction goes through it will lead the system in an Inconsistent state as the balance will be 0 now,
+and min balance should have been 5k
+
+3) Isolation - you are transferring 10k to your friend
+so first your account gets deducted - at time t1
+later, your friend account get added with 10k - at time t3
+
+what if a new reader tried to get your account balance and your friends account balance at time t2 which is in between t1 and t3?
+
+If there is no isolation that person will see wrong data (money deducted from your account, but not added to your friends account)
+
+A new reader should only see it this when both the above activities are done. This is called Isolation.
+
+4) Durability means the committed changes should not be lost even in case of any failures.
 
 
 
