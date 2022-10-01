@@ -465,6 +465,37 @@ select salesperson_id,order_number,order_date,amount,
 sum(amount) over(order by order_date rows between 1 following and 1 following)
 from int_orders
 
+remove revere pairs
+=====================
+
+select t1.a, t1.b from number_pairs t1
+left join number_pairs t2 on t1.b = t2.a and t1.a = t2.b
+where t2.a is null or t1.a < t2.a
+
+student marks invert - pivot
+==============================
+
+student_id,subject,		marks
+1001		english		88
+1001		science		90
+1001		maths		85
+1002		english		70
+1002		science		80
+1002		maths		83
+TO
+student_id english science maths
+1001		88		90		85
+1002		70		80		83
+
+select student_id,
+sum(case when subject='english' then marks else 0 end) as english,
+sum(case when subject='science' then marks end) as science,
+sum(case when subject='maths' then marks end) as maths
+from students
+group by student_id
+
+
+
 
 
 
