@@ -90,3 +90,174 @@ LEFT JOIN DEPT ON EMP.EMP_ID = DEP.DEP_ID
 WHERE DEP.DEPT_NAME = 'Analytics'
 
 there join will be performed first and then the where clause will be applied.
+
+==================
+
+Join scenarios
+================
+
+
+All matching rows from two tables
+
+t1
+==
+1
+1
+
+t2
+==
+1
+1
+1
+
+Inner Join
+===========
+6 rows
+left join
+==========
+matching + all from left
+6
+right join
+==========
+matching + all from right
+6
+full join
+==========
+matching + non matching from left + non matching from right
+6
+=====================================================================
+t1
+==
+1
+1
+2
+
+t2
+==
+1
+1
+1
+3
+
+we have one non matching in left and also in right
+
+inner - 6
+left - 6+1=7
+right - 6+1=7
+full - 6 + 1 + 1 = 8
+
+=======================================================================
+
+t1
+==
+1
+1
+2
+2
+
+t2
+==
+1
+1
+1
+3
+2
+
+inner - 6 + 2 = 8
+left - 6 + 2 = 8
+right - 6 + 2 + 1 = 9
+full - 6 + 2 + 1 = 9
+
+=============================================================================
+
+t1
+==
+1
+1
+2
+2
+4
+null
+
+t2
+==
+1
+1
+1
+3
+2
+2
+null
+
+inner - 6 + 4 = 10
+left - 6 + 4 + 1 + 1 = 12
+right - 6 + 4 + 1 + 1 = 12
+full - 6 + 4 + 1 + 1 + 1 + 1 = 14
+
+===============================================================================
+
+t1 has 5 records and t2 has 10 records
+you can assume any values in each of the tables. how many max and min reocrds possible in in case of
+inner, left, right and full
+
+maximum
+=========
+	t1			
+	===			
+	1				
+	1
+	1
+	1
+	1
+
+	t2
+	===
+	1				
+	1
+	1
+	1
+	1
+	1				
+	1
+	1
+	1
+	1
+
+inner - 50
+left - 50
+right - 50
+full - 50
+
+maximum
+=========
+	t1			
+	===			
+	1				
+	1
+	1
+	1
+	1
+
+	t2
+	===
+	2				
+	2
+	2
+	2
+	2
+	2				
+	2
+	2
+	2
+	2
+	
+inner  - 0
+left - 5
+right - 10
+full - 0 + 5 + 10 = 15
+
+
+
+
+
+
