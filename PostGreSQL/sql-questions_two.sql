@@ -43,7 +43,9 @@ DELETE FROM EMPPLOYEE E1
 
 -- IMP AND EASY WAY---
 
-with cte as (SELECT t.*,row_number() over(partition by emp_id order by emp_id desc)as rn from t3 t)
+with cte as (
+SELECT t.*,row_number() over(partition by emp_id order by emp_id desc)as rn from t3 t
+)
 DELETE from cte where rn>1;
 
 select *From (
@@ -400,10 +402,27 @@ SELECT EMP.NAME ,MGR.NAME AS MANAGER_NAME FROM T4 EMP
 INNER JOIN T4 MGR ON EMP.MANAGER_ID=MGR.ID
 WHERE EMP.SALARY > MGR.SALARY
 
+--sum and CASE
+
+select 'bull', sum(case when contents like '% bull %' then 1 else 0 end) from google_file_store
+union ALL
+select 'bear', sum(case when contents like '% bear %' then 1 else 0 end) from google_file_store
+
 
 -----Custom sort----
 select *from customers
 order by case when countryName='India' then 0 else 1 end, countryName
+
+select *from country
+where cname ='INDIA'
+select *from (select *from country
+where name!='INDIA'
+order by cname ASC);
+
+sql server
+
+select cname from country
+order by case when cname = 'INDIA' then '' end desc, cname
 
 ---Generate numbers using recrsive CTE--------
 
