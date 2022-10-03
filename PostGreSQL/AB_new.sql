@@ -127,7 +127,7 @@ UNION ALL - IT WILL JUST COMBINE TWO DATASETS AND WILL NOT REMOVE ANY DUPES
 SELECT ID,NAME,DEPT_ID,SALARY,NAME,
 RANK() OVER (PARTITION BY DEPT ORDER BY SALARY DESC) AS RNK,
 DENSE_RANK() OVER (PARTITION BY DEPT ORDER BY SALARY DESC) AS DNK,
-ROW_NUMBER() OVER (PARTITION BY DEPT ORDER BY SALARY DESC) AS RNUM
+ROW_NUMBER() OVER (PARTITION BY DEPT ORDER BY SALARY DESC) AS RNUMCG
 FROM EMP
 
 DENSE_RANK() 
@@ -493,6 +493,39 @@ sum(case when subject='science' then marks end) as science,
 sum(case when subject='maths' then marks end) as maths
 from students
 group by student_id
+
+ungrouping the DATA
+====================
+
+with recursive cte as 
+	(select id,item_name, total_count
+	from travel_items
+	UNION
+	select cte.id,cte.name, cte.total_count-1
+	from cte
+	join travel_items t on t.item_name = cte.item_name and t.id = cte.ID
+	where cte.total_count > 1
+	)
+select id, item_name
+from cte
+group by id;
+
+fill blank VALUES
+=================
+with cte1 as (
+select *,
+row_number() over(order by select null) as rn
+from brands
+)
+,cte2 as (
+select *,
+lead(rn,1,9999) over(order by rn) as next_rn
+from cte1
+where category is not null
+)
+select cte2.category, cte1.brand_name
+from cte1
+inner join cte2 on cte1.rn >= cte2.rn and cte1.rn <= cte.next_rn-1
 
 
 
