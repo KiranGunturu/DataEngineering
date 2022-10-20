@@ -1,0 +1,110 @@
+AWS CLI and Lambda
+=========
+
+Python3.8 -m pip install awscli
+aws
+aws --version
+aws s3 ls
+aws configure
+aws configure --profile awsanalytics // when we have more than one AWS account we use profiles to differentiate and connect to those
+aws s3 ls --profile awsanalytics
+ls -altr|grep aws // cd .aws to see the creds and configs (should run on home dir) or
+ls -ltr ~/.aws
+mkdir data-engineering-on-aws
+python3.8 -m venv de-env // to create python virtual environment and de-env is the name by which new folder gets created
+source de-env/bin/activate // activate the virtual env
+pip install configparser // before running any installs we have to make sure python virtual env is activated
+pip install requests -t ghalib // requests library will be installed in ghalib folder
+pip list
+
+	import boto3
+	s3_client=boto3.client('s3')
+	s3_client.list_buckets() // it will create a list with buckets info
+
+pip install jupyterlab
+aws configure --profile itvgithub
+aws s3 ls s3://data-engineering-aws-analytics
+aws s3 ls s3://data-engineering-aws-analytics --profile itvgithub
+
+S3
+===
+add files - we can upload multiple files
+add folder - we can ONLY upload one folder at a time
+drag and drop - we can upload multiple folders at same time
+
+Versioning 
+life cycle policies
+cross region replication - maintain copy of the bucket in two different regions for fault tolerance
+
+s3 commands
+=============
+
+aws s3 help // hit space to go furthur // :q to exit
+cp
+ls
+mb - create an s3 bucket
+	aws s3 mb s3://mybucket --region us-west-1
+mv
+presign
+rb - remove an empty bucket by default
+rm
+sync
+website
+
+aws s3 ls help
+aws s3 ls dgretail-db
+aws s3 ls dgretail-db --recursive
+aws s3 ls dgretail-db/categories --summarize --recursive --human-readable
+aws s3 ls dgretail-db --recursive --human-readable
+aws s3 rm s3://dgretail-db/orders --recursive // to delete the contents and folder from a s3 bucket
+aws s3 cp departments s3://dgretail-db/retail-db/departments/ --recursive // copy folder from local to s3 bucket
+aws s3 cp Research/data/retail_db s3://dgretail-db/retail_db --recursive --exclude "*.sql" --exclude "README.md"  //copy multiple folders under retail_db to s3 bucket from local
+
+
+
+
+LAMBDA
+========
+
+Set up virtual environemnt on local
+
+mkdir ghactivity-downloader
+cd ghactivity-downloader
+python3.8 -m venv ghad-venv
+source ghad-venv/bin/activate
+pip install boto3
+pip install requests
+mkdir ghalib
+pip install requests -t ghalib
+
+
+go to pycharm - open project - select ghactivity-downloader folder from local and open it in pycharm and make sure interpreter is pointing to ghactivity-downloader location
+
+zip -r ghactivity-downloader lambda_function.py - to create the zip file from pycharm terminal
+zip -g ghactivity-downloader lambda_function.py - to update the zip that was already created
+
+
+to include the requests module in the zip , do the following in the pycharm terminal
+
+cd ghalib
+zip -r ../ghactivity-downloader.zip .
+cd ..
+zip -g 
+
+ENV Variables
+--------------
+
+BUCKET_NAME = data-engineering-aws-analytics
+FILE_PREFIX = landing/ghactivity
+BASELINE_FILE = 2022-10-20-0.json.gz
+BOOKMARK_FILE = bookmark
+
+
+
+
+
+
+
+
+
+
