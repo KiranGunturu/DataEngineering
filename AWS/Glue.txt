@@ -1,0 +1,102 @@
+Glue
+=====
+1) what is Glue - 
+Crawler - Discover the schema of the data resides in data store
+Central metadata repository - Glue data catalog
+ETL Jobs - ETL Engine that generates python or scala code
+
+2) when do we use AWS Glue -
+
+To Build a datawarehouse type of things
+To maintain metadata - this is serverless
+Data catalog - it is a peristent metadata store. it contains table info, job info etc
+classifier - based on defined classifiers glue discovers the schema of data.
+	means regex patterns to parse the schema
+crawler - uses the classifier to infer the schama
+data store - a repository for persistenly storing the data
+Job - business logic to perform ETL work
+trigger - something which inititate the job
+
+Demo
+=====
+
+1 - drop file in s3
+2 - create crawler
+3 - run crawler to infer the schama
+4 - check the table definition in the glue catalog
+5 - create ETL job
+6 - trigger the job & validate the data in S3
+
+Crawler data source can be
+
+	S3
+	JDBC
+	DynamoDB
+	DocumentDB/MongoDB
+	Delta Lake
+when we run the crewler it will create the database and tables and we can prefix the table names too
+
+aws glue help
+
+aws glue list-crawlers --profile itvgithub --region us-east-1
+
+aws glue get-crawler --name "Retail Crawler" --profile itvgithub --region us-east-1
+
+aws glue start-crawler --name "Retail Crawler" --profile itvgithub --region us-east-1
+
+aws glue get-databases --profile itvgithub --region us-east-1
+
+aws glue get-tables --database_name retail_db --profile itvgithub --region us-east-1
+
+aws glue get-table --database_name retail_db --name products --profile itvgithub --region us-east-1
+
+
+import boto3
+import os
+os.environ.setdefault('AWS_PROFILE','itvgithub')
+os.environ.setdefault('AWS_DEFAULT_REGION','us-east-1')
+glue_client = boto3.client('glue')
+glue_client.list_crawlers()['CrawlerNames'] //this will give us list of crawlers
+glue_client.list_crawlers()['CrawlerNames'][3] //to take the 4th crewler name
+crawler = glue_client.list_crawlers()['CrawlerNames'][3]
+
+# get crawler details
+glue_client.get_crawler(
+	Name=crawler
+	
+	)
+
+# start the crawler
+
+glue_client.start_crawler(
+	Name=crawler
+	)
+
+# to get crawler state like running or stopping
+glue_client.get_crawler(
+	Name=crawler
+	
+	)['Crawler]['State']
+
+glue_client.get_databases? //to get help
+
+# to get list of tables
+
+for db in glue_client.get_databases()['DatabaseList']:
+	print(db['Name'])
+	
+# to get list of tables
+for table in glue_client.get_tables(
+	DatabaseName='retail_db'
+	)['TableList']:
+		print(table['Name'])
+		
+# to get details about specific table
+glue_client.get_table(
+	DatabaseName='retail_db',
+	Name='orders'
+	)
+
+
+https://boto3.amazonaws.com/v1/documentation/api/latest/guide/configuration.html // to get list of boto3 environment variables
+

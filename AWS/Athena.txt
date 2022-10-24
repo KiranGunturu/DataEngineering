@@ -1,0 +1,104 @@
+Athena
+===========
+
+HDFS File - Data
+
+Schema - metadata
+
+by combineing these two we get tabular view
+
+In case of athena, Data will be kept in S3
+
++ 
+
+Build schema on top of it to get tabular view
+
+we can query it like normal sql table
+
+we can query s3 data using sql style syntax.
+
+EMR - we create a cluster of machines
+
+for athena we do not have to create a cluster that is why it is called serverless.
+
+No infrastructure is required.
+
+In case of EMR we were paying based on nodes..
+
+for each node we have cost associated per hour.
+
+in athena, we will be charged based on amount of data scanned per query.
+
+In S3 we can store our data in csv, json, parquet, orc etc.
+
+whenever we have infrequent queries.. then we can go for athena.
+
+we can only focus on actual problem statement and we do not have to worry about managing the infrastructure since it is serverless.
+
+$5 per TB scanned.
+
+if we scan 100 MB -
+
+100/1024/1024*5 = $0.00047
+
+5 kb (atleast for 10MB will be charged)
+
+there are no charges for DDL.
+
+if the query fails we are not charged.
+
+what if we cancel the query? then we will be charged for the data which was already scanned.
+
+athena is query service tool in AWS.
+
+we can create databases
+
+we can create tables from 
+
+	s3 bucket data
+	Glue Crawler
+	
+lets say if we chose then we can give database name, table name, s3 location, type of file, bulk add column names, configure partitions.
+
+it will always going to be external table as we have the data in S3.
+
+avoid full scan by organizing the data (partitions) we scan less data and that will lead to less charges.
+
+and consider columnar file formats for better compression. - less data scan
+
+partition and column prunning
+
+where as csv - full scan as there wont be any compression.
+
+
+
+csv to parquet
+==============
+
+df = spark.read \
+		.format("csv") \
+		.option("inferSchema",True) \
+		.option("path","/path/file.csv") \
+		.load()
+
+df.write.partitionBy("subject").parquet("/path/")
+
+msck - to repair table partitions
+
+msck repair table schema.tablename
+
+Is there a automated way to infer the schema?
+
+Glue acts as metastore. (where the metadata is kept (glue catalog)
+
+Glue provides you a crawler as well which can crawl your data and infer the schema out of it.
+
+Glue is an ETL tool too.
+
+Crawler can be on S3, JDBC and dynamoDB.
+
+Crawler can be on demand or on schedule as well - best suited when we think our data/schema might change freqently
+
+Athena's defualt data source is GlueCatalog - we can query the data which is there is Glue catalog tables and databases
+
+Athena stores the query results in the S3. without s3 configured query will not run as athena does not know where to save the results of the query

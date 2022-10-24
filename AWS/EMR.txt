@@ -1,0 +1,230 @@
+EMR
+=====
+
+VM
+
+There will be big server (which holds lot of resources)
+
+128 GB RAM
+4 TB Hard disk
+32 cpu cores
+
+4 small machines
+
+32 gb ram
+1 tb hard disk
+8 cpu cores
+
+this machine is called as VM.
+
+in 1 big physical machine 4 smaller logical machines are running.
+
+that is why it is called a VM.
+
+on-premise
+===========
+
+this is very challenging process.
+
+Infra maintainance
+Infra deployement
+Infra monitoring
+
+3 imp vendors
+=============
+1.cloudera
+2.Hortonworks
+3.MapR
+
+1. Amazon AWS (EMR) 
+
+big data hadoop services fully managed by aws on cloud.
+
+2. Microsoft Azure (HD Insight)
+
+3. Google Cloud (DataProc)
+
+4. HDFS vs S3
+
+	s3 is distributed file system fully managed by AWS.
+
+	4 machines - VMs
+
+	each of these VMs has some RAM, cpu cores, storage
+
+	I store a 2 gb file on HDFS.
+
+
+	start cluster
+	spark code reads file from HDFS
+	do some processing 
+	and write result back to HDFS
+	terminate the cluster
+
+	your HDFS data will be gone or lost.
+
+	if we do not terminate the cluster we incurr huge bills for the cluster charges
+
+	the solution is S3.
+
+	take the data from S3
+
+	put to HDFS
+
+	do the processing in spark
+
+	put the output back to S3 and then shut down your cluster.
+
+	s3 storage is decoupled from our cluster.
+	
+5. there are 3 kinds of instances in amazon aws.
+
+	1. on-demand instances
+		procure, use and shutdown - pay hourly basis
+	2. spot instances
+		aws gives this on a heavy discounted price. upto 90% discount compared to on demand.
+		but aws can take it back whenever it wants by just giving a 2 min prior notification
+	3. reserved instances
+		we have to commit upfront that I will use this resource for a long time. and then aws gives some discounts as we commited for long time.
+		
+6. There are 3 kinds of nodes we can have in cluster
+
+	1. Master - Manages the cluster
+	2. Data Node - each cluster has one or more core nodes
+		It is the one hosts our HDFS data and also it is capable to run tasks
+	3. Task Node - These can only run tasks and no HDFS on it.
+		if our application is compute heavy then we can opt for few task nodes which can add more computing power to the cluster.
+		in this case spot instances are the best choice.
+		
+7. Transient vs long running cluster
+
+	Transient is the one which automatically terminates when all the steps are done. - called as step execution
+	
+	Long running cluster is the one where we have to manually terminate the cluster.
+
+In amazon S3 we need to create a bucket and upload file called file.txt
+
+val input = sc.textFile("s3n://bucketname/file.txt") - read file from S3
+
+create cluster
+
+security groups for master - click on master - inbound - edit - add rule - choose ssh - port as 22 - my ip or anywhere - give ip address
+
+ssh -i DB100.pem hadoop@ec2-13-232-140-185.ap-south-1.compute.amazonaws.com // ssh to master node
+
+here hadoop is the username
+
+
+spark-shell - for spark scala terminal
+
+:q to exit
+
+
+I want to bring the jar to master
+
+	1. first put to s3
+	2. then get from s3 to master node
+	
+aws s3 cp s3://bucketname/wordcount20.jar . // download file from s3 to master node current dir
+
+the history server should be configured on port 18080 and we should allow traffic.
+
+security groups for master - click on master - inbound - edit - add rule - give port as 18080 - my ip or anywhere
+
+spark-submit --class wordCount wordcount20.jar
+	
+ec2-13-232-140-185.ap-south-1.compute.amazonaws.com:18080 - put this in chrome to see spark history server
+
+Jobs - Stages - Storage - Environment - Executors // Spark UI
+
+fundamentals of big data
+========================
+
+1.Types of instances
+====================
+	
+	starts with m - general purpose
+	starts with c (c5.large) - compute optimized - no of cores will be more - ML purpose
+	starts with r (r5.large) - memory optimized - spark purpose
+	
+2. creating a VM
+================
+
+A VM which is empty + operating system/some softwares
+
+OS / some softwares - AMI
+
+AMI - Amazon machine image // can choose linux to be installed 
+
+3. Key Pair
+===========
+
+public and private key
+
+public is kept on the VM
+private key is the kept on local machine and we need to use this to connect to VM.
+
+public is kept in .ssh directory on the VM
+preivate key is nothing but a .pem file
+
+4. Elastic IP
+==============
+
+from outside world if we want to connect to AWS ec2 instance then we use public ips
+with in the aws if we want to connect to different ec2 instances then we use private ips
+
+private ips wont change untill we terminate the machine
+
+if we stop the VM and start then private ip will remain the same however public ip will change
+
+if public ip is changing everytime then we have to modify our ssh command to use the latest public ip while connecting.
+
+if we do not want any changes in terms of connecting to VM then elastic ip comes handy.
+
+elastic ip is the wrapper on public ip
+
+create elastic ip and associate your ec2 instance then we get elastic ip - use that to connect to VM instead of public ip
+
+elastic ip
+===========
+10.18.23.45
+
+public ip
+10.78.56.17
+
+after stop and restart
+
+public ip
+10.78.57.83
+
+
+Storages
+=========
+
+Instance store
+	refers to the storage which is tightly coupled with ec2
+	it is local to ec2 instance
+	when you terminate the machine then the data will be lost
+	
+S3 simle storage service
+	outside of cluster
+	can be accessed it from anywhere
+	decouples the data from cluster
+	
+	
+EBS
+	elastic block storage
+	network attached storage accessibale from ec2 instance using the mount.
+	when we terminate the cluster we have a option that whether this data should be deleted or not.
+
+
+AWS CLI
+=========
+to automate the things like VM creation, executing workload, starting cluster, terminating cluster,configuring the size
+we can do all these either with AWS CLI or boto3
+
+aws
+aws help
+
+
+
