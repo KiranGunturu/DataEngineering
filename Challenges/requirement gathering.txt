@@ -1,0 +1,92 @@
+requirements gathering
+=======================
+
+req : condition or capability that is required from us by  a stakeholder for a specific project
+
+condition:
+	I might mean contratual terms
+	obligations
+	compliance requirements
+	time frames
+	budgets or policies that we all should comply with.
+
+capability:
+	these could be features that our stakeholders need so something like
+	it must be blue or
+	it must be eight feet high
+	or our job should run at certain speed and these are few solutions that our solution needs to have.
+	
+1) understand the need
+
+]what is the outcome that you are expecting? 
+do I you have a specific number?
+can you put some numbers against that outcome?
+do we have all specifics?
+do we know how many people will be impacted by this.
+do we know why they want this?
+do we know what sort of performance improvement?
+
+2) constraints
+	Time
+	Money
+	resources
+	other
+	time versus resources
+	
+3) do I need know what I need to know?
+	
+	do I know the technology?
+	do I have enough data?
+	do I know whom to contact?
+	do I know what specific functionality?
+	any examples?
+	sample data
+	POC results
+	volume of work
+	volume of data
+	where is the data?
+	type of data?
+	capture meeting notes
+	update in the confluence
+	
+4) who or what can provide the info?
+	stakeholder?
+	vendor?
+	client?
+	internal teams?
+5) how will I collect the info?
+	interviews
+	workshops
+	meetings
+	research
+	reading documentation
+	brainstorimng sessions
+6) scheduling the time to get info
+
+no of users - manager - interview - monday at 9 am
+
+freqent challenge :
+
+in some cases ,stakeholders have hard time priotiuzig what they need especially when they have competing needs
+	typically they have priorities but they might not have order they wana go
+	prioritzation techniques:
+		100 doller techniques
+		======================
+		list out first 3 or 4 itesm that you want to do
+		if I give you 100$ now what would be the amount that you allocate to each of one and which one would you leave out.
+		
+		cost benefit analysis (quality function deployement)
+		====================
+		 if you do something what is the benefit
+		 if you dont do it what is the risk or loss
+		 combination of these two things often helps us to prioritize
+
+2 directors with diff opinion
+==============================
+
+one with deploying the code fast
+one with slowing down the process so they can evaluate more to avoid risk
+		
+	
+	
+dev teams, qa professionals and devops guys teams will have their own agenda - we will have balance out these things

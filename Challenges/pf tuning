@@ -19,8 +19,63 @@ To load huge data :
 	increase DTM buffer size
 	treat load type as bulk
 
+create index -PK
+sorted data
+partitioing
+window functions vs group by (prefer)
+prefer derived tables over corelated subqueries
+prefer union all over In clause
+forcing table join order - blocking operator
+prefer not exists over not in
+materialized views
 
-
+select fields instead of using select *
+avoid select distinct - select more fields to have the record become unique
+create join with inner join - not where clause
+filter unwanted data prior joining and grouping
+wild  cards
+	SELECT City FROM Customers
+    WHERE City LIKE ‘%Char%’
+	
+	SELECT City FROM Customers
+	WHERE City LIKE ‘Char%’
+use limit
+run our queries during off-peak hours
+add missing indexes
+	can be seen in the exe plan
+check for missing indexes
+	CREATE UNIQUE NONCLUSTERED INDEX IX ON Customer (MembershipCode)
+	WHERE MembershipCode IS NOT NULL;
+	
+	the index wont work for the below query
+	
+	SELECT
+	*
+	FROM Customer
+	WHERE MembershipCode = '258410';
+	
+	To get use of the index, you’ll need to optimize the query in the following way:
+	SELECT
+	*
+	FROM Customer
+	WHERE MembershipCode = '258410'
+	AND MembershipCode IS NOT NULL;
+	
+avoid using multiple OR in the filter predicate
+	SELECT
+	*
+	FROM USER
+	WHERE Name = @P
+	OR login = @P;
+	
+	efficient one
+	
+	SELECT * FROM USER
+	WHERE Name = @P
+	UNION
+	SELECT * FROM USER
+	WHERE login = @P;
+	
 STUFF:
 
 DECLARE @str VARCHAR(35) = 'ABCDEFGH'    
