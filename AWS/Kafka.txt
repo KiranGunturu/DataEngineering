@@ -1,0 +1,142 @@
+Apache Kafka
+============
+
+it is highly scalable and disributed platform for creating and processing streams in real-time.
+
+structured streaming
+====================
+we used to read the data from a socket and then we used to process using apache spark
+
+socket is nothing b\ut ip + port
+
+socket does not have any buffering capability
+
+if we have fast producer and a slow consumer then we will encounter data loss.
+
+both producer and consumer are tightly coupled. - both should be in sync
+
+Kafka will provide buffering capability
+
+if a producer is producing at a very high speed. the consumer can still consume at its own pace.
+
+using this we can get the producer and consumer decoupled
+
+1.Kafka helps to create real time streams.
+2.process streaming data (apache spark)
+
+kafka can create and process streams but we mainly use kafka to create streams and process using apache spark
+
+publisher-subscriber messaging system
+
+pub-sub system
+
+Broker - is nothing but a node/machine which is running a kafka software
+
+if there are 5 brokers then we call it as a 5 node kafka cluster
+
+producer can be -> twitter application
+a Kafka cluster with multiple brokers (nodes/machines)
+consumer can be -> spark streaming application
+
+Kafka session-2
+==================
+
+Data integration platform
+In the traditional messaging systems..
+if there is a producer which produces the data..
+if consumer consumes it then data is gone
+
+in case of kafka we can have one producer and multiple consumers
+
+the data is retained for 7 days by default
+
+producer writes to the topic
+consumer subscribes to the topic so it can pull whenever there is a new data in the topic
+
+1.Producer - Data Producer (Twitter)
+2.Consumer - Data Consumer (spark application)
+3.Broker - a node which is running kafka software
+4.Cluster - made of various brokers
+5.Topic - a unique name which holds perticular data ex:tagging data or claims data
+	if we keep this tagging data topic on a single machine then when the data grows over the time we may run out of storage
+6.Partitions - a topic can be divided into partitions and each partition can be stored on a different machine (makes sys scalable and disributed)
+	whenever we are creating a topic we need to define the number of partitions
+7.Partition offset - Inside each partition, the messages are stored in a seqence and we have a seqence id.
+if we want read perticular message, what details do we need?
+
+	topic name as we may have many topics inside kafka cluster
+	partition number as we may have many partitions inside each topic
+	offset
+	
+8.Consumer Groups - 
+
+1000's of billing counters all across the world. - 
+
+your role is to get all these generated invoices and dump them to a file system / data center
+
+producers are nothing but the billing counters
+
+these all will go to kafka cluster
+
+instead of putting more workload on one consumer , we create multiple consumers and call them as consumer groups
+
+number of consumers in a consumer group should be equal to the number of partitions inside the topic
+
+one partition cannot be handled by multiple consumers(if 2 consumers working on same partition then we dont know which consumer reads what and that can lead to dupes)
+ however a consumer can take multiple partitions.
+
+ex: 4 partitions and 2 consumers // each consumer can process 2 partitions
+
+Kafka session-3
+==================
+
+topic1 - p1, p2, p3
+
+B1 -P1
+
+B2 - p2
+
+B3 - p3
+
+what if nodes B3 goes down?
+
+we can set the replication factor
+
+B1 -P1,p2,p3
+
+B2 - p2,p3,p1
+
+B3 - p3,p2,p1
+
+scalability - partitions
+fault tolerance - replication factor
+
+3 ways to install kafka
+========================
+
+1.Open source - Apache Kafka
+2.commecial disribution - confluent.io
+3.fully managed service - confluent.io, aws (Kinesis)
+
+zookeeper already installed..
+
+helps to coordinate the various disributed services..
+
+many brokers
+
+kafa brokers will store shared information in zookeeper
+
+this is used to coordinate various brokers
+
+Kafka community is planning to get rid of zookeeper in coming versions
+
+
+
+
+
+
+
+
+
+
+
