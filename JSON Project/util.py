@@ -15,5 +15,6 @@ def get_spark_session(env, app_name):
             master('yarn'). \
             appName(app_name). \
             getOrCreate()
+        return spark
 
 
