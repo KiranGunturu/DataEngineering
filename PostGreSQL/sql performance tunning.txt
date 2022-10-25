@@ -1,0 +1,357 @@
+Query Optimization
+===================
+set statistics io, time on
+execution plan / cost / filters
+scan count
+logical reads - related to io
+physical reads
+lazy spool - bad / expensive operation
+	comes when there is a dup aggregation
+	lazy spool may come interms of recursive - then it is OK.
+statisticsparser.com - copy and paste the stats from query
+indexing
+partitioning
+bucketing
+CTEs
+
+
+
+
+expensive operations
+====================
+
+spooling - duplicate aggregation
+hashmatch - unsorted data
+keylookup - Missing data
+bad values
+	if we are joining the table which is already part of the view then it is bad
+	to solve this eiter alter the view or  create a new one
+sub query minimization
+row number vs offset & fetch (pagination) - offset & fetch are better
+SEEK - QUITE IS GENERALLY FASTER THAN SCAN (when there is an index)
+SCAN - when there is not an index it will go for full table scan.
+rank vs sub query
+power of over clause.
+
+
+Informatica
+python/pyspark
+oozie/hive
+aws
+
+Performance Tuning :
+
+	1.Having indexes on the tables going to lookup
+	2.in look up and soucrce tr take only required columns
+	3.pass sorted input to joiner and aggregator transformation
+	4.increase commit intervals 
+	5.drop if there are any constraints and reload them when data load is completed.
+	6. better to use mapplets and UDFs
+	7. tracing level to normal
+	
+To load huge data :
+	add session level partitioing
+	increase commit intervals
+	increase DTM buffer size
+	treat load type as bulk
+
+Informatica Performance Tuning
+================================
+
+Optimize the target
+	Optimizing flat file targets - writing to local target where Integration service is running
+	Dropping indexes and key constraints - use pre and post SQL / stored procedures
+	Increase database checkpoints
+	Using bulk loads - as it bypasses writing database log which speeds performance.
+	Using external loads - pipeline with multiple partitions. we can increase performance if we create the oracle target table with same number of
+							partitions you use for pipeline
+	Increasing database network packet size - allow larger packets of data to cross the network at one time.
+											configure in the listener.ora and tnsnames.ora
+
+optimize source
+	reduce number of transformations as much as possible
+	delete unnecessary links to minimize the data move
+	use number columns for group by and order by
+	sorted input to agg - decreases the use of agg cahces.
+	
+transformations
+	designate the master source as fewer dup key values / fewer source rows
+	perform joins in a database 
+	join sorted data
+	override the order by in look up transformation
+	indexing the look up table
+
+shared cache -
+	unnamed cache can be shared between transformations in the same mapping
+	named cache can be shared between transformations in same or different mapping
+persistant cache -
+	when we know our lookup table does not change during session runs - this can improve the performance as integration reads the data cache
+	from cache files instead building from database
+	
+	
+
+create index -PK
+sorted data
+partitioing
+window functions vs group by (prefer)
+prefer derived tables over corelated subqueries
+prefer union all over In clause
+forcing table join order - blocking operator
+prefer not exists over not in
+materialized views
+
+select fields instead of using select *
+avoid select distinct - select more fields to have the record become unique
+create join with inner join - not where clause
+filter unwanted data prior joining and grouping
+wild  cards
+	SELECT City FROM Customers
+    WHERE City LIKE ‘%Char%’
+	
+	SELECT City FROM Customers
+	WHERE City LIKE ‘Char%’
+use limit
+run our queries during off-peak hours
+add missing indexes
+	can be seen in the exe plan
+check for missing indexes
+	CREATE UNIQUE NONCLUSTERED INDEX IX ON Customer (MembershipCode)
+	WHERE MembershipCode IS NOT NULL;
+	
+	the index wont work for the below query
+	
+	SELECT
+	*
+	FROM Customer
+	WHERE MembershipCode = '258410';
+	
+	To get use of the index, you’ll need to optimize the query in the following way:
+	SELECT
+	*
+	FROM Customer
+	WHERE MembershipCode = '258410'
+	AND MembershipCode IS NOT NULL;
+avoid using multiple OR in the filter predicate
+	SELECT
+	*
+	FROM USER
+	WHERE Name = @P
+	OR login = @P;
+	
+	efficient one
+	
+	SELECT * FROM USER
+	WHERE Name = @P
+	UNION
+	SELECT * FROM USER
+	WHERE login = @P;
+	
+requirements gathering
+=======================
+
+req : condition or capability that is required from us by  a stakeholder for a specific project
+
+condition:
+	I might mean contratual terms
+	obligations
+	compliance requirements
+	time frames
+	budgets or policies that we all should comply with.
+
+capability:
+	these could be features that our stakeholders need so something like
+	it must be blue or
+	it must be eight feet high
+	or our job should run at certain speed and these are few solutions that our solution needs to have.
+	
+1) understand the need
+
+]what is the outcome that you are expecting? 
+do I you have a specific number?
+can you put some numbers against that outcome?
+do we have all specifics?
+do we know how many people will be impacted by this.
+do we know why they want this?
+do we know what sort of performance improvement?
+
+2) constraints
+	Time
+	Money
+	resources
+	other
+	time versus resources
+	
+3) do I need know what I need to know?
+	
+	do I know the technology?
+	do I have enough data?
+	do I know whom to contact?
+	do I know what specific functionality?
+	any examples?
+	sample data
+	POC results
+	volume of work
+	volume of data
+	where is the data?
+	type of data?
+	capture meeting notes
+	update in the confluence
+	
+4) who or what can provide the info?
+	stakeholder?
+	vendor?
+	client?
+	internal teams?
+5) how will I collect the info?
+	interviews
+	workshops
+	meetings
+	research
+	reading documentation
+	brainstorimng sessions
+6) scheduling the time to get info
+
+no of users - manager - interview - monday at 9 am
+
+freqent challenge :
+
+in some cases ,stakeholders have hard time priotiuzig what they need especially when they have competing needs
+	typically they have priorities but they might not have order they wana go
+	prioritzation techniques:
+		100 doller techniques
+		======================
+		list out first 3 or 4 itesm that you want to do
+		if I give you 100$ now what would be the amount that you allocate to each of one and which one would you leave out.
+		
+		cost benefit analysis (quality function deployement)
+		====================
+		 if you do something what is the benefit
+		 if you dont do it what is the risk or loss
+		 combination of these two things often helps us to prioritize
+
+2 directors with diff opinion
+==============================
+
+one with deploying the code fast
+one with slowing down the process so they can evaluate more to avoid risk
+		
+	
+	
+dev teams, qa professionals and devops guys teams will have their own agenda - we will have balance out these things
+
+
+	
+
+
+	
+
+
+
+STUFF:
+
+DECLARE @str VARCHAR(35) = 'ABCDEFGH'    
+SELECT @str, STUFF(@str,4,5,'_STUFF')    
+Output: ABC_STUFF
+
+REPLACE:
+
+DECLARE @str VARCHAR(35) = 'ABCDEFGH' 
+SELECT @str, REPLACE(@str,'DEFGH','_REPLACE')
+
+OUTPUT:ABC_REPLACE
+
+SUBSTRING:
+
+DECLARE @str VARCHAR(35) = 'ABCDEFGH' 
+SELECT @str, SUBSTRING(@str,1,3) 
+OUTPUT:ABC
+
+RANK():
+
+100	1
+200	2
+300	3
+400	4
+400	4
+500	6
+
+DENSE_RANK():
+
+100	1
+200	2
+300	3
+400	4
+400	4
+500	5
+
+
+unix :
+
+1.command to list all the directories:
+
+ls -lrt | grep "^1"
+
+2.read only file :
+
+touch filename.txt
+
+chmod 400 filename.txt
+
+3.which operating sys:
+
+"uname -a"
+
+4.how will you run a process in background?
+
+by using & or nohop
+
+5) how will you bring the job into foreground?
+
+fg jobid
+
+6) how do you know if remote host is live or not?
+
+telname or ping
+
+7) how do you see command line history ?
+
+history 
+
+8) how do you copy file from one host to another :
+
+scp or sftp
+
+9) how do you check how much space left in current drive ?
+
+df -h
+
+10) how do you find how many CPUs are there in your system and their details ?
+
+cat /proc/cpuinfo
+
+11) how to count word apperacne in a file ?
+
+grep -c "word" filename.txt
+
+12) how do you check if perticular process is listeing on a port or not?
+
+telnet hostname port
+
+13) how do you find if your system is a 32 or 64 bit?
+
+"uname -a"
+
+14) there is a file unit_test.txt which contain words Unix, how will you replace all Unix to UNIX?
+
+sed s/Unix/UNIX/g unit_test.txt
+
+15) you have a tab separated file which contains name, address and phone number, list down all phone number without their name and address/
+
+cut -f3 filename
+
+16) you have an IP address in your network how will you find hostname and vice versa?
+
+by using nslookup
+
+
+

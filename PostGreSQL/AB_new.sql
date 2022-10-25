@@ -528,6 +528,274 @@ from cte1
 inner join cte2 on cte1.rn >= cte2.rn and cte1.rn <= cte.next_rn-1
 
 
+multiple rows to single column with comma SEP
+===============================================
+input
+========
+ID	name
+1   emp1
+2   emp2
+3   emp3
+4   emp4
+5   emp5
+6   emp6
+7   emp7
+8   emp8
+
+output
+========
+1 emp1,2 emp2
+3 emp3,4 emp4
+5 emp5,6 emp6
+7 emp7,8 emp8
+
+with cte as (
+select CONCAT(id, ' ',name) as name,
+ntile(4) over(order by id) as buckets
+from emp_input
+)
+select string_agg(name,', ') as final_result
+from cte
+group by buckets
+order by 1
+
+exchange seats
+===============
+i/p
+====
+ID	Student
+1	Abbot
+2	Doris
+3	Emerson
+4	Green
+5	Jeames
+
+o/p
+====
+ID	Student
+1	Doris
+2	Abbot
+3	Green
+4	Emerson
+5	Jeames
+
+
+mySQL
+======
+with cte as (
+select *,
+lead(id) over(order by id) as next,
+lag(id) over(order by id) as prev
+from seats
+)
+select 
+case when ((id % 2 = 1) and next is not null) then next
+when (id % 2 = 0) then prev
+else id
+end as id, student
+from cte
+order by id
+
+
+Not boring Movies
+=================
+
+SELECT 
+    *
+from Cinema
+where mod(id,2)<>0  and description!='boring'
+order by rating desc;
+
+find customer referee
+=====================
+
+select 
+    name 
+from Customer
+where referee_id!=2 or referee_id is null
+
+Monthly merchant balance
+=========================
+cumulative sum of every day in a month and reset at every month
+with cte as(
+select 
+transaction_date::date as transaction_date,
+sum(case when type='withdrawal' then -1*amount else amount end) as amount
+from transactions
+group by transaction_date::date
+order by transaction_date::date
+)
+select 
+transaction_date,
+--amount,
+sum(amount) over(partition by extract(year from transaction_date, extract(month from transaction_date) order by transaction_date) as cum_sum
+from cte
+
+Actor and DIRECTOR
+====================
+
+select 
+    actor_id, 
+    director_id
+from ActorDirector
+group by actor_id, director_id
+having count(actor_id) >=3
+
+Reformat dep TABLE
+===================
+
+select
+id,
+sum(case when month='Jan' then revenue end) as Jan_Revenue,
+sum(case when month='Feb' then revenue end) as Feb_Revenue,
+sum(case when month='Mar' then revenue end) as Mar_Revenue,
+sum(case when month='Apr' then revenue end) as Apr_Revenue,
+sum(case when month='May' then revenue end) as May_Revenue,
+sum(case when month='Jun' then revenue end) as Jun_Revenue,
+sum(case when month='Jul' then revenue end) as Jul_Revenue,
+sum(case when month='Aug' then revenue end) as Aug_Revenue,
+sum(case when month='Sep' then revenue end) as Sep_Revenue,
+sum(case when month='Oct' then revenue end) as Oct_Revenue,
+sum(case when month='Nov' then revenue end) as Nov_Revenue,
+sum(case when month='Dec' then revenue end) as Dec_Revenue
+from 
+Department
+group by id
+
+Article Views
+==============
+
+select distinct author_id as id
+from Views
+where author_id = viewer_id
+order by id 
+
+customers who visited but did not make any transactions
+=============================================================
+
+select 
+    v.customer_id,
+    count(v.customer_id) as count_no_trans
+    from 
+    Visits v
+    left join Transactions T
+    on v.visit_id = T.visit_id
+    where T.visit_id is null
+    group by v.customer_id
+    order by count_no_trans desc
+
+Game play Analysis
+===================
+1) find the players who logged in for the first time
+
+select player_id, min(event_date) as first_login
+from Activity
+group by player_id
+
+2) find the device_ids when they logged in for the TIME
+
+with cte as (
+select 
+device_id,
+rank() over(partition by player_id order by event_date) as rn
+from Activity
+)
+select device_id
+from cte
+where rn=1
+
+3) cumulative sum of games played by each player
+
+select 
+*,
+sum(games_played) over(partition by player_id order by event_date) as cum_sum
+from Activity
+
+4) players who logged in for the first time and again the next DAY
+
+with min_date as (
+select 
+player_id,
+min(event_date) as first_logged
+from
+activity
+group by player_id
+)
+select
+a.*,first_logged
+from activity a
+inner join min_date md on a.player_id = md.player_id
+where datediff(day,first_logged,event_date)=1
+
+calculate special bonus
+========================
+
+select 
+    employee_id,
+    case when employee_id%2=1 and name not like 'M%' then salary else 0 end as bonus
+from Employees
+order by 1
+
+patients with condition
+========================
+
+
+select
+	patient_id,
+	patient_name,
+	conditions
+from Patients
+where conditions like 'DIAB1%' OR conditions LIKE '% DIAB1%'
+
+same dept and same salary employess
+====================================
+
+with cte as (
+select 
+	dept_id
+	salary
+from EMP
+group by dept_id,salary
+having count(1)>1
+)
+select *
+from emp
+inner join cte on cte.dept_id = emp.dept_id and cte.salary = emp.salary
+
+third highest salary in each dept and if there are less than 3 employess then return emp details with lowest salary in that emp
+================================================================================================================================
+
+with cte as (
+select 
+	*,
+	DENSE_RANK() over(partition by dept_id order by salary desc) as rn,
+	count(1) over(partition by dept_id) as dept_count
+from 
+EMP 
+)
+select *from cte where rn=3 or (dept_count <3 and rn=dept_count)
+
+query to return second most recent activity per user. if there is only activity per user then return the same
+===============================================================================================================
+with cte as (
+select 
+	*,
+	row_number() over(partition by username order by startdate) as rn,
+	count(1) over(partition by username order by startdate rows between unbounded preceding and unbounded following) as total_count
+	from user_activity
+)
+select *from cte
+where rn = case when total_count=1 then 1 else total_count -1 end;
+
+find the max amount for each salesperson_id
+==============================================
+
+select 
+	a.order_number,a.order_date,a.cust_id,a.salesperson_id.a.amount
+from orders a
+left join orders b on a.salesperson_id = b.salesperson_id
+group by a.order_number,a.order_date,a.cust_id,a.salesperson_id.a.amount
+having a.amount >= max(b.amount)
 
 
 
