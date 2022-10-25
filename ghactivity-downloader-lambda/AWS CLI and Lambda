@@ -99,6 +99,32 @@ FILE_PREFIX = landing/ghactivity
 BASELINE_FILE = 2022-10-20-0.json.gz
 BOOKMARK_FILE = bookmark
 
+JSON to parquet project
+pip install pyspark==2.4.\* // to install latest version in 2.4 series
+we should not keep app.py as part of zip file as we should pass that directly to spark-submit
+
+connect to gateway node from pycharm
+
+in the terminak --
+
+ssh training@gw01.com
+mkdir itvghactivity
+exit()
+
+zip -r itv-githubactivity.zip process.py read.py util.py write.py
+
+scp itv-githubactivity.zip training@gw01.com:~/itvghactivity //it will copy the file from local to gw node
+
+scp app.py training@gw01.com:~/itvghactivity //it will copy the app.py file to the gw node
+
+
+
+
+
+
+
+
+
 
 
 
