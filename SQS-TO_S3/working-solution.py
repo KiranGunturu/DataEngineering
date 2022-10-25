@@ -5,8 +5,8 @@ import time
 import xml.etree.ElementTree as ET
 import xml.dom.minidom as dom
 
-ET.register_namespace("", 'http://www.nissan.com/pega/ro');
-baseXml = '<?xml version="1.0" encoding="UTF-8"?><PegaRepairOrder xmlns="http://www.nissan.com/pega/ro"></PegaRepairOrder>'
+ET.register_namespace("", 'http://www.dealer.com/pega/ro');
+baseXml = '<?xml version="1.0" encoding="UTF-8"?><PegaRepairOrder xmlns="http://www.dealer.com/pega/ro"></PegaRepairOrder>'
 
 
 collectedmessages = []
@@ -40,7 +40,7 @@ def deleteHandle(receipt_handle, sqs, queue_url):
 def stripXML(str):
   if(len(str) > 0):
     res = str.replace('<?xml version="1.0" encoding="UTF-8"?>','')
-    res = res.replace(' xmlns="http://www.nissan.com/pega/ro"','')
+    res = res.replace(' xmlns="http://www.test.com/pega/ro"','')
     return res
   else: 
     return str
@@ -51,7 +51,7 @@ def extractRepairOrder(str):
   if(len(str) > 0):
     rt = ET.fromstring(str)
     print(rt)
-    ro = rt.find('./{http://www.nissan.com/pega/ro}RepairOrder')
+    ro = rt.find('./{http://www.test.com/pega/ro}RepairOrder')
     print(ro)
     return ro;
   else: 
