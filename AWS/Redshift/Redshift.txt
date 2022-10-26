@@ -1,0 +1,250 @@
+AWS Redshift
+=============
+
+Database Vs Datawarehouse Vs Data Lake
+======================================
+
+Database - 
+OLTP
+Transactional Data
+Structured Data
+Most Recent Data - day to day data (Probably for few months)
+Ex: Online banking transaction
+Oracle,MySQL
+schema on write - we first define the schema and then write
+cost to store the data in database is high
+the moment we run complex queries on our database with an intent to do some analysis then day to day transactions will become slow.
+
+
+Datawarehouse-
+OLAP
+Analytical Data
+we deal with lot of historical data
+we take the data from databases and migrate it to datawarehouse to do analytical processing.
+we get the data from multiple sources.
+structured data
+schema on write.
+we cannot store huge data in database as the cost is high
+Ex: Teradata
+ETL Approach - lets say we want to store log file here so we should must follow ETL Approach to transform the data and load. there is no other way as it as a
+log file - this reduces our flexibilty
+
+
+Data Lake-
+To get insights from huge amount of data
+the data is present in its raw form - can be structured or unstructured
+log file - we can directly have this file in raw form in data lake
+ELT process
+ex: HDFS, S3.
+cost effective - as it uses cheap storage
+schema on read - will first load then impose the structure
+it gives us enough flexibilty
+
+Redshift
+=========
+it is a daata warehouse on the cloud
+the charges starts from 25 cents per hour but clean up the resources once done to avoid cost.
+
+why redshift?
+
+Disadvantages of using traditional datawarehouse - on premise.
+==============================================================
+
+Initial set up and maintainance cost, resource intensive
+scaling is very difficult as it is all manual deployement
+Possibility of loss of information due to network issue
+data security
+
+redshift will help us to solve these issues
+
+Redshift - It is a fully managed, petabyte-scala, fast & scalable datawarehouse in the cloud
+
+1GB = 1024MB
+1TB = 1024GB
+1PB = 1024TB
+
+redshift is said to be 10 times faster than traditional DWH.
+
+redshift architecture
+======================
+
+master and slave architecture
+
+client application - leader node - and multiple compute nodes
+
+for a one node cluster - the same node acts both as leader node and compute node
+
+
+client application -
+
+amazon redshift integrates with various data loading and ETL tools, bi tools, data mining and variuos analytical tools
+
+Cluster - A cluster is composed of one or more compute nodes
+
+client applications interact directly with the leader nodes
+
+the compute nodes are transparent to the external applications
+
+Leader node - bridge between client application and compute node
+
+Leader node will parse the query coming from client application and develop the execution plan
+
+compute node - compute nodes executes the portion of compiled code assigned to it.
+
+each compute nodes has its own dedicated CPU, memory and storage based on type of node.
+
+there are basically 2 type of compute nodes -
+
+Dense storage Node  these are storage optimized and used to handle huge amount of data workloads. they use hard disk drive(HDD) type storage.
+
+Dense compute nodes - these are compute optimized and used to handle high performance intensive workloads. to acheive this they use SSD storage.
+
+Node slices
+==========
+
+compute node is partitioned into slices. each slice holds its own memory, CPU and storage alloted.
+
+Redshift Benefits
+==================
+
+faster performance - 10 times faster performance than traditional DWH
+
+Machine Learning
+Massively Parallel Processing
+Compute optimized hardware
+columnar storage
+compression techniques
+query optimizer
+resultset caching
+easy to set up, deploy and manage
+query datalake without any data movement called as redshift spectrum
+quiet secure
+
+Redshift Spectrum
+====================
+
+it enables us to query the data directly that is sitting on s3 (datalake)
+
+we can query exabytes of unstructured data without loading to redshift
+
+1EB = 1024 PB
+
+we can even join s3 data with redshift
+
+redshift durability
+====================
+
+3 copies
+
+replication within the cluster
+one is backuped to s3
+
+the failed drives/nodes are automatically replaced.
+
+redshift data distributed system
+================================
+we have 4 different modes
+
+Auto - redshift figures it out based on size of the data and various other parameters
+Even - rows are distributed across slices in the round robin fashion
+Keys - same as bucketing in hive
+
+employee data - empid.
+4 slices
+slice0
+slice1
+slice2
+slice3
+
+All - entire table is copied on all the nodes. recommended when we have smaller data sets ex: lookup / broadcast
+
+
+
+redshift sort keys
+==================
+
+rows are stored in disk in sorted order based on column that you designate as the sort key.
+
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+
+it works like an index
+quick filtering, seaching, Joins
+SMB join
+join column should be bucketed
+we should be having it as sort key
+
+
+Data from S3 to redshift
+=========================
+
+Copy command will help us to load the data from S3 to redshift
+
+ex: users table
+
+copy users from 's3://bucketname/foldername/allusers_pipe.txt' credentials 'aws_iam_role=arn:iam:77324524324:role/IAMROLENAME' 
+delimiter '|' region 'us-east-2'
+
+Unload command will be used to offload the data from redshift to S3
+
+schema of table
+=================
+select *
+from pg_table_def
+where tablename='users';
+
+
+Redshift Spectrum
+==================
+
+Query the data directly on S3
+
+1) create a folder in s3
+
+2) creare schema 
+
+create external schema spectrum_schema
+from data catalog
+database 'spectrumdb'
+iam_role 'arn:iam:77324524324:role/IAMROLENAME'
+create external database if not exists;
+
+3) create external table and point to the s3 location created above
+
+Setup SQL workbench
+===================
+
+download sql workbench
+
+download necessary Jars
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
