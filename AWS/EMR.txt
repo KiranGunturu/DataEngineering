@@ -1,6 +1,12 @@
 EMR
 =====
 
+version - emr-6.4.0
+spark 3.1.2
+hadoop distribution - amazon 3.2.1
+python 3.7
+
+
 VM
 
 There will be big server (which holds lot of resources)
@@ -226,5 +232,128 @@ we can do all these either with AWS CLI or boto3
 aws
 aws help
 
+aws s3 mb s3://itv-github-emr --region us-east-1 //to create bucket
+aws s3 ls|grep github
+aws s3 ls itvgithub-emr --recursive
+wget https://data.gharchive.org.2021-01-13-{0..23}.json.gz
+aws s3 \
+	cp . s3://itv-github-emr/prod/landing/ghactivity/ \
+	--exclude "*" \
+	--include "2021-01-13*" \
+	--recursive //it will create if target folders are not exists in s3 bucket
+aws s3 ls s3://itv-github-emr/prod/landing/ghactivity/
 
+
+zip -r itv-githubactivity.zip process.py read.py util.py write.py
+
+scp -i ~/.ssh/creds.pem itv-githubactivity.zip ec2-user@ec2-54-197-15-11.compute-1.amazonaws.com~/itvghactivity //it will copy the file from local to itvghactivity folder on master emr node
+
+
+scp -i ~/.ssh/creds.pem app.py ec2-user@ec2-54-197-15-11.compute-1.amazonaws.com~/itvghactivity //it will copy the app.py file to the itvghactivity folder on master emr node
+
+before entering into pyspark terminal on emr we have to make sure the user we connect to emr has user space (permissions to launch the applications)
+
+try entering into pyspark terminal on emr and see if can go through if not check users
+
+hdfs dfs -ls /user
+
+this should show the user by which we connected to the emr
+
+sudo -u hdfs hdfs dfs -mkdir /user/ec2-user
+now we should make sure owner of folder ec2-user is the ec2-owner itself not the hdfs
+hdfs dfs -ls /user
+sudo -u hdfs hdfs dfs -chown -R ec2-user:ec2-user /user/ec2-user
+hdfs dfs -ls /user
+now we can lauch pyspark without any issues.
+
+to submit a spark job on emr client mode
+========================================
+export ENVIRON=PROD
+export SRC_DIR=s3://itv-github-emr/prod/landing/ghactivity/
+export SRC_FILE_FORMAT=json
+export TGT_DIR=s3://itv-github-emr/prod/raw/ghactivity/
+export TGT_FILE_FORMAT=parquet
+env // to review all environment variables on emr master node
+export SRC_FILE_PATTERN=2021=01-13
+histroy|grep export //to review the environemnts which we set with export command
+
+spark-submit \
+	--master yarn \
+	--py-files itv-githubactivity.zip \
+	app.py
+	
+now we can open the jupyter lab under EMR console
+
+choose kernal as pyspark
+spark /to see the spark session
+df = spark.\
+	read.\
+	parquet('s3://itv-github-emr/prod/raw/ghactivity/')
+
+
+we can choose auto terminate after certain time.
+
+how do we connect to the master node of EMR
+==========================================
+
+ssh -i ~/.ssh/creds.pem ec2-user@ec2-54-197-15-11.compute-1.amazonaws.com
+
+ec2-54-197-15-11.compute-1.amazonaws.com - public DNS and address of master node
+
+spark-submit --help
+
+to submit a spark job on emr cluster mode
+========================================
+
+spark-submit \
+	--master yarn \
+	--deploy-mode cluster \
+	--conf "spark.yarn.appMasterEnv.ENVIRON=PROD" \
+	--conf "spark.yarn.appMasterEnv.SRC_DIR=s3://itv-github-emr/prod/landing/ghactivity/" \
+	--conf "spark.yarn.appMasterEnv.SRC_FILE_FORMAT=json" \
+	--conf "spark.yarn.appMasterEnv.TGT_DIR=s3://itv-github-emr/prod/raw/ghactivity/" \
+	--conf "spark.yarn.appMasterEnv.TGT_FILE_FORMAT=parquet" \
+	--conf "spark.yarn.appMasterEnv.SRC_FILE_PATTERN=2021=01-13" \
+	--py-files s3://itvgithub/itv-githubactivity.zip \
+	s3://itvgithub/app.py
+
+step execution in already running cluster with client mode
+=============================================================
+under emr console
+add steps
+step as spark or steaming application
+we can give name
+deploy mode as client
+provide spark-submit options as bootstrapping action (keep all export commands in a file in s3 and pass that file) so when the cluster is running
+	all those will be added
+application location can be given as local or also s3 path(keep zip and app.py files under same bucket or folder)
+pass if any args needed
+fail on action can be continue or terminate the cluster or cancel and wait
+
+
+
+step execution in already running cluster with cluster mode
+=============================================================
+under emr console
+add steps
+step as spark or steaming application
+we can give name
+deploy mode as cluster
+provide spark-submit options as below
+	--conf "spark.yarn.appMasterEnv.ENVIRON=PROD"
+	--conf "spark.yarn.appMasterEnv.SRC_DIR=s3://itv-github-emr/prod/landing/ghactivity/"
+	--conf "spark.yarn.appMasterEnv.SRC_FILE_FORMAT=json"
+	--conf "spark.yarn.appMasterEnv.TGT_DIR=s3://itv-github-emr/prod/raw/ghactivity/"
+	--conf "spark.yarn.appMasterEnv.TGT_FILE_FORMAT=parquet"
+	--conf "spark.yarn.appMasterEnv.SRC_FILE_PATTERN=2021=01-13"
+	--py-files s3://itvgithub/itv-githubactivity.zip
+application location can be given  s3 path(keep app.py and itv-githubactivity.zip files under same bucket or folder)
+pass if any args needed
+fail on action can be continue - it will go to the next step if any
+					or terminate the cluster - cluster will be terminated
+					or cancel and wait - it will just wait where it failed
+
+once all the steps are completed, cluster will be terminated and we can't validate the data using jupyter unless we provision the cluster again
+
+for this we can create an external table on top of s3 data and can go for athena to validate the same.
 
