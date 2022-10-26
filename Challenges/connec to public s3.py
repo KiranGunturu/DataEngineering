@@ -1,11 +1,8 @@
-import requests
-import boto3
-from botocore.handlers import disable_signing
-
-s3 = boto3.client('s3')
-print(s3)
-s3=boto3.resource('s3')
-s3.meta.client.meta.events.register('choose-signer.s3.*', disable_signing)
-bucketname=s3.Bucket('coderbytechallengesandbox')
-for i in bucketname.objects.filter(Prefix='__cb__'):
-    print(i.key)
+def list_s3_files_using_client():
+    
+    s3_client = boto3.client("s3")
+    bucket_name = "testbucket-frompython-2"
+    response = s3_client.list_objects_v2(Bucket=bucket_name)
+    files = response.get("Contents")
+    for file in files:
+        print(f"file_name: {file['Key']}, size: {file['Size']}")
