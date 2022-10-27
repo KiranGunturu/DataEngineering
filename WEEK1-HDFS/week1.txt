@@ -33,8 +33,8 @@ HDFS
 	Data node
 	heart beat
 	Name node
-	data node failure
-		replication factor
+	data node failure - failure to send heartbeats to names for 30 seconds(every 3 secs)
+		handled by replication factor
 	name node failure
 		fsimage and edit logs are sent to shared folder where secondary name have access to.
 		checkpointing for 30 secs
@@ -133,7 +133,13 @@ only batch processing
 high latency - end up reading complete block of data
 
 
+few important config files in hdfs
+===================================
 
+HDFS-SITE.XML
+CORE-SITE.XML
+MAPRED-SITE.XML
+YARN-SITE.XML
 
 
 
