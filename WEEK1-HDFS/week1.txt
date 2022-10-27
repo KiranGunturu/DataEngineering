@@ -40,6 +40,7 @@ HDFS
 		checkpointing for 30 secs
 	rack awareness - group of data nodes sitting in different geographical regios
 		one block will be stored in one region (rack) and another 2 copies of same block will be stored in another region(rack)
+		to minimize the network bandwidth and maximize the redundancy - balanced approach
 	black reporting - data nodes will send block information to name node at perticular time.
 	
 
@@ -111,6 +112,27 @@ hdfs dfs -du -s -h /projects/qvoice - sum up above
 27.0 M  81.0 M  /projects/qvoice
 hdfs dfs -Ddfs.replication=5 -put file1.txt /hdfspath/ - dynamically change replication factor for specific file.
 hdfs fsck /hdfspath/file.txt - to know how many blocks this file has and replication factor and ip addresses of data nodes where all these individual blocks kept.
+
+
+pros of hadoop
+===============
+cost
+scalability
+flexibility
+speed
+fault tolerance
+high throughput
+minimum network traffic
+
+cons of hadoop
+==============
+problem with small files
+Vulnerability - hadoop written in java which makes it more insecure as it can be easily exploited by any of the cyber criminal
+lack of security - hadoop uses kerberos for security feature which is not easy to manage. storage and network encryption are missing in kerberos which is more concern
+only batch processing
+high latency - end up reading complete block of data
+
+
 
 
 
