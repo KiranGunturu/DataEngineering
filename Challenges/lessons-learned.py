@@ -250,3 +250,19 @@ What happens num cores is > 5 = Bottleneck, linear processing like FIFO
 
 The above 3 cases of repartitioning can be put into IF-ELSEIF-ELSE statement according to parallelism required directly proportional to volume of data.
 
+sorting
+=========
+
+By changing the sort order of one of my parquet tables today, I was able to reduce its size from 35 GBs to 1 GB! Since there's 365 partitions of this data. 
+It goes from being 12.2 TBs of data to 0.3 TBs.
+
+Remember when sorting your Parquet data that you should start with lowest cardinality first, then higher cardinalities.
+
+Say you have a dataset with schema:
+- device_operating_system (values like iOS, Android, Windows)
+- country (~250 distinct values)
+- user_id (millions of distinct values)
+
+If you sort by device_operating_system first then country then user_id, you'll achieve much better compression than if you sorted country, device_operating_system, then user_id.
+
+The closer together your low cardinality dimensions are, the better job parquet does at shrinking its size!
