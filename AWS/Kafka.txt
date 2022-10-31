@@ -130,6 +130,227 @@ this is used to coordinate various brokers
 
 Kafka community is planning to get rid of zookeeper in coming versions
 
+2 pre-requisities
+=================
+
+1.Java should be already installed
+2.zookeeper should already running
+
+In Kafka folder inside bin we have the runnable scripts
+
+config folder has configuration files which needs to be passed to the runnable scripts
+in cloudera we have Java 1.7 but we need java 1.8
+cd kafka_2.12-2.6.0
+cd bin
+./kafka-server-start.sh ../config/server.properties //it will start the kafka one node cluster
+Unsupported major.minor version 52.0 - java version problem.
+
+Kafka-session-4
+================
+
+how to create a topic
+
+./kafka-topics.sh --create --topic dbsro_tagging --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
+
+how to list down the topics 
+
+./kafka-topics.sh --list --bootstrap-server localhost:9092
+
+command line producer for producing the data
+
+./kafka-console-producer.sh --broker-list localhost:9092 --topic dbsro_tagging
+
+it will allow us to enter the data and that will be sent to dbsro_tagging topic
+
+command line consumer to consumer
+
+./kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic dbsro_tagging --from-beginning
+
+here we can see the data coming from the producer
+
+where is the data gets buffered
+===============================
+
+cd /tmp
+cd kafka-logs
+ls
+here we will see the topic names and inside will see the data
+
+Kafka-session-5
+================
+
+in a production scenario
+=========================
+
+3 brokers
+
+machine1 - broker1
+broker.id=0
+ip1:9092
+/tmp/kafka-logs //where data will be present
+
+machine2 - broker2
+broker.id=1
+ip2:9092
+/tmp/kafka-logs //where data will be present
+
+machine3 - broker3
+broker.id=2
+ip3:9092
+/tmp/kafka-logs //where data will be present
+
+how to create a multi-node kafka cluster on local machine
+===========================================================
+
+3 brokers
+
+server.properties
+machine1 - broker1
+broker.id=0
+ip1:9092
+/tmp/kafka-logs //where data will be present
+
+server1.properties
+machine1 - broker1
+broker.id=1
+ip1:9093
+/tmp/kafka-logs1 //where data will be present
+
+server2.properties
+machine1 - broker1
+broker.id=3
+ip1:9094
+/tmp/kafka-logs2 //where data will be present
+
+copy server.properties and make different copies and change the broker ids, log dirs and listeners
+
+
+ideally kafka broker run on port 9092
+
+each broker should have a different IP
+
+if we want to create a 3 node kafka cluster we will have to assign the different port number as IP will remains the same (3 brokers on local machine)
+
+open the server.properties
+broker.id=0
+listeners=PLAINTEXT://:9092
+log.dirs=/tmp/kafka-logs
+
+now start the 3 nodes
+
+./kafka-server-start.sh ../config/server.properties //starts broker1
+./kafka-server-start.sh ../config/server1.properties //starts broker2
+./kafka-server-start.sh ../config/server2.properties //starts broker3
+
+create a new topic with three partitions
+
+./kafka-topics.sh --create --topic dbsro_tagging --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1
+
+dbsro_tagging with 3 partitions
+
+we have 3 brokers
+dbsro_tagging-0
+dbsro_tagging-1
+dbsro_tagging-2
+
+this means each broker is holding one partition
+
+
+command line producer for producing the data
+
+./kafka-console-producer.sh --broker-list localhost:9092 --topic dbsro_tagging
+
+enter the data here
+
+command line consumer to consumer
+
+./kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic dbsro_tagging --from-beginning
+
+
+Kafka-session-6
+================
+
+3 brokers
+
+we created a topic with partitions
+
+lets create a consumer group
+
+group of consumer to make it more scalable process
+
+create a new topic - customers
+
+3 partitions
+
+replication factor 1
+
+./kafka-topics.sh --create --topic customers --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1
+
+
+
+cat customers.csv | wc -l //12434
+
+./kafka-console-producer.sh --broker-list localhost:9092 --topic customers < ../../../Desktop/customers.csv
+
+./kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic customers --from beginning --group customer-group
+
+this one processed 8432 messages
+
+./kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic customers --from-beginning --group customer-group
+
+this one processed 4002 messages
+
+here we have two consumers and both are reading from same producer topic and good thing is that they both dont read same data.
+
+this is how we make use of consumer groups to scale the process
+
+
+/tmp
+
+machine		folder		partition	log file which will have actual data stored			no of msgs stored
+======		========	=========   ==========================================			==================
+broker0 - kafka-logs  customer2  	0000000.log											4002(value of lastoffset in the .log file)
+broker1 - kafka-logs1 customer1  	0000000.log											4004(value of lastoffset in the .log file)
+broker2 - kafka-logs2 customer0  	0000000.log											4428(value of lastoffset in the .log file)
+
+this shows one consumer has read from 2 different partitions(customer1,customer0) and other one has read from one partition(customer2)
+
+and its not possible that two consumers can take the data from single partition
+
+we should ideally have no of consumers is equal to no of partitions as two consumers are not allowed on single partition
+
+Kafka-session-7
+================
+3 partitions and replication factor of 3
+
+Kafka storage architecutre
+
+./kafka-topics.sh --create --topic customers_new --bootstrap-server localhost:9092 --partitions 3 --replication-factor 3
+
+./kafka-console-producer.sh --broker-list localhost:9092 --topic customers_new < ../../../Desktop/customers.csv
+
+cd /tmp
+
+cd kafka-logs
+
+ls
+here we will see three partitions created 
+customers_new0
+customers_new1
+customers_new2
+
+1 GB or 1 week of data (whicever is smaller)
+
+this means big log file is divided into segments
+
+Topic --> log files --> partitions --> replicated --> segments
+
+
+
+
+
+
+
 
 
 
