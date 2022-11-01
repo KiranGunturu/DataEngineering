@@ -102,3 +102,75 @@ Crawler can be on demand or on schedule as well - best suited when we think our 
 Athena's defualt data source is GlueCatalog - we can query the data which is there is Glue catalog tables and databases
 
 Athena stores the query results in the S3. without s3 configured query will not run as athena does not know where to save the results of the query
+
+import boto3
+import os
+os.environ.setdefault('AWS_DEFAULT_REGION','us-east-1')
+athena_client = boto3.client('athena')
+athena_client.list_work_groups? - to see the help
+athena_client.list_work_groups()
+databases=athena_client.list_databases(
+			CatalogName='Data source name'
+			)
+type(databases) //Dict
+type(databases['DatabaseList']) //list
+databases['DatabaseList']
+[database['Name'] for database in databases['DatabaseList']] //get list of database names
+tables=athena_client.list_table_metadata(
+				CatalogName='data source name',
+				DatabaseName='retail_db'
+				)
+
+type(tables) //dict
+tables['TableMetadataList']
+
+[table['Name'] for table in tables['TableMetadataList']] //get list of tables
+
+table_metadata=athena_client.get_Table_metadata(
+				CatalogName='data source name',
+				DatabaseName='retail_db',
+				TableName='orders'
+				)
+table_metadata['TableMetadata']['TableType'] //ex: external_Table
+
+table_metadata['TableMetadata']['Columns'] //list of columns with datatypes
+
+table_metadata['TableMetadata']['Parameters']['location'] //table location
+
+[table['Parameters']['location'] for table in tables['TableMetadataList']] //all tables location
+
+run queries
+============
+
+athena_client.get_work_group(
+			WorkGroup='primary'
+			) //to check default query results saving location
+			
+query_execution=athena_client.start_query_execution(
+			QueryString='select count(*) from myretail.orders') //it will give us the query execution id
+
+
+athena_client.get_query_execution(QueryExecutionId=query_execution[QueryExecutionId])
+
+athena_client.get_Table_metadata(
+				CatalogName='data source name',
+				DatabaseName='retail_db',
+				TableName='orders'
+				)
+
+query_str= """
+	select order_Status,count(*) as order_count
+	from myretail.orders
+	group by order_Status
+	)
+	"""
+query_execution = athena_client.start_query_execution(
+				QueryString=query_str
+				)
+				
+athena_client.get_query_execution(QueryExecutionId=query_execution[QueryExecutionId]) //to check if succeeded or any errors
+
+query_results=athena_client.get_query_results(QueryExecutionId=query_execution[QueryExecutionId]) //to get query results
+
+query_results['ResultSet']['Rows'] //to see actual data
+
