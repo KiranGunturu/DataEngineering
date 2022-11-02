@@ -90,3 +90,34 @@ one with slowing down the process so they can evaluate more to avoid risk
 	
 	
 dev teams, qa professionals and devops guys teams will have their own agenda - we will have balance out these things
+
+
+1) Identify end users
+
+	1. Data Analysts / Scientists
+	2.Business Users
+	3.Software Engineers
+	4.External Clients
+2) Help end users define the requirements
+
+Assume the end users don't know everything they want or even that they will clearly define it to you.
+
+you can't get 100% of the requirements right the first time.
+
+	2.1 Business Impact: how does having the data impact the business? what is the measurable improvement in the bottom line?
+	2.2 Semantic Understanding: what does the data represent? what business process generates this data?
+		knowing this will help you model the data and understand its relation to other tables in your warehouse
+	2.3 Data source: where does the data generate?(an application db? external sendor via sftp/cloud store dumps, API data pull, manual upload etc)
+	2.4 Freqency of data pipeline: how fresh does the data need to be? (minutes, hourly, weekly?
+		is there a business not allowing higher freqency?
+	2.5 Historical data: does historical data need to be stored?
+	2.6 Data caveats: does the data have any caveats?
+		effecting size,data skew, inability to join or data unavailbility
+		are there any known issues with upstream data sources such as late arriving data or missing data?
+	2.7 Access Pattern: how will the end user access the data? Is Access via SQL, Dashboard tools, APIs or cloud storage?
+		In case of SQL or dashboard access, what are the commonly used filter columns(eg: date, some business entity?
+	2.8 what is the acceptable latency?
+		batch , near real time or real time streaming
+	2.9 business rules check: what data quality metrics end user care about?
+	2.10 Data output requirements: what is the data output schema? (column names, API field names, cloud storage file name/size, etc)
+
