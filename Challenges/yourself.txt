@@ -1,0 +1,236 @@
+Good Morning
+
+my self:
+=========
+
+Thank you for the oppurtinity to introduce myself and especially for your time today.
+
+My name is Kiran kumar gunturu and me , my wife and my 2 yr old daughter live in franklin tn.
+
+awared as Nashville consultant of Quarter - from JDC group.
+
+very much excited about our new house being built in charlotte and plans to move there in Nov this year.
+
+and I am originally from southern part of india which is Hyderabad.
+
+I am AWS and snowflake certified solutions architect curretnly working as Senior Data engineer at Nissan and I guide and oversee few of my colleagues working from india offshore.
+
+we are of a team called TCS - Total customer satisfaction responsible for data managerment and analytics.
+
+what do I do daily:
+====================
+
+if our architecure is not cost efficient, it will never hit production.
+
+- Resonsilbe for design, development of new data pipelines to support data ingestion to several sinks.
+- move data between different systems
+- manage data warehouse
+- schedule, execute and monitor data pipelines
+- serve data to end users
+- working with data scientis to understand their data needs and strategy
+- deploy ML models to production
+- make enhancements to existing pipelines as and when needed.
+- Monitoring performance of existing pipelines and making sure that they are meeting SLAs
+- New coding efforts
+- Testing
+- Documentation
+- Code reviews / coding and platform standards.
+- meetings
+
+	few fundamental questions that I ask my self prior designing any data pipeline
+	==============================================================================
+- Hadoop works on two principls
+	data locality
+	write once and read many
+- Limitations in hadoop
+
+	unstructred data
+	No random access - should read entire block
+	High latency
+	not acid compliant
+	
+- what business questions do I need to answer?
+		what is my daily sale?
+				versus
+		what are my top 5 products?
+		who are my top 10 customers?
+		what are my top 2 stores?
+		
+- what type of data we will be analyzing?
+- what kind of schema do we need to define?
+		database
+		datawarehouse
+		data lake
+		delta lake
+		dimensions
+		facts
+		grain of the fact table
+		ACID complaint
+		Normalized vs denormalized
+		star and snowflake
+		is it for reporting?
+		is it more of a transactional?
+		do we read more?
+		do we write more?
+		do we want the data to be compressed?
+		what limitations do we have interms of memory and disk?
+	
+- what type of data quality problems do we have?
+
+		Duplicate data
+		too many outliers
+		unstructed data
+		security issues
+		inaccurate / inconsistent data
+		missing data
+		downtime in data retrieval
+		
+- issues with files
+	dynamic columns
+	removing unwanted lines
+	duplicate rows
+	nested folders
+	complext data types - array , struct or map type values
+	
+-- trade offs between the files
+	Text
+	Orc
+	Avro
+	Parquet
+	splittability
+	advanced compression
+	optimize the storage and processing - storage matters including replication factor (1 TB example)
+		string to integer storage (14 vs 4 bytes)
+		dict encoding
+		bit packing
+		delta encoding
+		run length encoding
+		snappy
+		lzo
+		gzip
+	faster reads
+	faster writes
+	
+
+- what is the acceptable latency of our data?
+	lambda - 15 mins
+	memory - 10 Gb 
+	ephemeral/tmp space - 10 Gb
+- should we tranform our data as we ingest it, or maintain it in a raw state and tranform it later?
+	logging
+	reporting to users on failure
+
+
+nature of data we deal with:
+============================
+
+vehicle
+Repair orders
+recalls
+warranty
+claims
+consumer affairs
+legal
+data migration activities
+	snowflake to apache hive - on prem
+	s3 to hive
+	hive to oracle
+	oracle to hive
+	oracle to AWS postgreSQL
+	hive to SFTP
+		VIN encoding
+		pgp encryption
+
+volume of data we deal with
+===========================
+
+close to 50 to 60 GB
+
+Tech stack:
+===========
+
+ingestion and integrity - Informatica, pyspark, python, sqoop (Data Transfer between RDMBS to HDFS). IICS, shell scripting
+aAWS - S3, SQS, Lambda, Secrets Manager, Event Bridge, Cron Job schedule, S3 Mount
+dbs - oralce, hive, AWS PostgreSQL
+bit of R 
+Hartonworks to cloudera conversion
+schedculing - oozie, tivoli unix for informatica stuff
+erwin - data modelling
+reporting - tableau
+tools - servie now , jira, bit bucket, confluence
+
+
+DRIVE - where we required gather data from all the corporate dealers to understand the effciency of car repairs that are happening on a global scale.
+
+hartonworks to clodera - cluster migration
+
+	awared as consultant of the quearter for best performance
+	
+caret - where we get the data diff car dealers and to report the performance reports to nhta
+
+Cigna:
+
+
+was supported the MOS project where we got deal with employee performance data like how efficient they are working and logging hours.
+
+and also worked on few medicaied and medicare projects - CMS 
+
+Fiserv:
+
+did supported claritry data - project managerment tool
+
+ FDVS - IBM watson.
+
+
+
+Different type of loads:
+========================
+
+Truncate and load
+always append
+insert else update
+SCD-2
+
+
+data storage
+data processing
+scalability
+HDFS
+small file problem
+Monolithic / vertical
+Distributed / Horizontal
+Master / slave
+
+Mapreduce
+
+key value pairs
+record reader
+input
+mapper
+partitioner
+combiner
+reducer
+
+sqoop
+boundv val query
+sqoop job
+incremental
+append
+merge
+password file - hdfs
+
+https://www.linkedin.com/pulse/apache-spark-small-file-problem-simple-advanced-solutions-garg/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
