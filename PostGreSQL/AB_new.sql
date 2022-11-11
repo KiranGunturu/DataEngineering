@@ -291,7 +291,7 @@ CUSTOM SORT IN SQL
 
 
 
-SELECT *FROM HAPPINESS_INDEX
+SELECT *FROM HAPPINESS_INDEX 
 ORDER BY 
 CASE WHEN COUNTRY='India' then 3
 	WHEN COUNTRY='Pakistan' then 2
@@ -796,6 +796,43 @@ from orders a
 left join orders b on a.salesperson_id = b.salesperson_id
 group by a.order_number,a.order_date,a.cust_id,a.salesperson_id.a.amount
 having a.amount >= max(b.amount)
+
+
+DDL
+====
+
+CREATE
+ALTER
+DROP
+TRUNCATE
+
+DML
+====
+INSERT
+UPDATE
+DELETE
+CALL
+LOCK
+EXPLAIN CALL
+
+TCL
+====
+
+COMMIT
+ROLLBACK
+SAVEPOINT
+SET TRANSACTION
+
+DQL
+====
+
+SELECT
+
+DCL
+====
+
+GRANT
+REVOKE
 
 
 
