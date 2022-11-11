@@ -14,4 +14,34 @@ Near Real Time -Reactive Actions
 Batch - Historical Analysis
 	Snowball
 	Data Pipeline
+
+
+S3 tires
+========
+
+s3 standard
+	default
+	costliest
+	data will be automatically repliacted in all the AZ
+	used for very freqent data access
+
+S3 standard Infrequent access
+	cheaper than standard
+	store the data that we dont access very freqently
 	
+s3 Intelligent tiring
+	smart enough to move the data from standard to S3 infreqent access storage depends on the usage and access pattern.
+	
+	but we have amazon life cycle policy - why do we need intelligent tiring
+	life cycle policy is a static - means it will just the move the data when it met the time cycle like 60 days.
+	there will be a latency in fetching the data from Infreqent tiring
+		hight latency and extra costs when reading from high latency storage places.
+
+s3 one zone IA
+
+s3 glacier 
+	very cheap
+	
+s3 glacier deep archive
+
+
