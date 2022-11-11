@@ -1,0 +1,124 @@
+by default red shift cluster end point is mapped to private Ip. if we want to access the redshift cluster from outside of aws such as our pc or internet
+then we have to assign the elastic ip address and use that elastic ip address to connect publicly
+
+we have to make the cluster publicly accessible
+
+redshift cluster - actions - modify publicly accessible setting - enable - elastic ip address
+
+there is a charge associated with elastic ip address
+
+there will be a downtime after we assign the elastic ip to the redshift cluster
+
+default port for redshift cluster is 5439
+
+hostname:end point
+port number:5439
+database:retail_db
+user:retail_user
+password:I3edshift
+
+create database retail_db;
+
+create user retail_user WITH PASSWORD 'I3edshift'
+
+GRANT ALL on retail_db to retail_user;
+
+alter table orders OWNER to retail_user;
+
+alter table order_items owner to retail_user;
+
+command line way
+===================
+psql --help
+
+psql -h hostname \
+	-p 5439 \
+	-d retail_db \
+	-U retail_user \
+	-w --no-password
+	-W --for password prompt
+	
+\d -- to see the tables available
+\q - quit
+
+download jar file
+==================
+
+goto workbench - clusters - choose the cluster - download the driver
+
+connect to redshift using python
+=================================
+
+mkdir redshift-demo
+cd redshift-demo
+python3 -m venv rd-venv
+source rd-venv/bin/activate
+pip install psycopg2-binary
+pip install boto3
+pip install jupyterlab
+jupyterlab
+
+import psycopg2 as ps
+con = ps.connect(
+		host=hostname,
+		port=5439,
+		dbname='retail_db',
+		user='retail_user'
+		password='I3edshift'
+		)
+cursor = con.cursor()
+
+query_string = 'select *from orders'
+
+cursor.execute(query_string)
+
+cursor.fetchall()
+
+or
+
+for rec in cursor:
+	print(rec)
+
+cursor.close()
+
+truncate_Stmt = 'Truncate table order_items'
+
+cursor = con.cursor()
+
+cursor.execute(truncate_Stmt)
+
+cursor.close()
+
+=========================================================
+
+execute redshift copy command with python
+
+import psycopg2 as ps
+con = ps.connect(
+		host=hostname,
+		port=5439,
+		dbname='retail_db',
+		user='retail_user'
+		password='I3edshift'
+		)
+
+table_name='order_items'
+s3_location = 's3://itv_retail/order_items/'
+
+copy_stmt = f"""
+COPY {table_name}
+FROM '{s3_location}'
+CREDENTIALS 'aws_access_key_id={access_key};aws_secret_access_key={secret_key}
+JSON as 'auto'
+"""
+
+cursor = con.cursor()
+
+cursor.execute(copy_stmt)
+
+
+
+
+
+
+

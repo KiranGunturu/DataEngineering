@@ -1,6 +1,12 @@
 AWS Redshift
 =============
 
+dc2.large - 160 GB each
+6 nodes as part of POC
+
+dc2.8xlarge - 244 GB ram, 2.5 TB storage per node, 32 vCPU, 16 slices per node.
+5 node
+
 Database Vs Datawarehouse Vs Data Lake
 ======================================
 
@@ -143,18 +149,51 @@ the failed drives/nodes are automatically replaced.
 
 redshift data distributed system
 ================================
+Auto
+=====
+DISTSTYLE is auto by default
+
+create table retail_ods.orders (
+	order_id int,
+	order_customer_id integer,
+	order_date datetime
+	) DISTSTYLE auto;
+	
+if we want to specify any column as dist key then above appraoch will not work
+
+select *from svv_table_info - to get table metadata
+select *from pg_table_def - to get tables info in the cluster
+
+PG_TABLE_DEF only returns information about tables that are visible to the user. 
+If PG_TABLE_DEF does not return the expected results, verify that the search_path parameter is set correctly to include the relevant schemas.
+
+You can use SVV_TABLE_INFO to view more comprehensive information about a table, including data distribution skew, key distribution skew, table size, and statistics.
+
+svv_table_info table is part of pg_catalog schema
+
+select *from pg_table_def
+where schemaname = 'retail_ods' - will not give any results for that we have to use searchpath
+
+because retail_ods may not be under default searchpath
+
+show searchpath
+
+set searchpath = '$user', public,retail_ods
+
+even if we set this in query editor it will not be added but set command will not throw any error.
+
+for that we have to set this in cluster level. - parameter group - create custom parameter group.
+
+
+
+
 we have 4 different modes
 
 Auto - redshift figures it out based on size of the data and various other parameters
+	starts with All and change to diff other dist styles based on the data growth in the future
 Even - rows are distributed across slices in the round robin fashion
+	if we have 100MB of table data, each node will get 33MB when we have 3 node cluster.
 Keys - same as bucketing in hive
-
-employee data - empid.
-4 slices
-slice0
-slice1
-slice2
-slice3
 
 All - entire table is copied on all the nodes. recommended when we have smaller data sets ex: lookup / broadcast
 
