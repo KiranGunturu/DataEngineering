@@ -1,0 +1,50 @@
+sqoop (hadoop) vs glue
+hive catalog (single point of failure) vs glue catalog
+hive metastore is hosted on sep RDS instance - MYSQL but still compute runs on EMR cluster. we should better use something like athena which is completely sep from compute part like EMR
+tableau with athena - issue
+	simba driver - aws does not support
+redshift serverless
+spectrum
+redshift have low latency in writing thats why we go for snowflake
+snowflake - always pay irrespective of data scan or not
+			instantanious scaling
+redshift - pay when you use
+	redshift spectrum - avaoids data movement
+	no of concurrent requests in redshift is directly propr to no of nodes
+	when we have more than 100 nodes - it gets lot of performance issues
+	doesn't auto scale
+
+Glue DC Permissions
+Hive Catalog - Apache Ranger for fine grained access
+AWS Lakeformation to acheive fine grained access
+	Import data from databases already in AWS
+	Import data from other external sources
+	Catalog and label your data
+	Transform data
+	Clean and deduplicate data
+	Storage optimizations
+	Row and cell-level security
+	Define and manage access controls
+	Implement audit logging
+	Tag-based access control
+	Cross account access
+	Governed tables
+	
+lake formation on redshift and snowflake is not recommended as there is a low latency while writing.
+
+DBS - DMS - CDC - to kafka topic
+zeppelin notebooks were hosted on one of the ec2 instance on emr (hdfs) - when cluster rebuilds, we lost them then we changed the path to S3
+
+snowball to migrate 80TB of historical feed from on-prem BDE to AWS S3
+Datasync service to sync incremental data from on-prem BDE to AWS S3 till app teams know and successful ingesting incr data using their own code
+
+
+https://bpcs.com/blog/databricks-vs-snowflake?utm_source=bambu&utm_medium=social&utm_campaign=advocacy&blaid=3914536
+
+Databricks and Snowflake aren’t as big of competitors as you’d think and often times can be used together.
+
+- Databricks is all about Spark and scalability and robustness. Databricks speaks to the soul of #dataengineering
+
+- Snowflake is all about SQL, usability, and quickness. Snowflake speaks to the soul of #analyticsengineering
+
+I predict many companies will use Databricks for their heavy pipelines and Snowflake for their analytics layer in the years to come!

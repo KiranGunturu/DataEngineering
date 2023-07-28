@@ -1,0 +1,71 @@
+Requirement - Is either a condition or capability that is required from us by a stakeholder for a 
+speicifc project
+
+when we talk about condition - we might mean contractual terms
+obligations , complaince requirements , timeframes or budget or policies that we need to comply with.
+
+when we talk about capability - we might mean these could be features that our stakeholders need so something like 
+it must be blue or it must be eight feet hight or it must run at certain speed.
+
+these are few capabilities that our solution need to have so its either going to be condition or a capability.
+
+
+1) understand the need from our stakeholder
+	can you put some numbers
+	why
+	what sort of performance it requires
+	what is the current state
+	what sort of issue it will be resolving
+	what is business use case
+	what is the value added to the business
+
+2) what are my constraints and put a plan to resolve
+	time
+	money
+	resources
+	rules
+	regulations 
+	policies
+
+3) do I know what I need to know?
+
+	do I know the technology?
+	can this be done?
+	required effort?
+	how the data wants to be ?
+	where the data wants to be?
+	total size
+	time to report?
+	optimization?
+	dependency with data avaailability
+	type of loads and timings
+	what if we miss the data feed?
+	
+4) who or what can provide me this data?
+
+	who - stakeholders
+	what - existing documentation 
+	
+5) How will i collect this info?
+
+	research
+	workshop
+	meetings
+	Reaching out to IT Managers
+
+No of users - IT Manager - Interview / Workshop
+Interfaces / Dashboard - Head of reporting and Analytics - meeting
+
+6) when will i collect this info?
+	scheduling time with people in step 5
+
+No of users - IT Manager - Interview / Workshop - Mon 9 am 
+Interfaces / Dashboard - Head of reporting and Analytics - meeting - Wed - 2 pm
+
+7) what will I need to collect this info?
+	can It be done by me?
+	do i need more people / team?
+
+DO IT - Implement
+
+

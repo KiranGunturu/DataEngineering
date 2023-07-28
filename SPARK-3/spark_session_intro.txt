@@ -1,0 +1,76 @@
+spark core
+==========
+
+rdds
+
+Structured API's
+=================
+
+Dataframes and Datasets
+
+A dataframe is distributed collection of data organized into names columns.
+
+it is conceptually equivalent to table in a relational database.
+
+employee - 10000
+
+dataframe
+
+4 partitions
+
+each partition holding 25k records.
+
+richer optimizations are possible.
+
+dataframe has schema attached to it.
+
+rdd till now .. spark 1 style
+
+spark 2 styple of writing code.
+
+are dataframes are datasets are launched in spark 2?
+
+df and ds were avaailble in sparl 1 as well.
+
+from spark 2 onwards we got better support and both of these are merged into a single API datasets API
+
+sc (spark context)
+
+seperate context for each and everything.
+
+spark context
+sql context
+hive context
+
+
+
+spark session - is a unified entry point of a spark application.
+
+it provides a way to interact with various spark functionality with lesser number of constructs.
+
+instead of having a spark context, hive context, sql context now all of these encapsulated into one.
+
+
+from pyspark import SparkContext
+from pyspark.sql import SparkSession
+
+spark = SparkSession \
+        .builder \
+        .appName("Hello world") \
+        .master("local[2]") \
+        .getOrCreate()
+        
+print(spark.version)
+
+spark.stop()
+
+SparkSession is a singleton - for one application there will be one SparkSession that is why we say getOrCreate()
+
+there cannot be multiple.
+
+Meaning if it is already availabe get it if not create.
+
+.builder() - it returns a builder object
+
+treat your spark session like a driver.
+

@@ -1,0 +1,83 @@
+Spark Adaptive Query Execution
+================================
+
+1. Dynamically coalescing shuffle partitions
+2. Dynamically switching join strategies
+3. Dynamically optimizing skew joins
+
+
+1. Dynamically coalescing shuffle partitions
+=============================================
+1) 
+
+lets say we configured spark.shuffle.partitions=10 but but we only have data for 5 partitions 
+then we still get 10 tasks created though there is no data in other 5 partitions.
+
+bit overhead on Yarm RM to allocate resources and monitor those.
+
+this problem will be resolved by AQE.
+
+when we enable the AQE, spark can findout all the partitions related information during data shuffling activity and it will try to adjust the 
+spark.shuffle.partitions property dynamically and also it will try merge the small partitions into bit big one. (to make all of them proportionate)
+
+if our partitions are small in the number:
+
+	we end up having large partitions size.
+	tasks needs large amount of memory
+	may cause OOM exception
+	
+if our partitions are big in the number:
+	small / tiny partitions size
+	many network fetch causing inefficient network I/O
+	more burden for spark task schedular
+
+	
+2)
+
+ lets take above 5 partitions which has data and those 5 partitions are not equal in the sense of
+few partitions may take longer time where as few might take few milli secs but whole job should be waited to complete everything.
+
+this represents a data skew problem.
+
+
+AQE Configurations
+====================
+
+spark.sql.adaptive.enabled=false(default)
+spark.sql.adaptive.coalescePartitions.initialPartitonNum
+
+	we set the initial value and dynamically determining the best number and setting that value is applied later.
+	this do not have default value, if we dont set anything it will consider the value of spark.sql.shuffle.partitions
+	
+spark.sql.adaptive.coalescePartitions.minPartitonNum
+
+	this determines minimum number of shuffle partitions after coalescing
+	this do not have default value, if we dont set anything it will consider the value of spark.default.parallelism
+	
+spark.sql.adaptive.advisoryPartitionSizeInBytes=64MB(default)
+spark.sql.adaptive.coalescePartitions.enabled=true(default)
+
+========================================
+2. Dynamically switching join strategies
+=========================================
+
+spark.
+
+spark.sql.adaptive.enabled=true
+spark.sql.adaptive.skewJoin.enabled=true
+
+spark will split the skewed partition into 2 or more partitions and it will also duplicate the right side matching partition.
+
+spark.sql.adaptive.skewJoin.skewedPartitionFactor=5
+
+if partition is considered skewed if its size is larger than 5 times the median partition size.
+
+spark.sql.adaptive.skewJoin.skewedPartitionThresholdInBytes=256MB
+
+if partition is larger than 256MB then it is considered as skewed partition.
+
+but spark will consider only when below two conditions are broken.
+
+spark.sql.adaptive.skewJoin.skewedPartitionFactor=5
+spark.sql.adaptive.skewJoin.skewedPartitionThresholdInBytes=256MB
+

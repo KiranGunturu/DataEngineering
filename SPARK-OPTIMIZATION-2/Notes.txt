@@ -1,0 +1,160 @@
+storage
+	files, hdfs, s3, databases
+cluster manager
+	standalone(comes with spark)
+	YARN
+	Mesos
+	Kubernetes
+spark core
+	RDDs - "first citizens" of spark
+	Dataframes & SQL. lots of optimization out of the box
+High Level Libs
+	Streaming: Infinite data at sub-second latency
+	ML
+	GraphX: analyze relationship between rows and cols
+
+spark arch
+	cluster
+	executor - worker logical node - JVM
+	Driver - spark application main JVM
+	cluster manager 
+	for performance : driver is close to the worker nodes (same physical rack or at least same LAN)
+
+RDDs - distributed data set
+Dataframes
+Datasets
+	memory and cpu expensive to create JVM objects
+Dataframe = Dataset[Row]
+
+Performance Tips
+	use dfs most of the time
+	use RDDs only in custom processing
+	do not switch types like DF to RDD and RDD to DF becuase they are expensive
+	in python switching type is disastrous
+computing anything
+	Lazy Evaluation
+	planning
+	Transformations & actions (return df vs return something to driver as o/p)
+spark API execution
+	action
+	Job
+	stages
+	tasks
+	RDD/dataframe/dataset has partitions
+	1 job = 1 or more stages
+	1 stage = 1 or more tasks
+	Tasks & executors
+		1 task is run by 1 executor
+		each executor can run 0 or more tasks
+	partitions & tasks
+		processing one partition = one task
+	partitions & executor
+		1 partition can stay on 1 executor
+		each executor can lead to 0 or more partitions in memory or any disk
+	partitions & nodes
+		1 executor = 1 JVM on physical node
+
+stages are before shuffle and after shuffle
+stages are run in seq order
+shuffle - exchange of data between executors
+	happens between stages
+	must complete before next stage starts
+tasks are smallest unit of computation
+executed once, per one partition, by one executor
+
+application contain jobs
+jobs contain stages
+stages contain tasks
+
+dependencies
+	narrow - one input(parent) partition influences a single output(child) partition
+	fast to compute
+	ex: map, flatmap, filter and projections
+	wide - one input(parent) partition influences more than one output(child) partition
+		involves a shuffle - data exchange between spark executors
+		are costly to compute
+		ex: grouping, joining,sorting
+
+shuffle
+	data exchange b/w executors in the cluster
+	expensive because of	
+		transferring data
+		serialization/deserialization
+		loading new data from shuffle files becuase disk is slow
+		
+scala> val ds1 = spark.range(1,10000000)
+ds1: org.apache.spark.sql.Dataset[Long] = [id: bigint]
+
+scala> val ds2 = spark.range(1, 20000000, 2)
+ds2: org.apache.spark.sql.Dataset[Long] = [id: bigint]
+
+scala> val ds3 = ds1.repartition(7)
+ds3: org.apache.spark.sql.Dataset[Long] = [id: bigint]
+
+scala> val ds4 = ds2.repartition(9)
+ds4: org.apache.spark.sql.Dataset[Long] = [id: bigint]
+
+scala> val ds5 = ds3.selectExpr("id * 3 as id")
+ds5: org.apache.spark.sql.DataFrame = [id: bigint]
+
+scala> val joined = ds5.join(ds4, "id")
+joined: org.apache.spark.sql.DataFrame = [id: bigint]
+
+scala> val sum = joined.selectExpr("sum(id)")
+sum: org.apache.spark.sql.DataFrame = [sum(id): bigint]
+
+scala> sum.explain()
+== Physical Plan ==
+AdaptiveSparkPlan isFinalPlan=false
++- HashAggregate(keys=[], functions=[sum(id#18L)])
+   +- Exchange SinglePartition, ENSURE_REQUIREMENTS, [id=#77]
+      +- HashAggregate(keys=[], functions=[partial_sum(id#18L)])
+         +- Project [id#18L]
+            +- SortMergeJoin [id#18L], [id#12L], Inner
+               :- Sort [id#18L ASC NULLS FIRST], false, 0
+               :  +- Exchange hashpartitioning(id#18L, 1000), ENSURE_REQUIREMENTS, [id=#69]
+               :     +- Project [(id#10L * 3) AS id#18L]
+               :        +- Exchange RoundRobinPartitioning(7), REPARTITION_BY_NUM, [id=#60]
+               :           +- Range (1, 10000000, step=1, splits=2)
+               +- Sort [id#12L ASC NULLS FIRST], false, 0
+                  +- Exchange hashpartitioning(id#12L, 1000), ENSURE_REQUIREMENTS, [id=#70]
+                     +- Exchange RoundRobinPartitioning(9), REPARTITION_BY_NUM, [id=#63]
+                        +- Range (1, 20000000, step=2, splits=2)
+
+exchange and sort are preliminary for join
+
+: represents they are related
+
+UI: jobs, stages, storage, environment, executors
+
+
+Join optimization
+=================
+left_semi = all the rows in the left DF for which there is a row in the right DF passing the condition
+left_anti = all the rows in the left DF for which there is no row in the right DF passing the condition
+above two are only for DFs
+
+
+why are joins slow?
+	data trasfer overhead
+	potential OOMs
+	limited parallelism
+
+co-loacated RDDs
+	have the same partitioner
+	reside in same physical location in memory
+	can be joined without any n/w transfer
+co-partitioned RDDs
+	have the same partitioner
+	may be on diff executor
+	will be joined with nw traffic
+
+shuffled Join
+	no partitioner is known
+	spark needs to shuffle both RDDs
+	
+	
+
+
+	
+	

@@ -44,4 +44,47 @@ s3 glacier
 	
 s3 glacier deep archive
 
+S3 Glacier Deep Archive. This storage class is used for long term archiving and the pricing per terabyte of storage in this storage class is only $1.01 USD per month!
+ This is incredibly cheap, and very useful for storing data that you very rarely need to access. 
+It can take up to 12 hours to have data from this storage class restored to be useable.
+
+
+block storage
+=============
+data in a file is broken down into multiple blocks with unique IDs
+lowest possible latency
+high performing
+highly redundant - as data stores in multiple places across the cluster but also helps in fault tolernace
+commonly used with SAN
+highly scalable
+bit expensive
+
+
+file storage
+============
+
+it follows hierarchical strucrure
+file organized into folders and sub-folders
+files retrived: full path + file name
+used in hard drives and NAS (single point of failure)
+NAS - multiple hard disks are kept in one box and there will be a n/w switch to give access to other sys who want to access NAS
+protocols: NFS, SMB
+simple and inexpensive
+
+object storage
+==============
+more like a internet faced
+low performance and low cost
+best suited to store any type of data
+best suited when we want to store long time for regulatory reasons and access via internet / API
+highly available
+offer diff tires to store the data. refer above
+id, metadata, data are the imp attributes
+
+video streaming is a use case. we make the data available globally
+
+
+
+
+
 

@@ -1,0 +1,28 @@
+Aggregates - Dataframes-16.py
+==============
+
+1.simple aggregation
+2.grouping aggregation
+3.window aggregation
+
+order_data.csv it is 46MB file
+
+1.simple aggregation
+=====================
+
+when after doing the aggregation we get a single row.
+
+total number of records, sum of all quantities
+
+2.grouping aggregation
+=====================
+
+in this we will be doing a group by
+
+in the output there can be more than one record.
+
+3.window aggregation
+=====================
+
+so we will be dealing with a fixed size window.
+

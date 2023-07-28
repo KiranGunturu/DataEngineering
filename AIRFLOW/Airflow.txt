@@ -1,0 +1,67 @@
+Airflow
+========
+
+1. create workflows
+2. schedule the workflows
+3. monitor the workflows
+
+we need to have python for airflow
+
+we need python version 3.5 but our platform has 2.6
+
+1. install SCL Utility - lets you install and run multiple versions of the same software.
+
+software collections
+
+sudo yum install centos-release-scl
+
+2. install python 3 with SCL
+
+sudo yum install rh-python36
+
+3. check the python version
+
+python --version
+2.6
+
+4. launch newer version of python using SCL shell
+
+scl enable rh-python36 bash
+python --version
+3.6.9
+
+5. create our own project folder
+
+mkdir airflow
+cd airflow
+scl enable rh-python36 bash
+
+6. create virtual env
+
+python -m venv airflow_project
+
+7. activate the venv
+
+source airflow_project/bin/activate
+
+8. Install apache airflow
+
+pip install apache-airflow
+airflow
+
+
+9. airflow requires a sql like database
+
+airflow initdb
+
+10. set airflow path
+
+export AIRFLOW_HOME=/home/cloudera/airflow
+
+11. start the web server in one termial and start the schedular in other termial
+
+airflow webserver -p 8080 (termial 1)
+
+airflow schedular (termial 2)
+
+then goto localhost:8080

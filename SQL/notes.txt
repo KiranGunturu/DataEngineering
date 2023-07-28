@@ -1,0 +1,736 @@
+constraints
+=============
+Null
+not null
+check
+default
+PK (can't have nulls)
+Unique (can have one null)
+FK - referential integrity
+
+select top 5 *
+from orders
+order by order_date desc
+
+select distinct ShipMode
+from orders
+order by order_date
+
+# filters
+
+select *from orders
+where ship_mode = 'first class'
+
+select *from orders
+where order_date = '2020-12-08'
+
+select *from orders
+where quantity > 5
+
+from/joins
+where
+group by
+having
+order by
+top 5
+select
+
+
+select *from orders
+where order_date between '2020-12-08' and '2022-12-09'
+
+
+select *from orders
+where ship_mode in ('first class', 'same day')
+
+select *from orders
+where quantity in (3,5)
+
+select *from orders
+where ship_mode > 'First class') #works but as per ASCII value.
+
+
+select *from orders
+where ship_mode = 'first class' and segment = 'consumer'
+
+select *from orders
+where ship_mode = 'first class' or segment = 'consumer' # as soon as one condition met, sql engine stops working.
+
+select , profit/sales as ratio, profit*sales, getdate() as total from orders;
+
+# like operator
+
+# name starts with C
+select order_id, order_date, customer_name
+from orders
+where customer_name like 'C%'
+
+starts with Chris
+select order_id, order_date, customer_name
+from orders
+where customer_name like 'Chris%'
+
+ending with Chris
+select order_id, order_date, customer_name
+from orders
+where customer_name like '%Schild'
+
+starting and ending can be anything but somewhere we should have "ven" in between
+
+select order_id, order_date, customer_name
+from orders
+where customer_name like '%ven%'
+
+starts with A and ends with a
+
+select order_id, order_date, customer_name
+from orders
+where customer_name like 'A%a'
+
+select order_id, order_date, upper(customer_name)
+from orders
+where upper(customer_name) like 'A%a'
+
+where second character is L
+
+select order_id, order_date, customer_name
+from orders
+where customer_name like '_L%'
+
+
+where third character is L
+
+select order_id, order_date, customer_name
+from orders
+where customer_name like '__L%'
+
+% means 0 or more any characters
+_ means one charater
+
+
+
+starts with C and second character should be either a or l and ends with anything
+
+select order_id, order_date, customer_name
+from orders
+where customer_name like 'C[al]%'
+
+starts with C and second character should not be either a or l and ends with anything
+
+select order_id, order_date, customer_name
+from orders
+where customer_name like 'C[^al]%'
+
+starts with C and second character can be anything between a and f and ends with anything
+
+select order_id, order_date, customer_name
+from orders
+where customer_name like 'C[a-f]%'
+
+
+when we are using groupBy
+
+cols in select and in group by should be same
+
+select region, category, sum(sales) as total_sales
+from orders
+group by category
+
+above query gives an error
+
+select sum(sales) as total_sales
+from orders
+group by category
+
+above query works
+
+Any aggregate function will just ignore null values
+
+sample data:
+
+region, sales
+east	100
+east	null
+east	200
+
+select region, avg(sales) as avg_sales  sum(sales)/count(sales) - 300/2 - 150
+from orders
+group by region
+
+join with aggregates
+======================
+select region, sum(sales) as avg_sales
+from orders o
+left join returns r on o.order_id = r.order_id
+group by region
+
+
+cross-join
+prepare master data
+prepare large no of rows for performance testing
+
+select *from emp, dept order by emp.emp_id
+
+or
+
+select *From emp
+inner join dept on 1=1
+
+
+string agg:
+===========
+
+postgres
+
+select dep_id, string_agg(emp_name, ';' order by emp_name) as list_of_employess
+from employess
+group by dept_id
+
+sql server
+
+select dep_id, string_agg(emp_name, ';') WITHIN GROUP (order by emp_name) as list_of_employess
+from employess
+group by dept_id
+
+
+date functions
+===============
+
+select order_id, order_date, 
+datepart(year, order_date) as year_of_order_date,
+datepart(month, order_date) as month_of_order_date,
+datepart(week, order_date) as week_of_order_date,
+datename(month, order_date) as month_name,
+datename(week, order_date) as week_name,
+from orders
+where datepart(year, order_date) = 2020
+
+
+case statement
+==============
+
+case statements are executed in top to bottom approach
+
+select order_id, profit,
+case
+when profit < 100 then 'Low Profit'
+when profit > 100 and profit < 250 then 'Medium Profit'
+when profit < 400 then 'High Profit'
+else 'Very High Profit'
+end as profit_category
+from orders
+
+string functions
+================
+
+select order_id, customer_name, 
+	len(customer_name) as len,
+	left(customer_name,4) as name_four,
+	right(customer_name,4) as name_five,
+	substring(customer_name,4,5) as sub_chars,
+	substring(order_id,4,4) as year,
+	charindex('C',customer_name) as c_pos,
+	charindex('C',customer_name,5) as c_pos, #start the search from 5th character,
+	concat(order_id,' ',customer_name) from cust_order_id,
+	left(customer_name, charindex(' ',customer_name)) as first_name,
+	replace(order_id,'CA','PB') as new_order_id,
+	translate(customer_name,'AG','TP') as translate_AG #it will translate A to T and G to P
+from orders;
+
+
+null handling functions:
+========================
+
+select order_id, city, 
+isnull(city, 'unknown') as new_city,
+coalesce(city,state,region,'unknown') as new_region,
+cast(sales as int) as num_sales,
+round(sales,1) as sales,
+from orders
+where city is null
+
+
+set functions
+=============
+
+union all to combine to two datasets with same no of columns and compatible data types.
+union - remove the dupes
+	internally it will do the union all, sort then delete the dupes
+intersect - shows common records and if there are any dupes, they will be discarded but in case of inner join, dupes will be shown
+
+intersect	inner join
+set operator	join type
+no dupes		dupes will be there
+
+
+select *from orders_east
+intersect
+select *from orders_west
+
+except/minus
+============
+select *from orders_east
+except
+select *from orders_west
+
+it will give the records from orders_east table which are not there in the orders_west
+dupes will be discarded
+
+(select *from orders_east
+except
+select *from orders_west)
+union all
+(select *from orders_west
+except
+select *from orders_east)
+
+this will give redcords which are unique in both the tables
+
+sub query
+=========
+
+select avg(sales) from orders
+
+there is a scenario, what if one order_id have multiple products?
+
+order_id	product_id	sales
+1			100			500
+1			100			700
+2			200			300
+
+select avg(order_sales) from 
+(select order_id,sum(sales) as order_sales
+from orders
+group by order_id) orders_aggregated
+
+find order_ids for with sales are more than the avg order value
+
+having version
+===============
+select order_id from orders 
+group by order_id
+having sum(sales) > 
+(select avg(order_sales) avg_order_value from 
+(select order_id,sum(sales) as order_sales
+from orders
+group by order_id) orders_aggregated)
+
+
+where version
+=============
+select *from employee
+where dept_id > (select min(dept_id) from dept)
+
+select *from employee
+where dept_id not in (select dept_id from dept)
+
+select  version
+===================
+select *, (select avg(sales) from employee) as avg_sal from employee
+where dept_id not in (select dept_id from dept)
+
+join version
+=============
+select A.*, B.*
+from
+(select order_id , sum(sales) as order_sales
+from orders 
+group by order_id)A
+inner join 
+(select avg(order_sales) as avg_order_value from 
+(select order_id,sum(sales) as order_sales
+from orders
+group by order_id) orders_aggregated)B
+on 1=1
+where order_sales > avg_order_value
+
+
+
+dept wise avg salary
+=====================
+
+select dept_id, avg(salary) as avg_dept_salary 
+from employee
+grup by dept_id
+
+select e.*, d.avg_dept_salary 
+from employe e
+inner join 
+(select dept_id, avg(salary) as avg_dept_salary 
+from employee
+grup by dept_id)d
+on e.dept_id = d.dep_id
+
+
+
+windows
+==========
+over - how 
+if we have the same salary then they will still get unique row number
+
+select *,
+row_number() over(order by salary desc) as rn
+from employee
+
+window for each dept and sort with in the dept
+select *,
+row_number() over(partition by dept_id order by salary desc) as rn
+from employee
+
+
+window for each dept and sort with in the dept and if there are dupes in salary, sort the dupes based on order_name asc
+select *,
+row_number() over(partition by dept_id order by salary desc, emp_name asc) as rn
+from employee
+
+1	Mohit	100	15000	1
+2	Ankit	100	10000	2
+3	Vikas	100	10000	3
+
+
+top 2 employess with highest salary in each dept
+with cte as (
+select *,
+row_number() over(partition by dept_id order by salary desc, emp_name asc) as rn
+from employee
+)
+select *from cte
+where rn<=2
+
+here if there are two emps in the dept has same salary, only one emp gets in the o/p becuase rank for the second emp is differs.
+
+so we use rank()
+assigns the same rank and skips the next rank
+
+with cte as (
+select *,
+rank() over(partition by dept_id order by salary desc, emp_name asc) as rn
+from employee
+)
+select *from cte
+where rn<=2
+
+
+with cte as (
+select *,
+rank() over(partition by dept_id order by salary desc, age asc) as rn
+from employee
+)
+select *from cte
+where rn<=2
+
+in above sql, if two emps have same salary then we are assigning rank based on emps lesser age will get next rank (2) and emp with
+higher age gets next rank(3)
+
+dense_rank()
+assigns the same rank for dupes but do not skip the next rank
+
+with cte as (
+select *,
+dense_rank() over(partition by dept_id order by salary desc, emp_name asc) as rn
+from employee
+)
+select *from cte
+where rn<=2
+
+
+write a query to print top 5 selling products from each category
+================================================================
+
+with cat_product_sales (
+select category, product_id, sum(sales) as cat_sales
+group by category,product_id)
+,rnk_sales as (
+select *,
+rank() over(partition by category order by cat_sales desc) as rn
+from cat_product_sales
+)
+select *from rnk_sales where rn<=5
+
+
+or
+
+with rank_sales as(
+select category,product_id,
+rank() over(partition by category order by sum(sales) desc) as rn
+from orders
+group by category, product_id
+)
+select *from rank_sales
+where rn<=5
+
+lead
+====
+
+select *,
+lead(salary,1) over(partition by dept_id order by salary desc) as lead_sal
+from employee
+
+within each dept salary will be ordered desc and lead_Sal column will get next value from the current row
+if there is no next row in the dept then lead_Sal will get null value
+
+select *,
+lead(salary,1,salary) over(partition by dept_id order by salary desc) as lead_sal
+from employee
+
+within each dept salary will be ordered desc and lead_Sal column will get next value from the current row
+if there is no next row in the dept then lead_Sal will salary of the same row
+
+select *,
+lead(salary,1,age) over(partition by dept_id order by salary desc) as lead_sal
+from employee
+
+within each dept salary will be ordered desc and lead_Sal column will get next value from the current row
+if there is no next row in the dept then lead_Sal will age of the same row
+
+
+select *,
+lead(salary,1,'unknown') over(partition by dept_id order by salary desc) as lead_sal
+from employee
+
+within each dept salary will be ordered desc and lead_Sal column will get next value from the current row
+if there is no next row in the dept then lead_Sal will value as 'unknown'
+
+samething goes with lag
+
+select *,
+lag(salary,1,) over(partition by dept_id order by salary desc) as lead_sal
+from employee
+
+select *,
+first_value(salary) over(partition by dept_id order by salary desc) as first_value
+from employee
+
+this will give first value of salary to all the rows in each dept
+
+
+windows with aggregation
+=========================
+when we are doing aggregation with windows functions , order by is not mandatory
+
+but the moment we specify order by , we will see running sum or max or min
+
+select *,
+avg(salary) over(partition by dept_id) as avg_salary,
+max(salary) over(partition by dept_id) as max_salary
+from employee
+
+dept wise running sum
+====================
+
+select *,
+sum(salary) over(partition by dept_id order by emp_id) as dept_sum
+from employee;
+
+running sum on full table
+=========================
+select *,
+sum(salary) over(order by emp_id desc) as dept_sum
+from employee;
+
+running avg on each dept
+=============================
+select *,
+avg(salary) over(partition by dept_id order by emp_id) as dept_avg
+from employee;
+
+
+rows clause
+==============
+
+select *,
+sum(salary) over(order by emp_id rows between 2 preceding and current row) as running_salary
+from employee;
+
+select *,
+sum(salary) over(order by emp_id rows between 1 preceding and 1 following) as running_salary
+from employee;
+
+
+select *,
+sum(salary) over(partition by order by emp_id rows between 1 preceding and 1 following) as running_salary
+from employee;
+
+
+
+select *,
+sum(salary) over(partition by order by emp_id rows between unbounded preceding and current row) as running_salary
+from employee;
+
+last_value
+===========
+
+select *,
+last_value(salary) over(order by salary rows between current row and unbounded following) as last_salary
+from empployee;
+
+
+first_value
+===========
+select *,
+first_value(salary) over(order by salary ) as first_salary
+from employee;
+
+
+if there are dupes in order by clause
+select order_id,sales,sum(sales) over(order by order_id) as running_sales
+from employee
+
+order_id	sales	running_sales
+100			377.97	377.97
+101			502.488	1077.162
+101			502.488	1077.162
+102			91.056	1168.218
+
+to avaoid this issue, we do the following
+
+select order_id,sales,sum(sales) over(order by order_id rows between unbounded preceding and current row) as running_sales
+from employee
+
+order_id	sales	running_sales
+100			377.97	377.97
+101			502.488	888.458
+101			502.488	1077.162
+102			91.056	1168.218
+
+or we can add any other column to make it unique
+
+select order_id,sales,sum(sales) over(order by order_id, product_id ) as running_sales
+from employee;
+
+order_id	product_id	sales	running_sales
+100			200			377.97	377.97
+101			201			502.488	888.458
+101			202			502.488	1077.162
+102			203			91.056	1168.218
+
+
+rolling 3 month sum
+====================
+with month_wise_sales as (
+select 
+	datepart(year,order_date) as order_year,
+	datepart(month,order_date) as order_month,
+	sum(sales) as total_sales
+	from orders
+	group by datepart(year,order_date),datepart(month,order_date)
+
+)
+
+select order_year,order_month,total_sales,
+	sum(total_sales) over (order by order_year,order_month rows between 2 preceding and current row) as running_sales
+	from month_wise_sales
+
+
+*********** order by will not work on CTEs) ******************
+
+because if we look at above query, keeping order by in cte does not make sense.
+because that is just a temp table.unnecessary computation power. ultimate result is from outer query.
+
+
+advance insert/update
+======================
+
+select *from employee
+
+update
+======
+
+update employee
+set salary = 10000
+
+update employee
+set salary = 10000
+where emp_id=1
+
+
+
+update employee
+set salary = salary * 1.1
+where dept_id in (select dept_id from dept where dept_name='HR')
+
+or 
+
+
+update employee
+set salary = salary * 1.2
+from employee e inne join dept d on e.dept_id = d.dep_id
+where d.dept_name = 'HR'
+
+update employee
+set dept_name = d.dep_name
+from employee e inner join dept d on e.dept_id=d.dep_id
+where d.dept_name='Analytics'
+
+
+
+delete from employee
+
+
+delete from employee
+where emp_id = 20
+
+delete from empployee
+where dept_id not in (select dept_id from dept)
+
+
+delete from employee
+from employee e inner join dept d on e.dept_id=d.dep_id
+where d.dept_name = 'HR'
+
+exists / not exists
+====================
+exists - returns true or false
+it acts like lookup
+
+select *from emp_back e
+where exists (select 1 from dept_back d where e.dept_id=d.dep_id)
+
+
+indexing
+=========
+it maintains the physical order of the data in the disk
+uses binary search instead linear search (root , data pages along with range)
+when we create an index, data will be sorted in a bitmap or Btree structure.
+we can specify the sorting order when we create an index.
+full scan if no index
+
+clustered index
+one only one of sorting the data in the disk
+one clustered index on table but it can be of composite PK
+bit faster.
+
+non-clustered index
+new structure will be created like hashmap
+takes more space due to extra table structure called hashmap
+if we create non-clustered index on emp_id, then every emp_id will have its own address in the hashmap
+
+1 0x4r34
+2 0X858t
+
+sql engine will first search the hash map and get the corresponding to search in the actual table
+bit slow as it is a two step process
+it can have more than one index defined
+
+
+43% cost to 0.09% when we create the index vs no index
+
+create nonclustered index idx_rn on employee (emp_id)
+
+select emp_id from employee
+this query will just return the emp_id from hashmap table itself. no need to look up on emp table. (index seek)
+
+but below query will go for index and lookup as well as emp_name is not part of the index.
+
+select emp_id, emp_name from employee
+
+to acheive that we use below index creating strategy
+
+create nonclustered index idx_rn on employee (emp_id) include (emp_name)
+
+
+unique index
+
+create unique nonclustered index idx_rn on employee (emp_id) - by default non unique
+
+

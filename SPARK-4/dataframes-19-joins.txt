@@ -1,0 +1,20 @@
+Dataframes Joins
+====================
+
+there are 2 kinds of joins 
+
+1. Simple join (shuffle sort merge join)
+2. Broadcast Join
+
+1. Simple join (shuffle sort merge join)
+=========================================
+
+we have 2 datasets
+
+orders - order_customer_id
+customers - customer_id
+
+kind of joins are possible
+===============================
+
+inner - matching records from both the tables

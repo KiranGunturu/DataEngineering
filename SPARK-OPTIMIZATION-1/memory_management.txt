@@ -1,0 +1,105 @@
+driver
+=========
+Yarm RM will allocate AM and start the driver in it
+the driver will start with the memory that we requested
+	1.spark.driver.memroy=4GB
+	2.spark.driver.memoryOverhead=max(384 or 10% which is 400MB)
+this means our driver gets created with 4GB driver memory and 384 MB overhead
+overhead will be used by non-jvm related purposes.
+
+total driver memory in this case is 4.4GB
+
+executor
+==========
+
+AM / driver will again request RM to allocate executor containers
+
+executor memory is combo of all below.
+
+1. Overhead Memory - spark.executor.memoryOverhead=0.1 (10% which is 800MB)
+2.Heap Memory - spark.executor.memory=8GB
+3.Off Heap Memory - spark.memory.offHeap.size=0
+4.PySpark Memory - spark.executor.pyspark.memory=0 - in case of python this comes from the driver overhead memory
+
+now the container max limit based on the above is 8.8 GB
+
+============================================================
+how to check the physical memory limit at the worker node:
+============================================================
+
+yarn.schedular.maximum.allocation-mb
+
+Non-JVM process overhead memory - used for shuffles and network buffers
+JVM process heap memory - used for container execution
+
+spark memory fall under 2 types
+
+
+1. EXECUTION MEMORY
+	
+	Memory required for computations in shuffle, join, sorts, aggregations.
+	
+2. STORAGE MEMORY - is used for cache.
+
+In spark, execution memory and storage memory share a common region..
+
+when no execution is happening then your storage can acquire all the available memory and vice versa.
+
+execution may evcit storage if necessary but if this eviction can happen untill storage memory usage falls untill certain threshold.
+
+but storage cannot evcit execution memory.
+
+this design ensures several desirable properties:
+
+1. applications do not use caching can use entire space for execution.
+2. applications that do not use caching can reserve a minimum storage space.
+
+
+this makes your data blocks immune from being evicted.
+
+JVM heap memory is the combination of reserved memory, spark memory and user memory
+
+--executor-memory 8GB
+--spark.executor.cores=4
+
+
+if we request a executor of 8gb size then that means we are requesting 8GB heap memory + max(384mb, 10% of 4GB) (off heap)
+
+for easy calculations, lets consider 8GB as 8000MB instead 8192MB(8 * 1024)
+
+out of 8GB 300Mb is again reserved
+
+8000 - 300Mb = 7.7 GB left with
+
+out of this 7.7 GB - 60% goes to storage + execution memory - comes around 4.6 GB
+
+	out of this 4.6 Gb - 50% (2.3 GB) for storage (caching) - this is alive as long as the executors are running and we do uncache.
+			   - 50% (2.3 GB) for executor memory (dataframe operations , aggregations) this is short lived as its get freed after exe is over.
+	
+is the threshold for storage memory and we can change this using spark.memory.storageFraction=0.5
+	
+	this means it can cache the data upto 1.5 gb roughly without worrying about eviction by execution/computations.
+
+and remaining 40%  - 3.0 GB goes to user memory - data structures and to safe guard from OOM errors, spark related metadata.
+
+we can change this 60 and 40 rule with spark.memory.fraction.
+
+Reserved pool - for spark engine itself
+spark memory - dataframe operations and caching
+user memory - data structures, spark internal metadata, UDFs, RDD lineage and dependency
+
+if we are directly using rdd level operations then that means we are making use of user memory
+
+spark exe memory and storage memory are borrowed by each other as long as they are free. but they when exe memory is used for storage , exe takes priorty and will spill that 
+
+storage to disk if it can. if not we will get OOM exception.
+
+off heap is used to avoid garbage collection and it is an indirect way to add more memory to spark memory pool. like if spark storage memory is full it can spill some of the
+data to off heap memory.
+
+
+
+
+
+
+

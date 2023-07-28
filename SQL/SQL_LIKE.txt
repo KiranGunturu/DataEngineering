@@ -1,0 +1,15 @@
+SQL LIKE
+==========
+
+'a%' - values starts with a
+'%a' - values ends with a
+'a%o' - values starts with a and end with o
+'%or%' - values which may have or in any place of the string
+'_r%' - values starts with r in the second position
+'a_%' - values starts with a and are at least 2 chars in LENGTH
+'a__%' - values starts with a and are at least 3 chars in LENGTH
+
+'C[AL]%' - starts with C and second character can be any thing wither a or c
+'C[^AL]%' - starts with C and second character can be any thing other than a or c
+'C[A-O]%' - starts with C and second character can be anything between a and o
+like 'CA-202[1-2]%

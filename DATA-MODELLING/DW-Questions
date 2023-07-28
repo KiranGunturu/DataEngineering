@@ -1,0 +1,349 @@
+1) what is a data warehouse
+============================
+
+BI is the process by which we collects the data about the business, analyze the data and then take required actions.
+
+DW is the technology that supports business intelligence.
+
+DW is like a relational database designed for analytical needs and it is a central location where consolidated data from multiple locations are stored.
+
+2) what is the very basic difference between a data warehouse and an operational database.
+===========================================================================================
+
+speedomater: shows what is our current speed.
+
+what happens if speedomater stops working? its a real hazard. 
+
+we could be operating vehicle beyond posted speed limit or
+
+we could be breaking the speed limit in that territory
+
+so speedomater is nothing but a operational / transactional system because it helps us to run the business.
+
+DB is mainly for writes.
+
+oddometer: it is showing us the historical information like how much miles we drove
+
+oddometer is nothing but a data warehouse as it is helping us to analyze the business.
+
+even if oddometer stops working there wont be any hurdle.
+
+Warehouse is mainly for reads.
+
+==================
+point of sale ex / last few transactions - OLTP
+sales manager / link to statements - OLAP
+
+3) What is a dimension table
+=============================
+
+assume that you are a area sales manager and intrested to know how the sales are going.
+
+somebody mentioned to you that yes today we soled 10,000 units of several products
+
+just the number 10,000 doesn't add any value so we really can't understand wheather we are doing good or bad and what is the room for improvement.
+
+this is where we need some context by which this number 10,000 can be divided.
+
+so we will natureally ask questions like.
+
+if my today's sale is 10,000 , how much was the sale yesterday?
+what are my top 5 products?
+what are my top 3 stores?
+who are my top 10 customers?
+
+the entities by which we divide the data becomes the dimensions and the measurement itself is the fact.
+
+like.
+
+customer:
+id, name, address
+product:
+product_id,product_name,type
+date:
+order_Date,shipment_Date,delivery_date
+
+dimensions will answer 7 questions.
+
+who
+what
+when
+where
+why
+how
+how many
+
+4) what is fact table
+======================
+
+fact is the business event
+
+fact represents the grain of the business event that is to be measured.
+
+how much is the product
+tax amount
+discount amount
+
+dimensions can be independent where as facts are not.
+
+when you walk into a store and purchased a product and finally get them billed.
+
+here the transaction is created.
+
+that moment when bill is generated , there are couple of things that are happen.
+
+you as a customer walked into the store,
+picked couple of products
+
+before the business event is occured, these dimensions are already exists and it just that they are not related to each other.
+
+only because of the sale , all of these dimensions came together (customer, product, store)
+
+5) grain of fact table
+========================
+
+grain is the level at which the business event occures.
+
+sales can be stored at day level.
+==================================
+	
+	today's sale - 5000 usd
+	yday's sale - 6000 usd
+
+here by attaching time dimension table to sales fact table is enougfh
+	
+in this case , we can't answer few questions.
+
+	what are my top 5 products
+	who are my top 10 customers
+
+this is when we need to lower the grain.
+	
+we can maintain at transaction level.
+=======================================
+
+for every transaction, there is sales id generated
+
+	if we think sales id is the grain of the fact then we could be mistaken because 
+	
+	one customer can order multiple products and multiple units of same product.
+	
+	so real grain could be of combination of both sales id and customer id
+	
+here we need to attach few of the other dimensions like customer, product and store.
+
+
+6) what is the difference between Additive, Semi-Additive and Non-additive facts?
+==================================================================================
+
+An additive fact is a measure in a fact table that can be fully summed across any of the dimensions associated with it.
+
+show me sales amount per day
+show me sales amount per customers
+show me sales amount per store
+
+so here sales amount is measure that can be aggregated across any of the dimensions like time, customer,store.
+
+A semi-additive fact is a measure in a fact table that can be summed across few dimensions associated with it, but not all.
+
+daily average balance of a bank account. this number can be summed up across customer dim but not with time dimension
+
+because lets say my dialy average balance as of yday is 50$ and my daily avg balance for today is 60$ so if I want to do
+
+a summation of it over the time it would mean 50 + 60 = 110 which is not right as we want the average.
+
+A non-additive fact is a measure in a fact table that cannot be summed across any dimensions associated with it.
+
+pre-calculated discount amount.
+
+10) factless fact table
+========================
+
+it is a fact table which do not contain numeric fact column in the fact table.
+
+charity account where we dont charge money but give products for free.
+
+11) conformed dimension -- reusable dimension - time dimension
+========================
+
+A dimension table which is used by more than one fact table is known as conformed dimension.
+
+
+OLTP & OLAP
+=============
+
+OLTP: My name is Online Transaction Processing
+OLAP: My name is Online Analytical Processing
+
+OLTP: I work on individual entries 
+OLAP: I can analyze large batches of data
+
+OLTP: I can access recent data, from the last few hours or days
+OLAP: I can access older data going back months, or even years 
+
+OLTP: I can update the data also
+OLAP: I can only read data
+
+OLTP: I support fast real-time access 
+OLAP: I support long running jobs 
+
+OLTP: I work with single data source 
+OLAP: I work with multiple data sources 
+
+Data Lakehouse
+===============
+
+A data lakehouse combines the best of both data lakes & data warehouses.
+
+Data lake benefits -
+flexibility
+cost-efficiency
+scalability 
+can hold all kinds of data
+
+Data lake cannot offer -
+ACID guarantees 
+Schema enforcement
+
+A Data lake can be used for ML kind of use cases but cannot serve a BI use case. 
+
+A BI use case is better served by a Datawarehouse
+
+Data warehouse benefits -
+ACID guarantees
+support schema enforcement
+
+Data warehouse drawbacks -
+proprietary format (ML not supported)
+
+A Datawarehouse is used for BI kind of usecases but cannot serve ML use case because of proprietary file formats.
+
+Earlier we used to have all our data in Data Lake & then a subset of this data used to go in Datawarehouse for serving BI use cases.
+
+But the problem is that - 
+we have to maintain 2 different systems
+It is costly
+A separate ETL activity is required
+
+To solve this problem Databricks gave a paper on Lakehouse which proposed the solution by just having a single system that manages both the things.
+
+Databricks have solved this using Delta Lake. They introduced metadata (transaction logs) on top of data lake which gives us datawarehouse like features.
+
+Lakehouse is a concept and can have various implementations. Delta Lake is just one of these implementations.
+
+Normalization and denormalization
+====================================
+
+Normalization vs Denormalization
+
+Normalization is a process of dividing the data into multiple smaller tables with an intent to reduce data redundancy & inconsistency. 
+
+However, Denormalization is totally opposite of above idea. 
+Denormalization is the technique of combining the data into a big single table. This definitely leads to redundancy in the data.
+
+Note: Redundancy causes inconsistency -
+Consider that same data is repeated 2 times and when updating you update at one place and forget to do at second place. This leads to inconsistent state.
+
+When retrieving data from Normalized tables we need to read many tables and perform join which is a costly operation.
+However, when reading the data from denormalized tables it's quite fast as no joins are required.
+
+When to use Normalized tables vs Denormalized ones?
+when we talk about OLTP systems (Online Transaction Processing) where we deal with lot of insert, delete and updates then you should go for Normalized tables.
+
+However, when you talk about OLAP (Online Analytical Processing) systems where you need to analyse historical data then Denormalized tables are best fit. 
+Since you wont be doing updates on data here, even though after having redundancy we wont end up in inconsistent state.
+
+Let's take a simple Example - when you make purchase on amazon then it requires a OLTP system (a rdbms kind of database). Here the tables should be normalized.
+
+when amazon is doing data analysis of historical data, they will create denormalized tables just to make sure analysis is faster and costly joins can be avoided.
+
+Data Lake
+============
+
+What is Delta Lake?
+
+Before talking about Delta Lake we first need to understand Data Lake & its challenges.
+
+Data Lake provides a very cost effective & scalable way to store any kind of data in form of raw files. 
+
+Example of Data Lake is amazon s3, azure datalake gen2 etc.
+
+The challenge with Data Lakes is that they do not provide ACID guarantees. 
+
+1) There can be a job failure while overwriting existing data or appending new data. This will break Atomicity & Consistency guarantees.
+
+2) Simultaneous read/write can also lead into inconsistent results as there is no Isolation.
+
+3) Moreover there is no schema enforcement in Data Lake.
+
+4) Also Data Lake does not offer updates & deletes.
+
+5) we cannot maintain version history. 
+
+and there are a few more limitations with Data Lake.
+This is where Delta Lake comes for rescue..
+
+So, what is Delta Lake?
+it's nothing but a slight salt that we add along with parquet files.
+
+what is this magic salt?
+It is nothing but transaction logs stored in _delta_log (subfolder)
+
+so delta format is nothing but a combination of:
+parquet + transaction logs
+
+Just by adding these transaction logs we are able to tackle all above limitations & we can get ACID features.
+
+ACID
+========
+
+A stands for Atomicity 
+C stands for Consistency
+I stands for Isolation
+D stands for Durability
+
+but I could not relate things and understand this at all.
+
+
+Let's assume you have a BOFA saving bank account & You have 25k in your account.
+
+Minimum balance in account should be 5k
+
+Consider, you are trying to transfer some amount to your friends account.
+
+This involves 2 activities -
+1. money deducted from your account
+2. money added to your friends account
+
+what if first activity succeeds and second one fail?
+
+Money will be deducted from your account,
+also your friend has not yet received the amount.
+
+this will lead the system in a wrong/inconsistent state
+
+1) Atomicity: It says either both the above activities happen as a whole or none of the activity happens. so that we never end up in an inconsistent state.
+
+2) Consistency: lets say you want to transfer Rs 25000,
+if the transaction goes through it will lead the system in an Inconsistent state as the balance will be 0 now,
+and min balance should have been 5k
+
+3) Isolation - you are transferring 10k to your friend
+so first your account gets deducted - at time t1
+later, your friend account get added with 10k - at time t3
+
+what if a new reader tried to get your account balance and your friends account balance at time t2 which is in between t1 and t3?
+
+If there is no isolation that person will see wrong data (money deducted from your account, but not added to your friends account)
+
+A new reader should only see it this when both the above activities are done. This is called Isolation.
+
+4) Durability means the committed changes should not be lost even in case of any failures.
+
+
+===========================
+
+
+
+
+

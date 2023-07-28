@@ -1,0 +1,110 @@
+rdd vs dataframes vs datasets
+
+when we deal with rdd. we deal with low level code.
+
+map
+filter
+flatMap
+reduceByKey
+
+this low level code is not developer friendly.
+
+rdd lacks some of the basic rdd optimizations.
+
+then dataframes came into picture to make the life of developer easy.
+
+dataframes:
+===========
+
+spark 1.3 version
+
+higher level constructs.
+
+but there  are two major challenges:
+=====================================
+
+1) dataframes do not offer strongly types code. type errors wont be caught at compile time rather we get surprise at runtime.
+
+2) developers felt that their flexibility has become limited.
+
+that the dataframes can be converted to rdd
+
+df.rdd (whenever we want more flexibility  and type safety)
+
+but there is small issue that
+
+1) this conversion from dataframes to rdd is not seamless.
+
+2) if we work with rdd by converting dataframe to rdd we will miss out some of the major optimizations. (we are loosing the catalyst optimizer capabilities)
+
+catalyst optimizer / tungsten engine.
+
+this is where Dataset API came into picture.
+
+and datasets were started in 1.6 version
+
+these provides compile time safety.
+
+we get more flexibility in terms of lower level code.
+
+and moreover conversion from dataframe to dataset is seamless.
+
+we wont lose any of the optimizations.
+
+before spark 2 both dataframes and datasets are 2 different things.
+
+in spark 2 they merged these two into a single unified dataset API Or structured API
+
+dataframe is nothing but a dataset of row type.
+
+in case of datatframes, datatypes are bound at run time.
+
+however dataset is of (Employee)
+
+the type will be bound at compile time.
+
+
+how to convert dataframe to dataset.
+
+if we replace generic row with specific object then it becomes a dataset.
+
+this is where we require a case class.
+
+create case class
+
+and create dataset[OrdersData]
+
+we need to import below only after creating a spark session
+
+import spark.implicits._
+
+
+what is more preferred? dataframe or dataset
+
+dataframes are most preferred. but why dataframes do not give compile time safety? because 
+
+to convert from dataframe to dataset there is an overhead involved and this is for casting it to a perticular type.
+
+meaning it internally uses serialization - convetting data into a  binary format.
+
+when we are dealing with dataframes then the serialization is managed by tungsten binary format.
+
+when we are dealing with datasets then the serialization is managed by java serialization (slow)
+
+using datasets will help us to cut down on developer mistakes but it comes with an extra cost of casting and expensive serialization.
+
+
+
+
+pyspark
+============
+
+In python datasets are not supported. reason?
+
+because python does not provide compile time safety however it is supported in scala.
+
+
+
+
+
+

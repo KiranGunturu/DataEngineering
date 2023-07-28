@@ -1,0 +1,98 @@
+Joins
+======
+
+structured streaming supports 2 kind of joins
+
+1. Streaming DF with static DF
+2. Streaming DF with another Streaming DF
+
+Streaming DF with static DF
+============================
+
+Stream enrichments..
+ex: banking domain
+
+we swipe our card at POS terminal
+whenever we swipe our card a transaction will be generated in the JSON form
+
+streaming df:
+=============
+{"card_id":4466778899881234, "amount":1000, "postal_code":37678, "pos_id":3475853, "transaction_dt":"2023-10-21 04:37:42")
+
+now we have to enrich this transaction in real time by joining with below static table/file
+
+static df:
+==========
+card_id, member_id, county, state, card_issue_date
+
+refer steamingdf_joinwith_staticdf.scala
+
+
+Streaming DF with static DF - inner join possible
+							- left join possible
+							- right join possible
+							- full outer join is not supported
+							
+
+left join possible
+==================
+
+only if left side is a stream and right side is static df
+
+right join possible
+==================
+
+only if right side is a stream and left side is static df
+
+stream to static join are stateless - as one side of the join is completely known in advance
+so there is no need to maintain any state
+
+
+========================
+stream to stream join
+========================
+
+this is a stateful join
+the state has to be maintained in the state store
+
+the challenge of generating join results between two data streams is that,
+at any point of time, the view of the dataset is incomplete for both the sides of the join (no idea if certain record will come in the future or not)
+
+this is make it very hard for us to find matches between inputs
+
+both the input streams have to be buffered in the state store
+
+it will continously check for a match when new data arrives
+
+ideally the best practice is to clean the state store else we will run into out of memory issue.
+
+
+inner join
+===========
+
+matching records from both the tables
+
+if lets say 100 people view the ad then impression is 100
+
+out of 100 people who viewed might be 4 people click on it - clicks -3
+
+there are 2 kinds of events that are happening
+
+1.impression
+2.click event
+
+we need to make sure we clean the state store to avoid out of memory issues
+so we will have to implement the watermark
+
+when both the dataframes are steaming 
+
+inner - recommended to use watermark for state store cleanup
+left - it is possible
+1. there should be watermark on the rightside stream
+2. maximum time constraint between the left and right side streams
+	for ex: if a impression happens at 10 pm then a click on that before 10:15 will only be considered
+	
+right - it is possible
+
+1. there should be watermark on left stream
+

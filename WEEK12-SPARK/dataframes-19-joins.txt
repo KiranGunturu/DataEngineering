@@ -1,7 +1,0 @@
-Dataframes Joins
-====================
-
-there are 2 kinds of joins 
-
-1. Simple join (shuffle sort merge join)
-2. Broadcast Join

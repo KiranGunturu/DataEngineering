@@ -1,0 +1,77 @@
+MOCK 1
+=======
+
+SQOOP, HIVE, SPARK, HBASE TOOLS USED.
+
+what is apache spark?
+
+any design patterns like functional programming? factory design or singleton
+
+spark optimization techniques: broadcast vs SMB
+
+partitionBy , bucketBy, Broadcast
+
+Cache & Persist methonds.
+
+when to use cache vs persist?
+
+cache is when we have enough memory and if there is a restriction in memory then we can go for persist(MEMORY_AND_DISK)
+
+day to day activities
+=====================
+
+new dev
+enhancements like when jobs taking long time.
+tweaking old data pipelines
+requirements gathering
+docu prep
+testing
+meetings
+prod issues
+assisting if any QA bugs
+
+
+how much data you handle? depends
+
+why scala? scala blends with spark very well.
+
+diamond problem in scala? 
+
+trait in scala?
+
+case class? converting dataframe to dataset and when you want to define the schema.
+
+which cluster do you use? on-prem cloudera
+
+size of the cluster? 25 node (18 worker nodes), 512 GB ram, 48 cpu cores.
+
+what is RDD? and why they are given as immutable? in memory distributed collection and they are immutable as they maintain DAG.
+
+challenges in the projects? people are using groupByKey and I solved it using salting.
+
+how do you analyze your spark jobs?
+
+UI,stages (minimize stages as by reducing wide transformations), long running partitions.
+
+few transformations which creates new stages? groupByKey, reduceByKey
+
+performance techniques in hive? table level partitions, buckets, bucketmap join, SMB, file formats, spark or tez engine, vectorizartion, compression techs
+
+when do you partitioning vs bucketing? cardinality high then partition else bucketing.
+
+why hive and why not spark SQL? 
+
+spark transformations: 
+
+difference between reduce and reduceByKey?
+
+when to use row vs columnar file formats?
+
+why parquet is best fit for spark? 
+
+Parquet provides a lot of room for schema evolution whereas ORC does not.
+
+parquet supports nested data structures.
+Parquet gives you the flexibility to keep encoding on a per-column basis. 
+So depending on the type and the data that is associated with the column in your table, you can choose a suitable compression scheme. 
+This enables more compression which results in better read performance due to reduced latency caused due to reduced disk I/O and network I/O.

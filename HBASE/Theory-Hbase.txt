@@ -1,0 +1,477 @@
+===============
+Hbase session 1
+===============
+
+4 requirements for a database.
+
+1. structured manner
+2. random access (based on indexing)
+3. Low latency
+4. ACID
+
+Atomic -
+
+Kiran
+
+Total_balance		transfer 			Remaining_balance
+1000			500			500
+
+Krish
+
+Total_balance	transfer 	Remaining_balance
+1500			500			2000
+
+either both should happen or none should happen.
+
+Consistency
+employee table - employee id unique
+
+Isolation
+locking should be there - seqence should be there if multiple transactions are happening at the same time.
+
+Durability
+
+system should not be a single point of failure - meaning even if there is a failure I should not loose any of my transactions.
+
+--Hadoop is not a database
+
+--Limitations of hadoop
+	unstructed data
+	No random access - you have to read entire block serially from start to end. there is no indexing.
+	High latency
+	Not ACID compliant
+
+so how did google solved this for search?
+
+Google published a paper on bigtable
+
+implementation of bigtable is nothing but a Hbase
+
+GFS - STORAGE
+MAPREDUCE - PROCESSING
+BIGTABLE (hbase) - SEARCHING
+
+HBase - is a distributed database management system which runs on top of hadoop.
+
+Hbase:
+
+1.Distributed - stores data in HDFS
+2.Scalable - Capacity directly proportional to number of nodes in the cluster.
+3.Fault tolerant - Piggybacks on hadoop (Replication factor)
+4.Columnar storage
+5.denormalization is preferred ( store the data in a big table)- Normalization ( big table is divided into smaller tables ) is preferred in traditional systems.
+	join is not possible so no point in making it as normalized
+6.we do join, group by and orderby in traditional systems however in hbase, you can only perform CRUD operations like create, read, update and delete.
+7.ACID at the row level
+hbase provides ACID complaince at single row level.
+whenever we are trying to update multiple columns for a single row.
+then either all of them will be updated or none will be updated. this means for a single row level Hbase is automic.
+
+when we talk about updates for multiple rows in hbase then there is no guarantee. - 
+
+even if the update is on the same column in multiple rows - we can't guarantee that it will update all the rows.
+
+===============
+Hbase session 2
+===============
+
+Hadoop is not a database
+
+1. structured manner
+2. random access
+3. Low latency
+
+2 and 3 are relatable.
+
+4. ACID
+
+
+Hbase:
+
+1. structured manner
+
+	loose data structure - is not as rigid as traditional RDBMS.
+	if we have one row with 4 columns, then all the rows will have 4 cols. we can't have any rows with cols instead 4.
+	ex: structure is fixed and same for all records in traditional RDBMS.
+
+2. random access
+3. Low latency
+
+	Hbasse provides these two based on Row keys.
+
+4. ACID 
+
+	somewhat ACID compliant- some transactions will have ACID properties
+
+Hbase provides two things:
+
+1. batch processing using mapreduce 
+2. real time processing using row keys
+
+but major use case for hbase is that to have quick searching capabilities.
+
+Columnar Store:
+
+Traditional:
+
+id	name	salary	phone
+1	Kiran	10000	123435
+2	Mike	20000	453455
+
+Hbase
+
+
+id	Column	Value
+1	Name	Kiran
+1   salary	10000
+1	phone	123435
+2	name	Mike
+2	salary	20000
+2	phone	453455
+
+Advantages of columnar store:
+
+
+Traditional:
+
+id	name	salary	phone	Expiry
+1	Kiran	10000	123435	07252020
+2	Mike	20000	453455
+3	James	30000	453489	06012021
+4	Michael	40000	457545	
+
+
+id	name	salary	phone	Expiry		order_status
+1	Kiran	10000	123435	07252020
+2	Mike	20000	453455
+3	James	30000	453489	06012021	delivered
+4	Michael	40000	457545				pending
+
+it looks like whenever there is a change in data that results in a change in database structure.
+
+very pain to change the structure.
+
+even though we are table to change the structure we still have empty values.
+
+but though they are empty values , they still occupy the space.
+
+id	Column			Value
+1	Name			Kiran
+1   salary			10000
+1	phone			123435
+1	expirty			07252020
+2	name			Mike
+2	salary			20000
+2	phone			453455
+3	name			James
+3	salary			30000
+3	phone			453489
+3	Expiry			06012021
+3	order_status	delivered
+4	name			Michael
+4	salary			40000
+4	phone			457545
+4	order_status	pending
+
+dynamically add new attributes as rows in the table.
+no need to change the schema.
+so there is no space wastage
+
+===============
+Hbase session 3
+===============
+RDBMS - two dimensional model
+Hbase - four dimensional model
+
+rowkey 
+	uniquely identified a row
+	represented internally as a byte array
+	sorted in asc
+	
+columns
+	columns are unites within a column family
+	new columns can be added on the fly
+	ColumnFamily:
+	ColumnName = Work:Department
+column family
+	all rows have the same set of column families like work and personal
+	each column family is stored in a separate data file
+	set up at schema definition time
+	can have diff columns for each row (rigid at the column family level)
+	
+	if we have 10K rows and we have 2 column families
+	then each of these 10K rows are bound to these 2 columns families however
+	6000 rows can have 10 columns and 4k rows can have 15 columns also
+	
+timestamp
+	used as a version number for the values stored in a column
+	the value of any verison can be accessed
+	
+
+employee table
+===============
+
+dept
+grade
+title
+name
+ssn
+
+row key
+========
+here emp_id is row key (unique id to each row)
+
+columns
+=========
+dept, grade, title, name, ssn are the columns
+
+
+column family
+============
+now the column families are logiclly divided
+
+dept, grade, title (column family - work)
+name, ssn (column family - personal)
+
+timestamp
+==========
+
+epoch time means no of secs Jan 1 1970
+
+title - 234569878 - AVP
+	  - 244909823 - VP
+
+
+timestamp is to maintain versioning
+by default, latest versioning will be shown to use
+
+	
+
+
+Hbase Architecure
+==================
+
+employee
+
+work - dept, grade, title
+personal - name and ssn
+
+1
+2
+3
+4
+5
+.
+.
+.
+10000
+
+1-2500 region1
+2500 - 5000 region2
+5001 - 7500 region3
+7501 - 10000 region4
+
+there can be many no of regions - admin work
+
+region server1		1-2500 region1 | 2501 - 5000 region2
+region server2		5001-7500 region3 | 7501-10000 region4
+
+region server
+=============
+- 4 data nodes we can have 4 region server. one running on each data node.
+region
+=======
+each region server can hold multiple regions.
+data sorted based on row keys.
+
+memstore
+===========
+for each region there is a memstore for every column family.
+meaning memstore is per column family.
+
+whenever we want to write new records.
+consider we are inserting one record.
+if we are inserting 100000 times and for each insert if it creates a new file then there will be 100000 files.
+these inserts will first goto the memstore (memory) then the size of the memstore goes to a threshold size then the
+content of memstore will flush to disk and new file will be created.
+this file which is created from memstore to disk is called a Hfile
+
+wal
+====
+write ahead lock (stored on disk)
+consider data is still in memstore(memory) and the server crashes then data is lost
+the data loss is tackled by wal.
+meaning whenever we write, we are writing to wal then to memstore.
+if something crashes, then we can replay wal to get the data back.
+
+block cache
+===========
+
+whenever we read the data, the data is cached in memory.
+for the next reads it might get the data directly from cache and this will save lot of time.
+wal and block cache is one per region server
+
+Hfile
+=====
+stored in HDFS
+immutable
+default block size is 64KB
+
+
+zookeeper
+==========
+it is a coordinating service for various distributed systems
+every server will send heartbeat to zookeeper. also zookeeper will hold the location of metatable.
+
+hmaster
+=======
+hbase is a master slave arch
+hmaster is the master and region servers are the slaves
+hmaster will assign regions to region server.
+it performs admin activities like ddl operations such as creating or deleting a table.
+
+
+
+Hbase arch -part 2
+===================
+how the communication happend for read/write operations
+=====================
+client request - zookeeper - meta table - region server containing the keys client looking for - metadata will be kept in memory
+
+write operations
+===============
+wal - memstore - Hfile on disk
+
+read operations
+===============
+
+region server checks in block cache first
+then if required data is not available, checks in memstore
+then if required data is not available in memstore , checks in Hfile
+end up reading block of Hfile based on binary search instead reading fill file
+if it finds the data then retuns key value pair or else null
+
+
+compactions
+============
+
+flushes from memstore to the HDFS create multiple HFiles, especially during periods of heavy incoming writes. which leads to
+two major problems.
+
+1. read efficiency gets low. this is because large number of disk seeks needed to process large no of files thereby adversely 
+impacting the read peformance
+2. it leads to dirty data. A large number of HFiles might result in a lot of redundancy and inconsistency in data.
+
+compaction takes care of this.
+
+two types
+minor
+where many small files are compacted to few large files
+major
+all HFiles of a store are picked and rewritten into a single large Hfile
+
+
+update operations
+=================
+updates are done using timestamps
+designation
+VP - timestamp1
+SVP - timestamp2
+
+new record is inserted as update.
+
+hdfs is a read only system and changes cannot be made.
+
+Hbase delete operations
+=======================
+
+delete is a special type of update in Hbase
+where the values for which the delete request is submitted are not deleted immediately.
+Rather, these values are masked by assigning a tombstone marker to them.
+every request to read these values (with tombstone markers) retuns null to the clinet, which gives the client impression
+that the values are alredy delted.
+
+this means with delete, new record is inserted and mask the old record with tombstone marker.
+
+
+because HFile is immutable.
+all the values with tombstone markers are permanently deleted during the next major compactions.
+
+Hbase code
+===========
+hbase shell
+list - list the tables
+
+create table
+===========
+
+create 'students', 'personal_details', 'contact_details', 'marks'
+students is table with three column families
+
+insert records
+==============
+
+put 'students','student1','personal_details:email','kiran@gmail.com'
+put 'students','student1','personal_details:name','kiran'
+
+here row key is student1
+we are populating email column in personal_details column family
+
+it happens in 0.02 secs compared to hive 20 secs
+
+scan students - to see table data
+
+scan will give range of rows or all rows. however if we want a specific row then use get
+
+get 'students','student1' /gets the details for specific row key which is student1'
+
+get 'students', 'student1',{COLUMN => 'personal_details'} /get only personal_details column family for student1 row key
+
+get 'students', 'student1',{COLUMN => 'personal_details.name'} /get only name column from personal_details column family for student1 row key
+
+delete 'students', 'student1','personal_details.name' /to delete email column from student1 row key
+
+scan 'students'
+
+exists 'students' /to check if table present
+
+drop 'students' / gives an error asking us to disable first as it is enabled
+
+the data is present in memstore and flush has not happened
+
+when we disable the table the content of memstore is flushed to disk and then we can drop the table.
+
+disable 'students'
+
+enable 'students'
+
+scan 'students', 'student1',{COLUMN => ['personal_details.name'], LIMIT => 1}
+
+
+scan 'students', 'student1',{COLUMN => ['personal_details.name'], LIMIT => 1, STARTROW => "2"}
+
+scan 'students', 'student1',{COLUMN => ['personal_details.name'], STARTROW => "2", STARTROW => "2"}
+
+startrow is included and stoprow is excluded.
+
+see the data
+===========
+hdfs dfs -ls /hbase/data/default/students/somenumber
+
+will see folder for each column family
+
+if we are not seeing any Hfiles under column family folders then that means memstore is not full at that moment.
+
+filters
+========
+ValueFilter
+
+scan 'students', {FILTER => "ValueFilter(=,'binary':Maria')"}
+
+QualifierFilter
+
+scan 'students', {FILTER => "QualifierFilter(=,'substring':Name')"}
+
+count 'students'
+
+

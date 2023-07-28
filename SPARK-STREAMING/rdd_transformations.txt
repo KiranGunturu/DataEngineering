@@ -1,0 +1,5 @@
+reduceByKey - stateless transformation - one rdd
+updateStateByKey - stateful transformation, it consider the entire dstream from the beginning to the end. - all rdds
+reduceByKeyAndWindow - stateful (sliding window) -pair RDD is required
+reduceByWindow - pair RDD is not required
+countByWindow - it will count the number of lines in a window

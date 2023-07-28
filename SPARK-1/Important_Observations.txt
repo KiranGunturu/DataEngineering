@@ -1,0 +1,547 @@
+TRANSFORMATION VERSUS ACTIONS
+===============================
+
+Let's say you are one of the creators of Apache Spark & you are creating a new function. how will you decide to keep it as a transformation or to keep it as an action?
+
+confused? okay let me explain this in detail.
+
+You would be aware of a dataframe, transformation & action.
+
+A dataframe sits in a distributed way across the cluster.
+
+Calling a Transformation on a dataframe gives us a new transformed dataframe.
+
+Calling an action triggers the job and the results are brought to the driver machine.
+
+So, if you feel a function might return huge amount of results then we would wish to have these results in a dataframe as we might want to apply more transformations & might need the power of cluster for distributed processing. So we can keep it as Transformation.
+For example -
+filter - The results might still be huge after the filter
+orderBy - The number of output rows is equal to input rows
+distinct - The results can still be huge if there are more distinct values.
+
+So all the above are transformations.
+
+However, if you feel that the results of a function will be guaranteed very less then we kind of feel that we might not be looking for any further transformations or even if we need more transformation we are okay to do it locally as results are small and we do not need the power of cluster to operate on it. So we can keep it as Action.
+For example -
+count - we know that the output is one single value & no further transformations would be needed.
+head - output is the first row
+tail - output is the last row
+
+So all of the above are actions.
+
+Also, other functions where we explicitly say please get me the results like show, take, collect are all actions.
+
+Interesting thing to note..
+count when used along with groupBy it acts as a transformation as it will calculate the count for each group and if number of groups are more, then results can still be huge.
+
+But in all other cases count will be acting like an action because it just returns a single value.
+
+=================================================================================================================
+
+1. cluster - A group of machines (nodes)
+
+2. mapper - Local processing that happens on each node
+
+3. combiner - Local aggregation on each node
+
+4. reducer - do the final aggregation
+
+5. partitioner - decides which data should be sent to which reducer
+
+6. shuffle - transferring data from mapper machine to reducer machine
+
+7. Data Locality - processing the data on a node where data exists
+
+8. Straggler - A node which goes slow in a cluster
+
+9. Speculative execution - launches an equivalent backup task when task is running slow. (taking care of stragglers)
+
+10. Serverless compute - we do not procure a cluster, rather our job will run on shared resource pool. We pay based on amount of data scanned. example - AWS Athena
+
+11. Serverful - we upfront create a dedicated cluster. We pay for it even when the cluster is idle. example - AWS Redshift
+
+12. Database - Meant to serve day to day transactional activities. ACID properties are supported. example - MySQL
+
+13. Datawarehouse - Meant to analyse the data. Not meant for transactional activities. example - Teradata
+
+14. DataLake - A centralized repository that allows you to store all your structured and unstructured data at any scale.
+You can store your data as-is, without having to first structure the data. example - Amazon S3, ADLS Gen2
+
+=================================================================================================================================
+
+- How many Spark jobs will be launched?
+
+When you execute an action in Apache Spark, it launches a job. So if you are calling two actions, Spark will launch two jobs.
+
+- How many stages will be there in each of the Spark job?
+
+Since you mentioned that there is one wide transformation, that will create at least two stages. If there are other wide transformations in your actions, 
+they will further add stages to your job.
+
+- How many tasks will be there in each of the job?
+
+The number of tasks is equal to the number of data partitions that need to be processed. By default, when reading a file from HDFS, 
+Spark creates a partition for each block of the file (the default block size in HDFS is 128MB). Given a 1TB file, there would be about 8192 blocks (1TB / 128MB), hence 8192 tasks. However, this can be modified with configurations or transformations that change the partitioning.
+
+- Will everything be re-executed from the very start?
+
+Yes, if you have not cached the Data Frame, then each action will result in the re-computation of the DataFrame from the source data. 
+This means that if you call the same action again, Spark will re-execute everything from the start, including reading the data from HDFS and re-applying the 
+transformations.
+
+================================================================================================================================================
+
+Lets say you have an orders data frame and you cache it using below command
+
+orders_df. \
+filter(customer_id > 20). \
+select(order_id,customer_id). \
+cache(). \
+count()
+
+1. if you run the below code it won't hit the cache.
+orders_df. \
+select(order_id,customer_id). \
+filter(customer_id > 20). \
+count()
+
+2. the below code will also not hit the cache
+orders_df. \
+filter(customer_id > 30). \
+select(order_id,customer_id). \
+count()
+
+Now, Lets say you have an orders data frame and you cache it using below command
+orders_df. \
+select(order_id,customer_id). \
+filter(customer_id > 20). \
+cache(). \
+count()
+
+3. Surprisingly the below code will hit the cache
+orders_df. \
+select(order_id). \
+filter(customer_id > 20). \
+count()
+
+4. The count operation on a uncached dataframe with parquet file underneath will be faster than the cached dataframe with csv file underneath.
+
+the main reason for not hitting cache is there is difference is Analyzed plan and spark will hit cache only if analyzed plan is same . 
+For count operation parquet file will be faster because it’s some metadata information also hence we don’t have to scan the entire data . 
+But if we cache the parquet file then for getting count it require to scan the entire data and hence it’s take some extra time .
+
+
+================================================================================================================
+
+How does Cache inspite of being Lazy, provide performance benefits?
+
+Caching improves the performance by avoiding reiteration of already performed computations and thereby cutting down on the computational cost.
+
+Consider an example where we are trying to find the distinct orders from the orders data...
+
+In this case, if the Dataframe is cached after loading the data, it would give eventual benefits.
+- This Dataframe can be reused for other computations.
+- Even though the very first execution would consume more processing time for caching the data(lazy), the subsequent executions will be very quick in giving the results.
+
+Do's and Don'ts with Caching
+Never Cache large Dataframes. The right dataframes to cache are those that are frequently reused and are medium sized.
+
+Good to know things about Caching in Spark
+- Spark being smart, caches only the required Data.
+- Locality Levels that are applicable when caching comes into picture are NODE_LOCAL and PROCESS_LOCAL
+- Whenever the cache is hit for accessing the data, the locality level shows up as PROCESS_LOCAL
+- When the data is read from the disk, the locality level shows up as NODE_LOCAL
+
+======================================================================================================================================
+
+A very interesting question on Apache Spark
+
+The default caching level in case of dataframes is memory & disk. That means when data cannot cache in memory then it caches it to the disk.
+
+what's the whole point of caching it to disk, ideally the data is already present on disk. Isn't it?
+
+
+yes, Data is already present on Disk but while it may seem redundant to cache data to disk since it's already stored there, caching to 
+disk in this context serves a specific purpose. When the available memory is insufficient to hold the entire dataset, caching to disk allows for faster retrieval 
+compared to reading the data from disk every time it's needed. This approach reduces I/O operations and optimizes data processing, ensuring efficient 
+utilization of memory resources. Caching to disk is a valuable technique to improve performance when dealing with large datasets and limited memory capacity. 
+Without this default setting of caching level, we will face memory errors whenever working on a limited memory capacity system.
+
+Well!
+Disk has number of worker nodes based on data-size & every worker node has some HDFS storage and some non-HDFS (i.e. local) storage. 
+When part of the data can't be cached in memory, we cache it to disk. Our data which is already present in the disk is at the HDFS storage part. 
+The data which is going to be cached will be in local storage part of the disk which has faster retrieval than the HDFS storage part of the disk & 
+that's where the whole idea lies.
+
+=====================================================================================================================================================
+
+Generally we use the cache in spark to cache things in memory & this result in better performance whenever there is a cache hit.
+
+But thats not always the case, at times it can degrade the performance too...
+
+Let me give an example...
+
+Lets say you have a 20 GB file in hdfs kept in parquet format, and we create a dataframe on it.
+
+If we perform a count on this dataframe directly in spark without caching, it will be super fast as parquet will hold the count in its metadata and it will just read the metadata and will not even go to the data to check it. This will happen in few milliseconds.
+
+however when we cache the dataframe, the first time when we run count it will be significantly very slow as cache was lazy and it will have to do all the work to bring it to the cache at this moment.
+
+however, the next time also it will take time to do the count, it will surely find the data in cache but would have to go through the data to count the rows. This will take time.
+
+if the file size grows then parquet without cache will almost take constant time which will be few milliseconds as data need not be scanned.
+
+But when we cache it, the time to count will keep growing as more the data, more the work!
+
+This is one scenario where cache can degrade the performance.
+
+
+==============================================================================================================================
+
+Caching in Apache Spark - RDD / Dataframes / Spark Tables
+
+caching a RDD or a DataFrame is a lazy operation, however caching a spark table is eager by default, you can can make it lazy by mentioning lazy keyword.
+
+when dealing with RDD the storage level is memory, however when dealing with Dataframes and Spark tables the storage level is memory and disk.
+
+lets say if we have a orders file in hdfs which is 1.1 GB
+and we create a dataframe named orders_df out of it.
+this orders_df will have 9 partitions
+
+if we say
+cached_df = orders_df.cache()
+=> nothing will be cached as its a lazy operation
+
+cached_df.head()
+=> this will cache one partition as only first few rows have to be displayed.
+At this moment 1 of 9 partitions are cached.
+
+cached_df.tail(10)
+=> this will cache the last partition as few last records need to be shown.
+so at this moment 2 out of 9 partitions gets cached.
+
+Now if say
+cached_df.count()
+=> all the partitions will get cached now as it has to count each and every record.
+
+Note - a partition cannot be cached partially. it's either full or none.
+
+=================================================================================================================================================
+
+
+Interesting Question - When Spark is in memory compute engine, then why do we ever need to cache a Spark Dataframe in memory?
+
+As dataframe is immutable in spark, every transformation that we do creates a new dataframe in memory. Now, it is impossible for spark to hold all the dataframes throughout the job execution because that will soon eat up all the execution memory. 
+So, spark is smart enough to erase the dataframes which are not being used anymore (this is called Garbage collection). 
+So, if we don't explicitly ask spark to cache a dataframe i.e. persist the dataframe in memory, 
+then it will soon be erased and during the next actions, the entire dag will have to be executed from the beginning i.e. reading the data from disk and doing all the transformations(which have already been executed at the time of executing previous actions). So, 
+to avoid the recomputation of the entire dag and start from where we left, we cache a dataframe.
+
+======================================================================================================================================================
+
+Internals
+
+Lets say you have a 20 node spark cluster
+
+Each node is of size - 16 cpu cores / 64 gb RAM
+
+Let's say each node has 3 executors,
+with each executor of size - 5 cpu cores / 21 GB RAM
+
+=> 1. What's the total capacity of cluster?
+
+We will have 20 * 3 = 60 executors
+Total CPU capacity: 60 * 5 = 300 cpu Cores
+Total Memory capacity: 60 * 21 = 1260 GB RAM
+
+=> 2. How many parallel tasks can run on this cluster?
+
+We have 300 CPU cores, we can run 300 parallel tasks on this cluster.
+
+=> 3. Let's say you requested for 4 executors then how many parallel tasks can run?
+
+so the capacity we got is 20 cpu cores
+84 GB RAM
+so a total of 20 parallel tasks can run.
+
+=> 4. Let's say we read a csv file of 10.1 GB stored in datalake and have to do some filtering of data, how many tasks will run?
+
+if we create a dataframe out of 10.1 GB file we will get 81 partitions in our dataframe. (will cover in my next post on how many partitions are created)
+
+so we have 81 partitions each of size 128 mb, the last partition will be a bit smaller.
+
+so our job will have 81 total tasks.
+but we have 20 cpu cores
+
+lets say each task takes around 10 second to process 128 mb data.
+so first 20 tasks run in parallel,
+once these 20 tasks are done the other 20 tasks are executed and so on...
+
+so totally 5 cycles, if we think the most ideal scenario.
+
+10 sec + 10 sec + 10 sec + 10 sec + 8 sec
+
+first 4 cycles is to process 80 tasks all of 128 mb,
+last 8 sec is to process just one task of around 100 mb, so it takes little lesser but 19 cpu cores were free during this time.
+
+=> 5. is there a possibility of out of memory error in the above scenario?
+
+Each executor has 5 cpu cores and 21 gb ram.
+This 21 gb RAM is divided in various parts -
+300 mb reserved memory,
+40% user memory to store user defined variables/data. example hashmap
+60% spark memory - this is divided 50:50 between storage memory and execution memory.
+
+so basically we are looking at execution memory and it will he around 28% roughly of the total memory allotted.
+
+so consider around 6 GB of 21 GB memory is meant for execution memory.
+per cpu core we have (6 GB / 5 cores) = 1.2 GB execution memory.
+That means our task can roughly handle around 1.2 GB of data.
+however, we are handling 128 mb so we are well under this range.
+
+
+explanation
+
+21GB = 21000 MB
+300MB reserved - 20,700
+40% goes to user memory - 8280 so 20700-8280 = 12420
+so 50% goes to storage (6210) and 50 goes to execution (6210)
+so rougly 6210 is equal to 6gb of executer memory
+so divide this 6gb/5 = 1.2 gb so our one task handle 1.2 Gb of data
+=========================================================================================================================
+
+SQL exec order
+
+SELECT
+city,
+SUM(weed_smoked) as total_weed_smoked
+FROM weed_consumption
+WHERE is_legal = TRUE
+GROUP BY city
+HAVING SUM(weed_smoked) > 420
+ORDER BY SUM(weed_smoked) DESC
+LIMIT 69
+
+First, SQL executes FROM and WHERE. So we take the weed_consumption table and filter to only rows where is_legal is True.
+
+Then we GROUP BY city to start our aggregation.
+
+Then we filter the aggregation to only cities that have smoked at least 420 pound of weed. HAVING only ever applies to the aggregated result.
+
+After that we ORDER BY so we see the most Snoop-like cities first.
+
+Then we LIMIT to the top 69 cities.
+
+Then at the very end, we apply SELECT and aliases. This is why we can’t do things like ORDER BY total_weed_smoked because ORDER BY happens before the AS is executed and the alias is applied.
+
+
+===========================================================
+
+ORDER BY can be one of the worst things to use in Spark for job performance.
+
+The reason is, in order for Spark to truly know the data is sorted globally, it has to end up passing all the data to a single executor which destroys parallelism and makes your job sad.
+
+How can you avoid this pain but still get the compression benefits of sorting?
+
+- Repartitioning your data on your expected join key and then using sortWithinPartitions is a great way to keep compression high while also not trying to do a global sort and killing parallelism.
+
+- Bucketing is another similar option that you can try. You end up using the DISTRIBUTE BY keyword in your table's DDL to get Spark to recognize the buckets.
+
+the syntax “CLUSTER BY” does sorting AND bucketing within partitions. You can also use “SORT BY” to sort without bucketing, 
+“DISTRIBUTE BY” to bucket without sorting, or even both to specify different sorting and bucketing keys.
+
+========================================================================
+
+By changing the sort order of one of my parquet tables today, I was able to reduce its size from 35 GBs to 1 GB! Since there's 365 partitions of this data. It goes from being 12.2 TBs of data to 0.3 TBs.
+
+Remember when sorting your Parquet data that you should start with lowest cardinality first, then higher cardinalities.
+
+Say you have a dataset with schema:
+- device_operating_system (values like iOS, Android, Windows)
+- country (~250 distinct values)
+- user_id (millions of distinct values)
+
+If you sort by device_operating_system first then country then user_id, you'll achieve much better compression than if you sorted country, device_operating_system, then user_id.
+
+The closer together your low cardinality dimensions are, the better job parquet does at shrinking its size!
+
+What is your query access pattern? If you filter by country more than OS you could end up paying a huge penalty. 
+If OS is always included then you got a big win.
+
+There's a compute/storage tradeoff. You might want slightly bigger tables if it means your queries run faster.
+
+dataframe.repartition(100, $"user_id").sortWithinPartitions($"device_operating_system", $"country", $"user_id") 
+
+=========================================================
+
+You don't crush your performance reviews as a data engineer by writing thousands of lines of SQL!
+
+Thinking about impact in terms of lines of code is a very rudimentary and flawed way of thinking.
+
+There are many ways to have an impact beyond churning out code:
+
+- Changing stakeholders' intuitions about the business
+If you produce data sets that mostly reaffirm everyone's intuitions about the business, you're more likely to be taken for granted. Supplying data that actually changes decision-making processes is a huge way to have an impact as a data engineer.
+A critical question you should be asking when writing a pipeline is, "How will the business operate differently when they have visibility that this pipeline provides?" If the answer is, not much, then it's probably the wrong pipeline to be working on and you should push back!
+
+- Saving money in the cloud
+Cloud cost savings can happen in a few different buckets. Storage, compute and IO are the three big ones. Optimizing a pipeline is a great way to save money. An even better way to save money is by deprecating that pipeline.
+Often times in big organizations you'll have duplicate pipelines that each give roughly the same data set. Finding these inefficiencies and building more robust data models that minimize the number of pipelines that you need can be another great way to have an impact!
+
+- Reducing the on-call burden
+On-call is one of the most expensive parts of managing the data engineering process. Data engineer time is extremely expensive. If you can increase the reliability of your pipelines, you'll not only be liked more by your team but also save your company a lot of money!
+
+- Improving development efficiencies
+Is deploying and testing your pipeline incredibly slow? If you can find ways to deploy, build or test your pipelines faster and then get those methods adopted by your teams, that's a great way to have a "horizontal" impact and act as a force multiplier. Imagine saving 100 engineers 10 minutes a day, that's a HUGE impact that will result in you getting promoted pretty quickly!
+
+
+==========================================================
+
+Cloud costs can overrun and bottleneck your data engineering efforts!
+
+How do you get them under control?
+
+Step 1:
+Actually tracking and consolidating your cloud costs. These usually fall into four buckets
+- Storage cost, how much it costs to hold onto the data (e.g. S3 costs)
+- Compute cost, how much it costs to transform the data (e.g. EC2 costs)
+- IO cost, how much it costs to move the data around (ingress/egress costs)
+- Service cost, how much the service you're using costs (e.g. Databricks costs)
+
+Step 2:
+See where there are excessive gains in cost.
+- If you're seeing gains in storage costs that could be because:
+You aren't setting proper retention policies
+Your data tables are using the wrong data types
+You're using entire data sets when sampling would work fine
+
+- If you're seeing gains in computing costs that could be because:
+You have a skewed job that is keeping an EC2 instance alive too long
+You have overallocated or under-allocated your jobs. Overallocated jobs are wasteful. Underallocated jobs fail a lot and are wasteful
+You aren't using the right type of JOINs in your job or doing them are the wrong time
+
+- If you're seeing gains in IO costs that could be because:
+Your jobs are misconfigured and reading in too much data. You're missing the benefits of partition pruning and predicate pushdown
+You aren't leveraging the Parquet file format to its greatest extent and moving around data that isn't as compressed as it could be
+
+- If you're seeing gains in your service costs that could be because:
+Databricks decided to raise prices and you're locked in!
+
+=======================================================================
+
+One-liner mistakes that hurt your data lake performance:
+
+- not sorting your parquet files from lowest to highest cardinality
+Run length encoding compression is your best friend when storing data. Leverage it as much as you can!
+
+- using VARCHAR ids when BIGINT would work
+JOINs on BIGINT are much more performant than JOINs of VARCHAR
+
+- over/under partitioning your Spark jobs
+Set spark.sql.shuffle.partitions so that each partition has about 200mbs. Too big partitions hurt memory and reliability. Too small causes unnecessary network overhead.
+
+- over/under provisioning your Spark job memory
+Set spark.executor.memory so that your job has enough memory to run plus a little bit of overhead. Under provisioning causes unnecessary out of memory exceptions. Over provisioning prints Jeff Bezos money on EC2.
+
+=====================================================================
+
+Global sorting is one of the worst things you can do in your Spark job in terms of performance.
+
+The reason for this is in order to sort something globally, all the data has to be passed to one machine in the end to verify that it is completely sorted. This bottleneck brings a lot of Spark jobs to their knees.
+
+Global sorting is painful but sorting is not!
+
+If you want to leverage the sorting compression benefits of something like parquet file format, you can leverage .sortWithinPartitions function available in the Spark dataframe. That way at least each file is sorted even if the entire table is not sorted globally.
+
+======================================================================
+
+======================================================================
+
+A mistake many data engineers make is thinking real-time = streaming pipelines!
+
+Whenever a stakeholder says they want data in real time, you shouldn't default to dreams of Flink, Kafka, and watermarks.
+
+You should clarify with precision what an acceptable amount of latency is for this use case.
+
+Many times when a stakeholder asks for real-time data, it can be solved with an hourly batch pipeline. The incremental benefit to jump from hourly batch to streaming isn't worth it because it impacts the homogeneity of your suite of pipelines and makes the overhead maintenance much higher!
+
+Sometimes stakeholders say real-time and what they mean is "predictable refresh rates." This is a sign you need to do better as a data engineer at setting SLAs for your pipelines about when they'll refresh.
+
+
+
+=======================================================================
+
+Should you use Spark DataFrames, Datasets or SQL when writing your pipelines?
+
+DataFrames and SparkSQL can both do mostly the same things as one another.
+
+- if the pipeline is going to be tweaked by data scientists and analysts, please use SQL since they’ll be more comfortable editing it.
+
+- Spark Datasets are the opposite and only available in Scala. If you’re using datasets, you’re working on hardened master data that isn’t looking to change very much. It has lots of tests and quality checks too!
+
+- DataFrames is the weird middle ground that I like for PySpark. If you’re using DataFrames you’re in .py files which is more engineering than analytics which is nice. Use DataFrames for more hardened pipelines if you’re a PySpark fan!
+
+=========================================
+
+resilience engineering which is about designing a system that handles disasters.
+
+Netflix developed a tool called Chaos Monkey that simulates various disaster scenarios.
+
+For example, what if AWS us-west-2 gets destroyed? How does the infrastructure react to that?
+
+Measuring how the infrastructure responded to this simulated scenario allowed us to predict how it would respond in an actual scenario.
+
+
+===============================================================
+
+Apache Spark - how are the initial number of partitions calculated
+
+=>1. why are we really worried about initial number of partitions in dataframe?
+
+Initial number of partitions control the parallelism.
+say, if we have 20 partitions in our dataframe then 20 tasks will be launched.
+suppose, if we have 50 cpu cores then we are wasting 30 cores.
+ideally we could have run 50 tasks in parallel.
+so initial number of partitions directly impact the performance.
+
+=>2. Let us consider a scenario that we have 20 worker nodes each with 16 cpu cores, 64 gb RAM.
+
+we requested for 10 executors each with 5 cpu cores and 21 gb RAM
+this means we have a provision to run 50 tasks in parallel as we got 50 cpu cores.
+
+Now, Let's say we have a single csv file in datalake which is of size 1 GB then how many partitions will be there if we create a dataframe?
+
+There are 3 important configurations here:
+
+spark.conf.get("spark.sql.files.maxPartitionBytes")
+// default is 128 mb, this means that initial partition size cannot be bigger than 128 mb
+
+spark.conf.get("spark.sql.files.openCostInBytes")
+// default is 4 mb, for now ignore this. I will explain this when we are talking about merging multiple small files, so that you can understand it better. It's not much relevant here.
+
+spark.sparkContext.defaultParallelism
+// default will be number of cores we have, since in this case we have 50 cpu cores it will be 50.
+
+Now think logically that if we go with the partition size of 128 mb then we will get 8 partitions, but we had a provision to run 50 parallel tasks. why should we not use the remaining 42 cpu cores?
+
+so spark tries to finalize the size of partition based on below
+
+dataframe partition size = min of ( maxPartitionBytes , file size / total cpu cores )
+
+dataframe partition size = min of (128 mb, 1 GB/50)
+
+dataframe partition size = min of (128 mb, 20.5 mb) //rough calculation
+
+so we will get our partition size as 20.5 mb
+
+how many partitions will be there = 1 gb/20.5 mb = 50 partitions
+
+so the though process is simple that when talking about initial number of partitions, all our cpu cores should be used.
+
+=>3. Now, Let's say we have a single csv file in datalake which is of size 100 GB then how many partitions will be there if we create a dataframe?
+
+in this case each partition size will be of 128 mb so we get 800 partitions.
+
+eventually 800 tasks will run, but at a time only 50 will run in parallel as we have 50 cpu cores.
+
+so, 128 mb is the recommended number for the ideal partition size, but if we are processing smaller data then we go for a smaller partition size so that all our resources are used wisely.

@@ -1,0 +1,21 @@
+Internals of normal join operation
+=================================
+
+this involves shuffle.
+
+
+because same keys may not exists on the same machine.
+
+first records will be mapped based on the join key and send to the write exchange (buffer in the executor).
+
+mapping is like a key value pairs where key is the join key column and values are rest of column values in the same record.
+
+from this exchange spark framework can read it and do the shuffle.
+
+	at this time same keys will goto the same reduce exchange so join can happen easily
+	
+---
+
+first data will be shuffled
+then sorting will be done
+then merge and join will takes place

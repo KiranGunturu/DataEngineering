@@ -1,0 +1,363 @@
+1)
+select * from dbo.emp_compensation;
+
+select
+emp_id,
+sum(case when salary_component_type = 'salary' then val end ) as salary,
+sum(case when salary_component_type = 'bonus' then val  end ) as bonus,
+sum(case when salary_component_type = 'hike_percent' then val end ) as hike_percent
+into emp_compensation_pivot
+from dbo.emp_compensation
+group by emp_id
+
+
+select *from emp_compensation_pivot
+
+select emp_id,'salary' as salary_component_type,salary as val from emp_compensation_pivot
+union all
+select emp_id,'bonus' as salary_component_type,bonus as val from emp_compensation_pivot
+union all
+select emp_id,'hike_percent' as salary_component_type, hike_percent as val from emp_compensation_pivot
+	
+==================================
+2)
+--where
+operate at row level. goes to each record and apply the filter
+where comes before group by
+--having
+filters aggregate results
+give me depts whose average salary is greater than 10000
+
+select dept_id, avg(salary) as avg_salary
+from emp
+where salary > 5000
+group by dept_id
+having avg(salary) > 10000
+
+==========================================
+
+3)
+
+create table emp(
+emp_id int,
+emp_name varchar(20),
+department_id int,
+salary int,
+manager_id int,
+emp_age int);
+
+insert into emp
+values
+(1, 'Ankit', 100,10000, 4, 39);
+insert into emp
+values (2, 'Mohit', 100, 15000, 5, 48);
+insert into emp
+values (3, 'Vikas', 100, 10000,4,37);
+insert into emp
+values (4, 'Rohit', 100, 5000, 2, 16);
+insert into emp
+values (5, 'Mudit', 200, 12000, 6,55);
+insert into emp
+values (6, 'Agam', 200, 12000,2, 14);
+insert into emp
+values (7, 'Sanjay', 200, 9000, 2,13);
+insert into emp
+values (8, 'Ashish', 200,5000,2,12);
+insert into emp
+values (9, 'Mukesh',300,6000,6,51);
+insert into emp
+values (10, 'Rakesh',300,7000,6,50);
+insert into emp
+values
+(1, 'Saurabh', 900,12000, 2, 51);
+
+
+create table department(
+ 
+ dept_id int,
+ dept_name varchar(10)
+ );
+ 
+insert into department values(100,'Analytics');
+insert into department values(300,'IT');
+
+
+create table orders_s(
+ customer_name char(10),
+ order_date date,
+ order_amount int,
+ customer_gender char(6)
+ );
+ 
+ insert into orders_s values('Shilpa','2020-01-01',10000,'Female');
+ insert into orders_s values('Rahul','2020-01-02',12000,'Male');
+ insert into orders_s values('shilpa','2020-01-02',12000,'Female');
+ insert into orders_s values('Rohit','2020-01-03',15000,'Female');
+ insert into orders_s values('SHILPA','2020-01-03',14000,'Female');
+
+
+
+select *from emp
+
+
+-- find duplicates
+select emp_id,count(*)
+from emp
+group by emp_id
+having count(*) > 1
+
+--delete duplicates where there are two records for same employee. delete the lowest salaried employee
+-- thats why used order by desc clause as that will give us the first rank to higest salaried employee so we can delete the other record.
+with cte as (
+select *, row_number() over(partition by emp_id order by salary desc) as rn from emp
+)
+delete from cte
+where rn>1
+
+--union and union all
+union will remove the dupes
+union all will just combine the two datasets
+
+--difference between rank, row_number() and dense_rank
+
+-- employess who are not present in the dept table
+	--sub query
+select *from emp
+select *from emp where department_id not in (select dept_id from department)
+
+	--join
+select e.* from emp e
+left join department d on e.department_id = d.dept_id
+where d.dept_id is null
+
+-- second higest salary in each dept
+
+select *from emp
+order by department_id;
+with cte as (
+select *,
+--row_number() over(partition by department_id order by salary desc) as rn,
+--rank() over(partition by department_id order by salary desc) as rnk,
+dense_rank() over(partition by department_id order by salary desc) as drn
+from emp
+)select *from cte where drn=2
+
+-- find all transactions done by Shilpa
+
+select *from Orders_s
+where upper(customer_name) = 'SHILPA'
+
+-- manager salary > employee salary
+
+-- joins with output
+
+-- write query to swap gender
+
+select *from orders_s
+
+update orders_s
+set customer_gender = case when customer_gender='Female' then 'Male' 
+						when customer_gender='Male' then 'Female' end
+
+====================================================
+
+4)
+
+-- manager salary > employee salary
+
+select *from emp
+select e.*,m.emp_name from emp e
+inner join emp m on e.manager_id = m.emp_id
+where e.salary > m.salary
+
+=========================================
+
+
+7) diff joins
+
+create table t1
+(
+id int
+)
+
+create table t2
+(
+id int
+)
+
+insert into t1 values (1);
+insert into t1 values (1);
+
+
+insert into t2 values (1);
+insert into t2 values (1);
+insert into t2 values (1);
+
+select *from t1 inner join t2 on t1.id = t2.id --6
+select *from t1 left join t2 on t1.id = t2.id --6
+select *from t1 right join t2 on t1.id = t2.id --6
+select *from t1 full outer join t2 on t1.id = t2.id --6
+
+
+insert into t1 values (2);
+insert into t2 values (3);
+
+select *from t1 inner join t2 on t1.id = t2.id --6
+select *from t1 left join t2 on t1.id = t2.id --7
+select *from t1 right join t2 on t1.id = t2.id --7
+select *from t1 full outer join t2 on t1.id = t2.id --6+1+1=8
+
+
+insert into t1 values (2);
+insert into t2 values (2);
+
+select *from t1;
+select *From t2;
+
+
+select *from t1 inner join t2 on t1.id = t2.id --8
+select *from t1 left join t2 on t1.id = t2.id --8
+select *from t1 right join t2 on t1.id = t2.id --9
+select *from t1 full outer join t2 on t1.id = t2.id --8+1=9
+
+
+insert into t1 values (null);
+insert into t1 values (4);
+insert into t2 values (null);
+
+select *from t1;
+select *From t2;
+
+select *from t1 inner join t2 on t1.id = t2.id --8
+select *from t1 left join t2 on t1.id = t2.id --8+1+1=10
+select *from t1 right join t2 on t1.id = t2.id -- 8+1++1=10
+select *from t1 full outer join t2 on t1.id = t2.id --8+2+2=12
+
+=========================================================================
+
+8) calculate mode (most frequent element in a column)
+
+first get the count of each element , assign the rank and take the first one which has first rank (order by desc)
+
+create table mode 
+(
+id int
+);
+
+insert into mode values (1),(2),(2),(3),(3),(3),(3),(4),(5);
+
+insert into mode values (4),(4),(4);
+select *from mode
+
+with freq_cte as (
+select id, count(1) as freq from mode group by id
+),rank_cte as (
+select *, rank() over(order by freq desc) as rn
+from freq_cte
+)
+select *from rank_cte where rn=1
+
+=================================================================
+
+9) employee change in status
+
+create table emp_2020
+(
+emp_id int,
+designation varchar(20)
+);
+
+create table emp_2021
+(
+emp_id int,
+designation varchar(20)
+)
+
+insert into emp_2020 values (1,'Trainee'), (2,'Developer'),(3,'Senior Developer'),(4,'Manager');
+insert into emp_2021 values (1,'Developer'), (2,'Developer'),(3,'Manager'),(5,'Trainee');
+
+select *from emp_2020;
+select *from emp_2021;
+
+select isnull(e1.emp_id,e2.emp_id) ,
+case when e1.designation != e2.designation then 'promoted'
+	when e2.designation is null then 'Resigned'
+	when e1.designation is null then 'new employee' end as emp_status
+from emp_2020 e1
+full outer join emp_2021 e2 on e1.emp_id = e2.emp_id
+where isnull(e1.designation,'xx') != isnull(e2.designation,'xy')
+
+=========================================================================
+
+10) rank only dupes
+
+create table list (id varchar(5));
+insert into list values ('a');
+insert into list values ('a');
+insert into list values ('b');
+insert into list values ('c');
+insert into list values ('c');
+insert into list values ('c');
+insert into list values ('d');
+insert into list values ('d');
+insert into list values ('e');
+
+select *from list;
+
+with dupe_ids as (
+select id from list group by id having count(1) >1
+), rank_dupes as (
+select *,
+rank() over(order by id asc) as rn
+from dupe_ids
+)
+select l.id, 'DUP'+ cast(rd.rn as varchar(2)) from list l left join rank_dupes rd on l.id = rd.id
+
+======================================================
+
+11) updates
+select *from emp
+
+update emp
+set salary=100
+
+update emp
+set salary = 100
+where emp_age < 16
+
+update emp
+set salary = 100,
+dept = 200
+where emp_age < 16
+
+update emp
+set salary = salary + 100
+
+update emp
+set salary = case when department_id = 100 then salary*1.1
+				when department_id=200 then salary*1.2 else salary end
+
+
+update emp
+set dept_name = d.dept_name
+from emp e inner join dept d on e.department_id = d.dept_id
+
+=========================================
+
+12) custom sort
+
+select *from happiness_index
+order by case when Country ='India' then 2
+	when Country= 'Canada' then 1
+	else 0
+	end desc
+
+15) count no of spaces
+select
+name,
+len(name) - len(replace(name,' ','')) as cnt
+from strings
+
+
+
+

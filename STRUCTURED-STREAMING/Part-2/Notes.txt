@@ -1,0 +1,220 @@
+stateful vs stateless transformation
+====================================
+
+stateless
+=========
+
+select, filter, map, flatMap, explode
+
+these transformations work only with the current batch and have nothing to do with the history
+
+stateful
+========
+
+last state is maintained in a state store
+
+aggregations, grouping cannot work without history
+so these kind of transformations rely on state info or the history
+
+Note - stateless transformations do not complete complete outputMode
+=====================================================================
+ex:
+
+map, select
+
+10000 input -> 10000 output
+
+in this case, remembering the state of the query is not efficient
+
+when we are using stateful transformations we are storing the state or the history in the state store
+excessive state can cause OOM exception because state is maintained in the memory of the spark exeutors
+
+but we store the checkpoint dir and that is HDFS (disk) so why OOM exception here?
+
+state info is stored in checkpoint dir to handle fault tolerance
+
+same info which is present in the above dir will be maintained in exe memory for quick lookups
+
+so we should be careful when we deal with stateful transformations.
+
+spark offers us 2 kinds of stateful operations
+
+1.Managed stateful operations
+	spark manages on how to clean up the state store
+2.unManaged stateful operations
+	where we as a developer decide on when to cleanup the state store. we write our custom cleanup logic
+
+avaialble in scala/java only for now
+
+aggregations are of two types..
+===============================
+
+1.continous aggregations
+==========================
+
+we purhcase our grocery from costco
+on purchase of 100$ we get 1 reward point
+
+these reward points are never expired(unbounded)
+
+current 100 million customers ..
+and every month costco getting 1M new customers
+
+so here the state or history state will keep on growing
+
+in such cases where we have unbounded things we can think of unmanaged stateful operations to do the cleanup
+
+2.time bound aggregations (window aggregations)
+=========================
+
+one month window. the reward points expire after one month
+
+in such cases, spark can help us clean the state store because any data before 1 month can be cleaned up
+
+in this case, we can go for spark managed stateful operations so spark will work on cleanup logic.
+
+there are two types windows
+===========================
+
+1.Tumblng time window - a series of fixed size, non overlapping time interval.
+10:00 - 10:15
+10:15 - 10:30
+10:30 - 10:45
+
+2.Sliding time window - a series of fixed size, overlapping time interval.
+
+10:00 - 10:15
+10:05 - 10:20
+10:10 - 10:25
+
+here the window size is 15 mins and the sliding interval is 5 mins
+
+
+session-16
+===========
+
+the aggregations windows are based on event time not on trigger time
+
+{"order_id":57012,"order_date":"2020-03-02 11:05:00","order_customer_id":2765,"order_status":"PROCESSING","amount":200}
+
+event time is 11:05:00
+
+this event might come to spark lets say at 11:20
+
+problem statement is: calculate amount of sales every 15 mins
+
+tumbling window 
+
+11:00 - 11:15
+11:15 - 11:30
+11:30 - 11:45
+
+lets say event time is 11:14 (the order was placed at 11:14)
+
+this order reached quite late to spark lets say at 11:50
+
+what happens to late records?
+
+late arriving records are also updated to the store. refer code latearrivingorders.scala
+
+if we keep on entertaining the late arriving records like after one year in a unbounded way then we have to maintain that in store info
+
+if we want to deal with late coming records. then we wont be able to clean the state store and we have to maintain all the state.
+
+the reason we have to maintain the state is to tackle late coming records.
+
+session-17
+==========
+
+to deal with late coming records. there is a concept called watermarks
+
+what is a watermark?
+
+it is like setting an expirty date to a record
+
+the business says that we are looking for 99.9% accuracy.
+
+99.9% of our records are never late than 30 minutes
+
+and .1% of the transactions we might receive after 30 mins
+
+1000 events.. 1 event can arraive later than 30 mins
+
+999 events arrive before 30 mins
+
+in such a scenario we can safely discard the events which arrives later than 30 mins
+
+
+the state info should not be maintained for windows which are before the watermark duration.
+
+watermark boundary = max(eventtime) (11:48) - watermark threshold (30 mins) = 11:16
+
+spark will remove the state info for those states whos time is less than watermark boundary
+
+each microbatch ends up doing 3 things--
+
+1.update the state store
+2.cleanup the state store
+3.send the output to the sink
+
+remeber that
+
+1.watermark is the key to clean our state store
+2.events within the watermark are taken - this is guaranteed
+3.events outside the watermark may or may not be taken
+	if the event info is still there in checkpoint though event came after the watermark - will be considered
+	if the event info is deleted from the checkpoint but record came within the watermark - will be discarded
+	
+
+session-18
+============
+
+state store cleanup
+=====================
+
+1. setting a watermark
+2. using an appropriate output mode
+
+we have three diff output modes
+
+1.complete
+2.update
+3.append
+
+complete
+==========
+if we use complete outputMode with watermark then watermark will not be considered as spark should give us the full data all times
+complete outputMode will not allow us to clean the state store
+complete mode for windowing aggregates has side effect on state store cleaning
+
+update
+======
+update mode is the most usuful and efficient mode
+
+append
+=======
+
+append mode is not allowed on window aggregates
+why?
+so when records arrive late, we have to update the previous windows.
+append mode says I will only work when there are no updates
+
+when we talk about watermarks the scenario is now changed.
+
+spark allows to use append mode when we are using watermarks on event time.
+
+it will wait to output the results to the sink
+
+**append mode will supress the output of window aggregates unless they cross the watermark boundary.
+
+
+
+sliding window
+===============
+
+refer watermark_slidingWindow.scala
+now we will have new window after every 5 minutes
+overlapping window size
+
+11:00 - 11:15
+11:05 - 11:20

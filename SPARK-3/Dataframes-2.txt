@@ -1,0 +1,75 @@
+from pyspark import SparkContext
+from pyspark.sql import SparkSession
+
+spark = SparkSession \
+        .builder \
+        .appName("Hello world") \
+        .master("local[2]") \
+        .getOrCreate()
+        
+print(spark.version)
+
+orderdf = spark.read \
+			.option("header","true") \
+			.optin("inferSchema","true") \
+			.csv("/path/orders.csv")
+
+orderdf.show()
+
+orderdf.printSchema()
+
+there are 3 actions here
+
+
+read the data and inferSchema
+
+3rd is for show()
+
+--------
+
+if we disable inferschema then there will be only 2 jobs
+
+orderdf = spark.read \
+			.option("header","true") \
+			.csv("/path/orders.csv")
+
+orderdf.show()
+
+https://stackoverflow.com/questions/67339570/is-spark-read-csv-an-action-on-transformation
+
+case 1:
+
+One job
+
+orderdf = spark.read \
+			.csv("/path/orders.csv")
+			
+
+case 2:
+
+One job
+
+orderdf = spark.read \
+			.option("header","true") \
+			.csv("/path/orders.csv")
+
+case 3:
+
+two jobs
+
+orderdf = spark.read \
+			.option("header","true") \
+			.optin("inferSchema","true") \
+			.csv("/path/orders.csv")
+		
+case 4:
+
+two jobs
+
+orderdf = spark.read \
+			.option("header","true") \
+			.optin("inferSchema","true") \
+			.csv("/path/orders.csv")
+			
+
+orderdf.show(5,False)

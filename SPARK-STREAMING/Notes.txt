@@ -1,0 +1,395 @@
+session-1
+=========
+Batch Processing:
+doing analysis on top of files
+processing takes time, run on specific time in a day
+
+Real time processing:
+we will have continously flowing data and we have to calculate results instantly.
+
+credit card fraud detection
+finding trending hashtag
+track website failures using server logs
+
+when we talk about hadoop
+	HDFS + MR + YARN
+MR - batch processing only. can't handle streaming data
+
+apache spark can do this.
+
+spark can do both batch and streaming data.
+
+in spark we have a module called as spark streaming.
+
+session-2
+=========
+how is the data stored in spark when it comes to streaming?
+RDD
+when we load the file
+val baseRDD = sc.textFile("file path in hdfs")
+but in streaming, there is no concept of file
+when there is no concept of static file, how do we visualize the RDD.
+consider a water tap which is continously flowing.
+tap is running for 1 hour then size of my stream is one hour
+every 2 minutes we are filling one water ballon. now we have 30 ballons
+that means a new RDD is framed every 2 minutes then we will have 30 rdds in an hour.
+here all RDDs may not have same size of data (sometimes water is not that high flow)
+here this 2 mins is called a batch interval and it can be any number.
+
+consider whatever 30 ballons that we have filled we are putting them in a tub (Dstream)
+Dstream - seqence of RDDs - messages
+
+we need to operate at Dstream level
+
+within DStreams, spark does batch processing on individual RDDs
+
+underneath spark still works in batch style
+
+the batch size could be of 1 second.
+
+session-3
+=========
+
+spark is not a true streaming engine  but of a micro batch nature.
+
+In batch processing in spark we dealt with following
+	lower level constructs (RDDs)
+	higher level constructs (dataframes, dataset and spark SQLs)
+In stream processing
+	we have both lower and higher level constructs
+	1. spark streaming (RDDs) Traditional way
+	2. structured streaming (dataframes)
+
+lets talk about spark streaming with RDDs
+
+producer will be an application which is giving you a continous data
+consumer will be our spark steaming application
+producer will write to a socket and consumer will read from the same socket
+
+socket
+======
+combo of ip and port numnber
+(localhost + 9998)
+step1:
+we want to create a dummy producer where we continously type things.
+nc -lk 9998 (it will give a terminal to type)
+step2:
+we have to start a consumer
+spark streaming code which reads the data from socket
+
+spark-shell --master local[2] - at least 2 cpu cores are needed for spark steaming application
+it will give us the spark context called sc
+we also need a spark steaming context here
+
+
+//create spark streaming context
+val ssc = new StreamingContext(sc, Seconds(5)) / create RDD for every 5 secs
+// lines is a dstream
+val lines = ssc.socketTextSteam("localhost",9998)
+//transformed DStream
+val words = lines.flatMap(x => x.split(" ") 
+val pairRDD = words.map(x => (x,1))
+val wordCounts = pairRDD.reduceByKey(_+_)
+wordCounts.print()
+ssc.start() //starting the streaming application
+
+session-3
+=========
+
+in the above word count streaming example
+
+when calculating word count example, it was forgetting the state of previous RDDs
+
+if we write hello 5 times then it is givuing us the rdd with (hello,5)
+if we write hello 2 times then it is givuing us the rdd with (hello,2)
+
+it is giving o/p for each rdd individually
+this means it is forgetting the state of previous RDD
+
+when we talk about spark streaming, there are 2 kinds of transformations
+
+1. stateless
+
+is the one which forgets the previous state
+we perform operation only on single RDD
+map(), reduceByKey(), filter()
+
+2. statefull
+
+is the one in which we do accumulation over more than one RDD
+
+
+batch processing is always a stateless
+
+when we talk about stateful, we have 2 choices
+
+lets consider we have streaming application which runs for 6 hours
+batch interval size to be 5 mins - a new rdd will be created every 5 mins
+during the course of entire streaming application
+how many rdds will be created ? 72 rdds
+
+
+1.consider all of the rdds within a stream - all 72 (entire stream)
+2.we want to do operations over the last 30 mins -- last 6 rdds (moving window)
+
+sum() is the stateless transformation and work for each rdd individually
+
+what if we want to get running total on integers - use stateful transformation
+
+we need to convert normal RDD into pair RDD and add a dummy key to all the elements
+
+1 5 7
+
+k,1
+k,5
+k,7
+
+updateStateByKey() - statefull transformation
+countByWindow() - stateful transformation
+
+lets say the batch interval is 10 seconds (find out cumulative error rate over a 30 second timeframe)
+
+that means for every 10 seconds, we will have a new rdd (will work on 3 rdds)
+
+here 30 seconds timeframe is called as window size
+
+sliding interval - 20 seconds (drop last two rdds and bring 2 more new ones)
+
+
+session:5 //stateful
+==========
+
+lets calculate word count in entire stream and make this as stateful
+
+updateStateByKey is a stateful transformation we can think of using.
+
+this requires 2 steps:
+
+1. Define a state to start with.
+2. a function to update the state
+
+//create spark streaming context
+val ssc = new StreamingContext(sc, Seconds(5)) / create RDD for every 5 secs
+// lines is a dstream
+val lines = ssc.socketTextSteam("localhost",9998)
+
+ssc.checkpoint(".") /creates the checkpoint dir in the current working dir
+
+def updatefunc(newValues:Seq[Int], previousState: Option[Int]): Option[Int] = {
+	val newCount = previousState.getOrElse(0) + newValues.sum
+	Some(newCount)
+	
+
+//transformed DStream
+val words = lines.flatMap(x => x.split(" ") 
+val pairRDD = words.map(x => (x,1))
+
+ex: data cming as below
+
+big data is interesting big data is fun
+
+val words = lines.flatMap(x => x.split(" ")
+big
+data
+is
+interesting
+big
+data
+is
+fun
+
+val pairRDD = words.map(x => (x,1))
+(big,1)
+(data,1)
+(is,1)
+(interesting,1)
+(big,1)
+(data,1)
+(is,1)
+(fun,1)
+
+then it goes for sorting
+(big,1)
+(big,1)
+(data,1)
+(data,1)
+(fun,1)
+(interesting,1)
+(is,1)
+(is,1)
+
+(big,{1,1})
+(data,{1,1})
+(fun,{1})
+(interesting,{1})
+(is,{1,l})
+
+
+
+val wordCounts = pairRDD.updateStateByKey(updatefunc)
+
+rdd1
+
+(big,{1,1}) newValues = {1,1} 2 previousState = 0, (big,2)
+(data,{1,1}) newValues = {1,1} 2 previousState = 0, (data,2)
+(fun,{1}) (fun,1)
+(interesting,{1}) (interesting,1)
+(is,{1,1})  (is,2)
+
+rdd2
+big data is vast
+
+big
+data
+is
+vast
+
+(big,1) newValues = {1} previousState = 2, (big,3)
+(data,1) newValues = {1} previousState = 2, (data,3)
+(is,1) newValues = {1} previousState = 2, (is,3)
+(vast,1) newValues = {1} previousState = 0, (vast,1)
+
+wordCounts.print()
+ssc.start() //starting the streaming application
+
+when we talk about stateful transformation then we have to do checkpointing.
+
+session-7
+===========
+our problem statement is to find the freqency of each word in the 10 seconds sliding window
+
+reduceByKey - stateless transformation - one rdd
+updateStateByKey - stateful transformation, it consider the entire dstream from the beginning to the end. - all rdds
+
+instead of one rdd and all rdds, what if I want to consider certain rdds or moving window?
+
+slicing window: few parameters
+1. batch interval - the time in which each rdd is created.
+if we have batch interval as 2 seconds that means after every 2 seconds a new rdd will be created.
+
+2. window size - 10 seconds. we are interested in the last 5 rdds only (10/5=2)
+
+3.sliding interval - 2 seconds
+
+after every 2 seconds one oldest rdd will go away and the new rdd will come in
+
+if the sliding interval is 4 seconds
+
+after every 4 seconds 2 oldest rdds will go away and two new rdds will come in
+
+
+sliding interval has to be integral multiple of batch interval
+
+window size should also be an integral multiple of batch interval
+
+reduceByKeyAndWindow is the transformation can be used
+
+reduceByKeyAndWindow takes 4 parameters
+
+1. summary function (Rdds entered the window) (x,y)=>x+y
+2. inverse function (RDDs left the window) (x,y)=>x-y
+3. window size - Seconds(10)
+4. sliding interval - Seconds(2)
+
+
+//create spark streaming context
+val ssc = new StreamingContext(sc, Seconds(5)) / create RDD for every 5 secs
+// lines is a dstream
+val lines = ssc.socketTextSteam("localhost",9998)
+
+ssc.checkpoint(".") /creates the checkpoint dir in the current working dir
+//transformed DStream
+val words = lines.flatMap(x => x.split(" ") 
+val pairRDD = words.map(x => (x,1)).reduceByKeyAndWindow((x,y)=>x+y,(x,y)=>x-y, Seconds(10), Seconds(2))
+wordCounts.print()
+ssc.start()
+ssc.awaitTermination()
+
+we will see our very first result in 10 seconds and will see our second result after 12th second then 14th then 16th.
+
+
+
+with functins:
+
+//create spark streaming context
+val ssc = new StreamingContext(sc, Seconds(5)) / create RDD for every 5 secs
+// lines is a dstream
+val lines = ssc.socketTextSteam("localhost",9998)
+
+ssc.checkpoint(".") /creates the checkpoint dir in the current working dir
+//transformed DStream
+val words = lines.flatMap(x => x.split(" ") 
+def summaryFuct(x: Int, y: Int) = {
+	x+y
+}
+
+def inverseFuct(x: Int, y: Int) = {
+	x-y
+}
+
+val pairRDD = words.map(x => (x,1)).reduceByKeyAndWindow(summaryFuct(_,_),inverseFuct(_,_), Seconds(10), Seconds(2))
+wordCounts.print()
+ssc.start()
+ssc.awaitTermination()
+
+
+session-8
+===========
+
+reduceByKey - stateless transformation - one rdd
+updateStateByKey - stateful transformation, it consider the entire dstream from the beginning to the end. - all rdds
+reduceByKeyAndWindow - stateful (sliding window) -pair RDD is required
+reduceByWindow - pair RDD is not required
+countByWindow - it will count the number of lines in a window
+
+reduceByWindow - pair RDD is not required
+==========================================
+it accepts the strings only
+
+//create spark streaming context
+val ssc = new StreamingContext(sc, Seconds(5)) / create RDD for every 5 secs
+// lines is a dstream
+val lines = ssc.socketTextSteam("localhost",9998)
+
+ssc.checkpoint(".") /creates the checkpoint dir in the current working dir
+//transformed DStream
+
+def summaryFuct(x: String, y: String) = {
+	(x.toInt + y.toInt).toString()
+}
+
+def inverseFuct(x: String, y: String) = {
+	(x.toInt - y.toInt).toString()
+}
+
+val wordCounts = lines.reduceByKeyAndWindow(summaryFuct,inverseFuct, Seconds(10), Seconds(2))
+wordCounts.print()
+ssc.start()
+ssc.awaitTermination()
+
+countByWindow
+============
+
+it will count the number of lines in a window
+
+
+//create spark streaming context
+val ssc = new StreamingContext(sc, Seconds(5)) / create RDD for every 5 secs
+// lines is a dstream
+val lines = ssc.socketTextSteam("localhost",9998)
+
+ssc.checkpoint(".") /creates the checkpoint dir in the current working dir
+//transformed DStream
+
+def summaryFuct(x: String, y: String) = {
+	(x.toInt + y.toInt).toString()
+}
+
+def inverseFuct(x: String, y: String) = {
+	(x.toInt - y.toInt).toString()
+}
+
+val wordCounts = lines.countByWindow(Seconds(10), Seconds(2))
+wordCounts.print()
+ssc.start()
+ssc.awaitTermination()

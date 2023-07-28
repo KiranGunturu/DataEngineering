@@ -1,0 +1,34 @@
+Airflow
+========
+it is an open source platform to programatically author, schedule and monitor workflows
+benefits
+	dynamic - oozie is a static with XML
+	scalable - can run millions of tasks
+	UI
+	extensibility - we can also have our plugins, functions
+
+core components
+================
+
+web server - UI
+schedular - helps to schedule our workflows
+metastore - stores metadata related to workflows, users.
+triggerer - allows us to run specific kind of tasks
+executor - celery, kubernetes executor
+queue
+worker - where tasks are executed
+DAG - no cycles
+operator - its nothing more than a task.
+db = connect(host, creds)
+db.insert(sql_query)
+	action operator like python or bash operator
+	transfer operator - allows us to transfer data from one point to another like Mysql to redshift
+	sensor operator - allows us to wait for something to arrive like file to certain location
+	
+how it works
+=============
+
+add .py to folder DAGs - will take 5 mins to reflect on UI
+if we make any changes to existing DAGs, they will take 30 secs to reflect in the schedular
+taskinstance-known-shheduled-queued- success/fail
+

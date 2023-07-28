@@ -1,0 +1,59 @@
+snowpipe
+=========
+enables loading once a file appears in a s3 bucket.
+if data needs to be avaialble immediately for data analysis.
+it uses serverless features
+
+s3 bucket -
+s3 notification / copy -
+serverless load -
+snowflake DB
+
+set up snowpipe
+===============
+
+create stage
+	To have the connection
+	Copy command
+
+create pipe
+	create a pipe as object with COPY COMMAND
+
+s3 notification
+	to trigger snowpipe
+
+1) create table
+2) create file format
+	
+	CREATE OR REPLACE file format MANAGE_DB.file_formats.csv_fileformat
+		type=csv
+		field_delimiter = ','
+		skip_header = 1
+		null_if = ('NULL','null')
+		empty_field_as_null = TRUE;
+	
+3) create stage object
+	CREATE OR REPLACE stage MANAGE_DB.external_Stages.csv_folder
+		URL='s3/bucket'
+		STORAGE_INTEGRATION= s3_int //access related info
+		FILE_FORMAT = MANAGE_DB.file_formats.csv_fileformat
+4) create pipe
+	
+	CREATE pipe MANAGE_DB.pipes.employee_pipe
+	auto_ingest=TRUE
+	as
+	COPY INTO OUR_FIRST_DB.PUBLIC.employees
+	FROM @MANAGE_DB.external_Stages.csv_folder
+	
+event notification:
+===================
+
+under s3 bucket
+create event notification
+path: csv/snowpipe - folder path
+event types as all object create events
+destination as SQS
+SQS ARN as notification channel from Pipe
+
+		
+		

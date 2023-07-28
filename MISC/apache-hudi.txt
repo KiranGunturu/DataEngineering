@@ -1,0 +1,67 @@
+pyspark --conf "spark.dynamicAllocation.minExecutors=1" --conf "spark.dynamicAllocation.maxExecutors=50" --conf "spark.sql.avro.datetimeRebaseModeInWrite=CORRECTED" --conf "spark.serializer=org.apache.spark.serializer.KryoSerializer" --conf "spark.sql.catalog.spark_catalog=org.apache.spark.sql.hudi.catalog.HoodieCatalog" --conf "spark.sql.extensions=org.apache.spark.sql.hudi.HoodieSparkSessionExtension" --jars /usr/lib/hudi/hudi-spark-bundle.jar
+tableName = "hudi_trips_cow"
+basePath = "s3://nissan-nna-bdeemrdev-dev-tcs-data-s3-us-east-1/data/refined/bidw/hudi-test/"
+dataGen = sc._jvm.org.apache.hudi.QuickstartUtils.DataGenerator()
+
+#inserts
+
+inserts = sc._jvm.org.apache.hudi.QuickstartUtils.convertToStringList(dataGen.generateInserts(10))
+df = spark.read.json(spark.sparkContext.parallelize(inserts, 2))
+
+hudi_options = {
+    'hoodie.table.name': tableName,
+    'hoodie.datasource.write.recordkey.field': 'uuid',
+    'hoodie.datasource.write.partitionpath.field': 'partitionpath',
+    'hoodie.datasource.write.table.name': tableName,
+    'hoodie.datasource.write.operation': 'upsert',
+    'hoodie.datasource.write.precombine.field': 'ts',
+    'hoodie.upsert.shuffle.parallelism': 2,
+    'hoodie.insert.shuffle.parallelism': 2
+}
+
+df.write.format("hudi"). \
+    options(**hudi_options). \
+    mode("overwrite"). \
+    save(basePath)
+	
+tripsSnapshotDF = spark. \
+  read. \
+  format("hudi"). \
+  load(basePath)
+
+tripsSnapshotDF.createOrReplaceTempView("hudi_trips_snapshot")
+
+spark.sql("select fare, begin_lon, begin_lat, ts from  hudi_trips_snapshot where fare > 20.0").show()
+spark.sql("select _hoodie_commit_time, _hoodie_record_key, _hoodie_partition_path from  hudi_trips_snapshot").show()
+spark.sql("select _hoodie_commit_time, _hoodie_record_key, _hoodie_partition_path, rider, driver, fare ,uuid from  hudi_trips_snapshot").show()
+
+updates = sc._jvm.org.apache.hudi.QuickstartUtils.convertToStringList(dataGen.generateUpdates(10))
+df = spark.read.json(spark.sparkContext.parallelize(updates, 2))
+df.write.format("hudi"). \
+  options(**hudi_options). \
+  mode("append"). \
+  save(basePath)
+  
+spark. \
+  read. \
+  format("hudi"). \
+  load(basePath). \
+  createOrReplaceTempView("hudi_trips_snapshot")
+  
+commits = list(map(lambda row: row[0], spark.sql("select distinct(_hoodie_commit_time) as commitTime from  hudi_trips_snapshot order by commitTime").limit(50).collect()))
+beginTime = commits[len(commits) - 2] 
+
+incremental_read_options = {
+  'hoodie.datasource.query.type': 'incremental',
+  'hoodie.datasource.read.begin.instanttime': beginTime,
+}
+
+tripsIncrementalDF = spark.read.format("hudi"). \
+  options(**incremental_read_options). \
+  load(basePath)
+tripsIncrementalDF.createOrReplaceTempView("hudi_trips_incremental")
+
+spark.sql("select `_hoodie_commit_time`, _hoodie_record_key,rider, driver, fare from  hudi_trips_incremental").show()
+
+
+https://hudi.apache.org/docs/quick-start-guide/

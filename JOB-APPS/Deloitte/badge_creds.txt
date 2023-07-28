@@ -1,0 +1,12 @@
+https://credentials.databricks.com/4e2ecd0c-df7c-4ba4-af8d-dc9afa30c199
+https://www.credly.com/badges/6a97d864-d741-4ffe-8622-b0120cfeb9c5/public_url
+https://www.credly.com/badges/53bb8a9a-5a9f-4cca-aea1-e8cb6e002590/public_url
+
+credly creds:
+kiranusa15@gmail.com
+P@ssw0rd345
+
+credentials.databricks.com:
+
+kiran.gntdm@gmail.com
+P@ssw0rd345

@@ -1,0 +1,171 @@
+
+1 to 80
+
+int a1 = 1
+int a2 = 2
+
+array = [1,2,3,4,..80]- 
+can hold somilar type of elements
+index starts from 0
+elements can be accessed via index
+
+
+linkedList, trees, stack, queue, heap
+
+algoritham
+==========
+
+I have an array of 1024 elements
+
+[5,2,9,500,23..78]
+
+check if 78 is exists in this array or not
+
+in worst case-
+
+we may make 1024 comparaision
+best case is when your element is in first place - rearest of rear
+
+if size of array is n
+
+o(n) - linear search (if n increases then time to search will also increases)
+
+p1
+===
+
+arrays
+linkedList
+Hash tables
+strings
+sorting - quick sort and merge sort
+searching - linear search and binary search
+Hashing
+Time complexity
+
+p2
+===
+
+Dynamic programming
+Trees - BST, Tree traversals
+
+
+p3
+===
+
+Heap - Min and Max heap (2nd highest, lowest)
+stack
+queue
+
+
+Brute force - will give the answer, but not be optimized
+
+
+Time complexity
+================
+
+array of 1000 integers
+
+I have to search for an element
+
+Linear search
+
+n elements in your array - o(n) - straight line
+
+
+[2,6,8,9,10,40...50000] -- sorted array
+
+search for 560
+
+[2,4,6,9,12,15,18,20,22]
+
+
+18
+
+1024
+512
+256
+128
+64
+32
+16
+8
+4
+2
+1
+
+
+binary search (when array is sorted)
+
+log(n)
+
+o(log n) < o(n)
+
+if there is only one operation like get me 800th element in an array
+
+o(!) < o(log n) < o(n)
+
+
+o(n) + o(log n) ~ o(n)
+
+
+
+order in the least
+
+o(!)
+o(log n)
+o(n)
+o(n logn) - time complexity of sorting
+o(n2)
+o(n3)
+o(2n) - exponental
+o(n!)
+
+
+array of 1024 elements - tell if there are any dupes in this array or not
+
+[5,2,9,500,23,29,30,78,29]
+
+7
+6
+5
+4
+3
+2
+1
+
+n2/2
+
+TC is o(n2)
+
+If we sort it
+
+[2,5,9,23,29,29,78,500]
+
+o(n logn) + o(n)
+
+
+there is an array of 999 elements
+
+and this aray holds all elements from range 1 to 10000
+
+one element is missing
+
+how do we find the missing element
+
+1. Brute force - o(n2) - for each element we are doing 1000 comparaisions
+2. Sorting - o(n logn)
+
+[1,2,3,4,....849,851,852..]
+
+o(n)
+
+o(nlogn) + o(n) ~ o(nlogn)
+
+
+
+
+
+
+
+
+

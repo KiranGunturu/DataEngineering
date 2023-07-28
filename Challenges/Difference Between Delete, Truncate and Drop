@@ -1,0 +1,26 @@
+Difference Between Delete, Truncate and Drop 
+
+DELETE:
+1. Data Manipulation Language Command (DML)
+2. Delete one or more tuples of a table. 
+3. Either delete all the rows in one go or can delete rows one by one.
+4. It is comparatively slower than the TRUNCATE command.
+5. It does not reset the high water mark (HWM) back to zero
+6. Consume more resources.
+7. Explicit commit is required. 
+
+TRUNCATE: 
+1. Data Definition Language Command (DDL).
+2. Delete all the rows of a table in one go.
+3. We can’t delete the single row as here WHERE clause is not used.
+4. It is comparatively faster than the delete command.
+5. Does not remove the structure of the table.
+6. It resets the high water mark (HWM) back to zero.
+7. Consume fewer resources.
+8. Auto commit 
+
+DROP:
+1. Data Definition Language Command (DDL).
+2. It is used to drop the whole table. 
+3. We can drop (delete) the whole structure in one go.
+4. Existence of the whole table is finished or say lost. 

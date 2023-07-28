@@ -1,0 +1,314 @@
+================================
+Compression Techniques in hadoop
+================================
+save storage
+also it will help us to process the data transfer.
+it will reduce I/O costs.
+
+
+compression and uncompression comes with some cost in terms of time taken to compress and time taken to uncomress.
+
+when we compare it with I/o gains we can actually neglect this additional time.
+
+4 important ones.
+
+1. Snappy
+2. lzo
+3. gzip
+4. bzip2
+
+
+some of the compression codecs are optimized for storage
+however some of the compression codecs are optimized for speed.
+
+
+trade off
+
+if we want more compression ratio then we have to spend more time in compression.
+
+=========
+snappy
+=========
+
+very fast compression codec. - speed at which compression happens.
+
+however in terms of compression it is not very good.
+
+optimized for speed rather than storage.
+
+snappy by default is not splittable.
+
+avro, parquet, orc is good combo with snappy as spilittability is already taken care.
+
+=============
+Lzo
+=============
+
+optimized for speed just like snappy.
+
+lzo is inherently splittable so we can even use with json, xml and text file.
+
+=============
+gzip
+=============
+
+very good compression performance. better than snappy. 2.5 times better than snappy.
+
+1 gb - 8 blocks
+
+after compression - 2 blocks.
+
+then this means we are not getting the parallesim.
+
+
+we can ideally reduce the block size so that we have more number of blocks and we get more parallesim.
+
+=============
+Bzip2
+=============
+
+which is optimized for storage and it is very very slow.
+
+best use would be using hadoop mainly for archival purposes.
+
+--------------------
+
+snappy  - optimized for speed rather than storage, not splittable
+
+lzo     - optimized for speed rather than storage, splittable
+
+gzip   -  optimized for storage rather than speed,
+		  in terms of storage it is 2.5 times better than snappy however 2 times slower than snappy in terms of speed. not splittable.
+
+bzip2   - highly optimized for storage, but very very slow, can be 10 times slower than gzip. splittable.
+
+
+snappy - It is a fast compression codec, however in terms of compression it is not too good. 
+	It is basically optimizes for speed rather than storage. It is by default is not splittable. 
+	It works well with container based file formats like avro, orc & parquet.
+	This is mostly used in industry in-terms of compression techniques.
+
+https://stackoverflow.com/questions/32382352/is-snappy-splittable-or-not-splittable
+This means that if a whole text file is compressed with Snappy then the file is NOT splittable. 
+But if each record inside the file is compressed with Snappy then the file could be splittable
+
+Lzo - It is a fast compression codec but not like snappy. It is inherently splittable. In terms of compression it is better than snappy.
+
+Gzip - It is a slow compression codec but it is good in compression performance. It is not splittable. It should be used with a container based file format.
+
+Bzip2 - It is slower than Gzip also. But it is very good in compression performance. As it is optimised for storage. It is inherently splittable. 
+		It is henerally not a good choice to go with.
+
+Bonus :
+There will always be trade off between speed and storage. If you’re looking for storage then you’ve to compromise with speed and 
+	if you’re looking for speed then you’ve to compromise with storage. 
+	But compromising is very minimal. As these techniques are getting enhanced day-by-day. 
+
+===================
+Hive Vectorization 
+===================
+
+vectorized query execution is a hive feature that greatly reduces the CPU usage for typical query operations.
+
+A standard query execution system processes one row at a time.
+
+vectorized query execution streamlines operations by processing a block of 1024 rows at a time. 
+
+to use vectorized query execution, you must store your data in ORC format.
+
+by default it is not enabled.
+
+set hive.vectorized.execution.enabled=true;
+
+create table vectorizedtable (state string, id int) stored as orc;
+
+insert into vectorizedtable values ('franklin',1);
+
+set hive.vectorized.execution.enabled=true;
+
+explain select count(*) from vectorizedtable;
+
+now it will show us 
+
+execution mode: vectorized
+
+========================
+changing the hive engine
+========================
+
+hive supports three execution engines
+
+1. MR - slow
+2. tez - fast
+3. spark - fastest
+
+MR is the by default.
+
+set hive.execution.engine;
+mr
+
+
+now lets change the engine to spark
+
+set hive.execution.engine=spark;
+
+hive query will leverage the spark engine.
+
+============================
+Apache Thrift server/service
+============================
+
+you are sitting on your laptop that does not have hadoop installed.
+
+so you want to connect to hive and execute a bunch of queries from your machine.
+
+you can try to connect to hive using various programing clients.
+
+java client
+python client
+
+lets say if we write the java code to talk to hive then it can be done with the help if thrift service.
+
+
+=========================
+MSCK repair
+=========================
+
+external table -> points to a directory -> partitioned base on some column called state
+
+lets say there is a third party service feeding the data to the table pointed  by adding the partition folders manually
+
+/data/state=CA
+/data/state=NY
+
+but for some reason when we do below
+
+show partitions table_name;
+
+it may show zero 
+
+so we will have to use MSCK repair command to update the hive metadata.
+
+
+msck repair table table_name;
+
+===================================================================================================
+
+alter table employee enable no_drop; - avoid dropping accidentally
+
+alter table employee disable no_drop;
+
+alter table employee partition (state='CA') enable no_drop; avoid dropping perticular partition accidentally
+
+alter table employee enable offline; - we can't do select on it.
+
+alter table employee disable offline;
+
+tblproperties("skip.header.line.count"="3") - to skip first n rows.
+
+tblproperties("skip.footer.line.count"="3") - to skip last n rows.
+
+======immutable========
+
+if we set tblproperties("immutable"="true") then
+
+this means will allow to load data in table only for first time.
+
+that means we wont't be able to append / modifying the data in this table. however we can still overwrite the data.
+
+
+======drop vs truncate vs purge ========
+
+drop -
+
+when we drop a managed table both the data and metadata will be deleted
+
+when we drop a external table then metadata will be deleted. data is not touched.
+
+truncate - 
+
+all the data is deleted. metadata will still be there.
+
+purge -
+
+if purge is set to true , and if we delete the data the data is permanently gone.
+
+but if purge is set to false, then we can recover the data.
+
+
+====== treating empty string as nulls ========
+
+if the data is stored in a file. and there is no value for a perticular string field. (blank values). these will be displayed as blank values.
+
+blank - ""
+null
+
+tblproperties("serialization.null.format"=""); - all blank values will be shown as nulls.
+
+instead of "" , if we give ABC then all the ABC values will be shown to us as nulls.
+
+====terminal=====
+
+hdfs dfs -ls /user/hive/
+
+========if we want to access hdfs dir from hive terminal then use below.=====
+
+hive> dfs -ls /user/hive/
+
+executing normal linux commands from hive
+
+!ls -ltr /home/localpath
+
+
+========Hivevar===========
+
+select *from orders where customer_id=1111;
+
+set hivevar:my_customer=1111;
+
+select *From orders where customer_id=${my_customer};
+
+
+=========how to print the headers along with the data========
+
+set hive.cli.print.header=true;
+
+
+====cartesian product======
+
+select *from table1,table2
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		
+
+
+

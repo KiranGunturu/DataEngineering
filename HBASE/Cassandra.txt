@@ -1,0 +1,109 @@
+Cassandra
+==========
+it is a distributed column oriented database and is highly performant.
+
+it is highly scalable
+
+when we require transactional activities or quick retrieval
+
+low latency retrieval.
+
+cap theorum
+===========
+
+consistency
+availability
+partition tolerance
+
+
+CA
+CP
+AP
+
+hbase - CP
+Cassandra - AP
+
+
+incase of hbase , we run of hadoop cluster
+also hbase provides master slave arch where master is hmaster and slave is region server
+
+however incase of cassandra there is no master
+all are pears
+cassandra has a decentralized arch
+
+for communication among themself they (nodes) use gossip protocal
+
+in master slave arch, there can be down times if master fails.
+
+becuase of decentralized (no master arch) cassandra is highly available sys
+
+tunable read/write consistency
+===============================
+
+cassandra is a AP system
+it by default compramises on the consistency to be highly available
+step 1: client will send the request to get value A
+step 2: the request will go to one of the machine. for ex: node 5
+step 3: node 5 will go and talk to node 1(can be any node) to get the results.
+step 4: node 5 will return the result to the client
+
+here just to be available we are compramising on consistency (not checking if the value is latest or not)
+
+cassandra provides us tunable consistency.
+I want the results only when 2 nodes agree on the same result or
+I want the results to be agreed by all the nodes.
+but by default it is just one node.
+when we move towards availability, consistency is compramised
+when we move towards consistency, availability is compramised
+
+differences between hbase and cassandra
+======================================
+
+when we are on hadoop, hbase is the natural choice as it integrates easily
+
+similarities
+=============
+
+both are NO SQL distributed databases
+columnar fashion
+highly scalable
+when we want to perform transactions (update, inserts) and quick reads
+low latency operations
+
+
+differences
+============
+1)
+hbase has master slave arch however cassandra is decentralized arch (no master)
+cassandra is highly available as no dependency on single master
+
+2)
+hbase provides consistency and partition tolerance system
+cassandra is availability and partition tolerance system
+however cassandra also offers tunable consistency where we can set the consistency level:
+	one node
+	all nodes
+	quorum (2 nodes)
+3)
+hbase runs on top of hadoop cluster meaning data is kept on hdfs
+however cassandra has seperate cluster than our hadoop
+
+4)
+
+hbase shell commands
+cassandra has its own query language called as CQL.
+
+this CQL is very similar to normal sql
+
+
+=================
+
+hbase syntax looks quite hard
+
+apache phoenix
+
+gives us a sql interface on top of nosql
+
+apache phoenix works on top of hbase where we can query our hbase using sql like syntax
+
+Solr SQL also there.

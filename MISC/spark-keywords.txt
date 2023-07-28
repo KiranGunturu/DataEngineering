@@ -1,0 +1,525 @@
+Spark
+======
+
+hadoop works on data locality priniple
+=======================================
+In memory
+general purpose
+compute engine
+
+CE
+==
+hadoop provides?
+	HDFS - storage
+	MR - processing
+	YARN - RM
+spark says where is your data and RM
+	storage - HDFS, S3, local storage etc
+	RM - YARN, Mesos, Kubernetes
+In memory
+=========
+hadoop - 50 jobs - 100 i/o
+spark - 1 job - 2 i/o
+I/O
+serialization - compact storage - bytes format
+Deserialization - object format
+CPU costs
+trade off between storage and CPU costs
+recommendation is to keep it Deserialized and save cpu costs
+GP
+===
+pig - cleaning
+hive - querying
+mahout - ML
+sqoop - data ingestion
+storm - streaming data
+
+only bound to use map and reduce with above.
+
+RDD:
+basic unit fold the data in memory
+resilient distributed dataset
+RDD - in memory collection
+Transformations are lazy but actions are not
+blocks - spread across disk
+RDD - spred across memory
+what is resilient: resilient to failure and ability to create lost RDDs
+no replica concept as memory is expensive
+replicas in disk is cheap
+immutable so we can recover
+what happens when transformations are lazy?
+	huge file with 10 lakh records
+what happens when transformations are NOT lazy?
+pushing the predicates down
+
+execute code on the cluster
+==========================
+scala or pyspark terminal
+spark-submit
+master / slave arch
+each app will have driver
+each app will have its executors
+driver - analyze the work, divide the work, distribute the task, schedule task and monitors
+executor - execute the code locally on JVM
+executors are always launched on the cluster
+driver - will run on client machine - client mode
+		 will run on cluster machine - cluster mode
+
+In client - mode:
+	
+		1. when we launch spark-shell automatically spark session is created.
+		2. as soon as spark session is created request goes to the YARN RM.
+		3. YARN RM will create a container on one of the node manager and will launch and AM for this application
+		4. this AM will negoatiate RM for resources in the form of container
+		5. RM will create containers on the worker nodes
+		6. AM will launch executors in these containers
+		7. now the driver and executors can communicate directly
+		
+	In cluster - mode:
+	
+		everything is same but the driver runs on the AM which is on the cluster.
+reduceByKey (paired RDD)- transformation
+rdd.reduceByKey(lambda x,y: (x+y)) // result is df
+reduce - action
+rdd.reduceByKey(lambda x,y: (x+y)) // result is a local variable
+
+parallelism
+============
+
+sc.parallelize
+sc.defaultParallelism //2 varies from sys to sys
+rdd.getNumPartitions
+sc.defaultMinPartitions // 2 as example
+case 1: 500 MB / 4 partitions
+case 2: 100 MB / we may assume that we get 1 partition but we get 2 as we have defaultMinPartitions are 2.
+case 3: 250 MB / sc.defaultParallelism=2 and sc.defaultMinPartitions=3 and if we run rdd.getNumPartitions then we get 3 because
+	sc.defaultMinPartitions has precedence over sc.defaultParallelism
+
+repartition - increase degree of parallelism / full shuffling / equal partitions size.
+	increase and decrease
+	500 MB - 4 partitions - 20 machines but only 4 are working
+coalesce - avoids full shuffle / not even distribution
+	coalesce can only decrease 
+	1 TB - 8000 partitions - 1000 node cluster - each node as 8 partiitions
+		then few transformations applied like map, filter, reduce and left with only few MB in each partition and remaining all are empty.
+reduceByKey
+	local aggs
+	reduce data shuffle
+groupByKey
+	1 TB - 8000 partitions - 1000 node cluster - each node as 8 partiitions
+	but lets say we onky have 3 distinct values
+	after groupByKey operation we have our data only on 3 machines though we have 1000 node cluster.
+	3 machines will hold 1TB - OOM may come
+	no parallelism
+
+reduceByKey and groupByKey can only work on paired RDDs and keys be duplicated
+it is not same as map - map can only have distinct keys
+
+
+no of jobs is equal to no of actions
+
+no of wide transformations is equal to no of stages + 1
+
+no of partitions is equal to no of tasks
+
+accumulator
+============
+shared variable sitting on the driver machine
+executors can only update that variable
+ex: count no of empty lines in a file.
+
+DAG - only available when we call an action
+	rdd.toDebugString
+Lineage - is nothing but dependency graph. logical plan
+
+map - 10 partitions with 1000 rows - map will be involked 1000 times
+mapPartitions - 10 partitions with 1000 rows - mapPartitions will be involked 10 times
+
+rdd level transformations
+=========================
+map
+flatMap
+mapPartitions
+filter
+sample
+union
+intersection
+distinct
+groupByKey
+reduceByKey
+aggregateByKey
+sortByKey
+coalesce
+repartition
+
+rdd level actions
+==================
+reduce
+collect
+count
+countByKey
+first
+take
+saveAsTextFile
+foreach
+
+cache
+	no args
+	reuse results of previous rdd
+	cache - always in memory
+	always load complete partition df.take(10)
+	df.count() - loads all partitions
+persist
+	persist - by default cache - stored in memory
+	In memory
+		deserialized - persist(StorageLevel.MEMORY_ONLY) // If no enough memory it will just ignore
+	In disk
+		serialized - persist(StorageLevel.DISK_ONLY)
+	In memory and disk
+		persist(StorageLevel.MEMORY_AND_DISK) // first memory then disk.
+	off heap
+		persist(StorageLevel.OFF_HEAP)
+		always disk
+		outside of JVM
+		If we store objects in jvm, it uses GC for freeing up and it takes time.
+		if we store objects off the JVM (off heap) - bit speed but unsafe operation as we are grabbing memory from machine instead executor
+MEMORY_ONLY_SER
+MEMORY_ONLY_2
+block eviction - LRU principle - Least recently used
+	
+
+spark reading
+==============
+	external (mysql, oracle, redshift, mongodb)
+	internal (hdfs, s3, azure blob, google cloud) distributed storage
+	
+	PERMISSIVE
+	DROPMALFORMED
+	FAILFAST
+	schema
+		infer
+		implicit - bounded with avro and parquet 
+		explicit
+			programitically
+			DDL string
+	sep
+	encoding
+	quote
+	escape
+	header
+	ignore spaces
+	maxColumms
+	maxCharsPerColumn
+	
+spark writing
+===============
+	append
+	overwrite
+		truncate and reload
+			drop table and recreate
+		cx_oracle module and do explicit query to delete and commit
+	errorIfExists - if table exists it will give error. if not it will create and write
+	ignore
+	repartition
+	partitioning
+	bucketing
+	sorting
+	maxRecordsPerFile
+	by default we can't write as avro but possible with external jar
+	
+df to dataset
+=============
+using case class
+case class Person(name: String, Age: Int, city: String)
+import spark.explicits._
+val ds = df.as[Person]
+ds to df:
+==========
+df = ds.toDF()
+df to rdd
+==========
+df.rdd
+
+dataframes are more developper friendly
+they are compiled at driver and code can be optimized
+datasets provide compile type safety
+catalyst optimizer available with both ds and df
+dataframes - high level API
+rdd - low level API
+what is more preferred? dataframe or dataset
+dataframes are most preferred. but why dataframes do not give compile time safety? because 
+to convert from dataframe to dataset there is an overhead involved and this is for casting it to a perticular type.
+meaning it internally uses serialization - convetting data into a  binary format.
+when we are dealing with dataframes then the serialization is managed by tungsten binary format.
+when we are dealing with datasets then the serialization is managed by java serialization (slow)
+using datasets will help us to cut down on developer mistakes but it comes with an extra cost of casting and expensive serialization.
+
+
+==============
+10 nodes, 16 cores, 64 GB memory
+thin -
+	min possible resources
+	16 executors one core each and 4 Gb ram
+	we can't run multiple tasks as executor got only one core
+	more copies of broradcast variable as every executor should get its own copy
+	
+	
+fat -
+	max possible resources
+	1 executor with 16 cores and 64 Gb ram
+	if executor holds more than 5 cpu cores then the hdfs throughput suffers because lot of i/o due to multiple threads
+	lot of memory - GC takes lot of time.
+
+balanced approach
+=================
+goal to get multi threading in each executor
+reduce hdfs throughput
+
+1 core and 1 gb is gone os and other deamons
+
+15 cores and 63 gb
+
+3 executors and 21 gb ram for each executor
+
+out of 21 Gb, 7% goes to the part of overhead
+max(384,7% of 21GB) - 1.5 so left with 19GB
+
+since we have 10 nodes then
+30 executors
+50 cpu cores
+570 GB ram
+
+
+cat biglogNew.txt biglogNew.txt biglogNew.txt biglogNew.txt >> biglogNew.txt
+
+dynamic resource allocation
+============================
+spark.dynamicAllocation.enabled=true
+	
+	whenever we go with dynamicAllocation there is something called below set in the cluster level
+	
+		spark.dynamicAllocation.maxExecutors=10 - Max executors = 10
+		
+		spark.dynamicAllocation.minExecutors=0 - Min executors = 0 this means it can release all the executors whenever it is idle
+		
+		spark.dynamicAllocation.InitialExecutors=2 -  Initial executors = 2
+		
+		spark.dynamicAllocation.executoridleTimeout = 120s - if the executor is idle for 2 mins then it will be released
+
+salting
+========
+
+increase the distinct keys.
+
+Interms of serializer we should prefre kryo serializer over java serializer.
+
+whenever the data is stored on disk or has to be transfered over the disk it has be in serialized form.
+
+if we use kryo serializer then size will be much lesser than in the case of java serializer.
+
+if we have 5gb then we might end up transerfeing around 2gb with the help of kryo serializer
+
+kryo is significantly faster and more impact than java serializer (often as much as 10 times as per the documentation)
+
+Partitioning
+bucketing
+cache & persist
+coalesce & repartition
+avoid/minimize shuffling data
+filter data as early as possible
+try to have even distribution on key columns. if not, consider salting
+	select id, count(*) from table
+	group by id
+broadcast Join
+join optimizations
+using reduceBykey instead groupByKey
+thin vs fat executor: Balanced Approach
+dynamic and statics resource allocation
+choosing the right file formats: Orc, Avro, Parquet
+
+
+df1
+df2
+df1.read - 1 job, 1 stage, 3 tasks
+df2.read - 1 job, 1 stage, 3 tasks
+spark.sql.shuffle.partiitions,3
+joindf=df1.join(df2,condition,type) - 2 map exchanges and one reduce exchange (6 tasks from map exchange and 3 from reduce exchange)
+
+100GB file
+total tasks? 1600
+each stage will have 800 if we take word count ex with 2 stages
+
+100 Gb file
+suppose we have the max 10 executors and 4 cpu cores each
+what is the parallelism? 40 tasks can run in parallel at a time in the cluster for each stage
+
+
+100 GB file
+500 distinct keys
+in first stage - 800 tasks will run
+in 2nd stage - 500 tasks will run and 300 will be in idle
+
+rdd join
+========
+1.4Gb file - normal join - 1.3 mins - 2 stages
+1.4 gb file - broadcast join - 6 secs - only 1 stage.
+
+df join
+=======
+
+	normal join
+	============
+	orders - 2.6 GB - 21 partiitions
+	customers - 900KB - 1 partiition
+	spark.conf.set("spark.sql.autoBroadcaseJoinThreshold",-1) // disable broadcast join 
+	by default we get shuffle partitions as 200
+	so in this case we get 222 tasks - 200 default , 21 from orders and 1 from customers
+	it took 1.9 mins and took 32 secs just to infer the schema.
+
+	where as in rdd we only have 22 partiitions even with groupBy or w/o groupBy
+
+	broadcast join
+	===============
+	
+	define explict schema - avaoid infer schema time
+	broadcast smaller data set
+	there will be only 22 tasks since there wont be any shuffling and job completes in one minute.
+	
+join optimization
+==================
+
+goal
+	avoid or minimize shuffling
+	increase the parallelism
+1 large and 1 small table
+	-> no shuffling required
+two large tables
+	1) filter early
+	2)Increase parallelism
+		50 executors
+		5 cpu cores
+		at max - 50*5 - 250 tasks can run in parallel
+		lets say we defined spark.sql.shuffle.partiitions=200
+		now our parallelism is limited to 200 though we have 250 cpu cores
+		lets say we only have 100 distinct keys in our data then after join we will have 100 taks with data and 100 with no data
+		in this case - we only have 100 tasks though we have 250 cpu cores
+		
+		it means min(cpu cores,no of shuffle partiitions,distinct keys)
+		min(250,200,100) - 100
+		
+		we can tune this 100 either by changing the join column or salting techniques.
+		
+skew partitions
+================
+
+consider salting
+ex: US data joiining with CA data - add salting to CA data
+
+bucketing & sorting
+======================
+
+orders - 32 buckets 
+customers - 32 buckets
+
+32 is a random number
+
+we can avoid SMB with this approach as data is pre-shuffled (one time activity)
+
+simple example
+==================
+	
+	if you are not doing bucketing & sorting and you are doing a plain join
+	
+	say our join takes - 30 minutes
+	and we are joinin our tables 1000 times in different use cases then
+	30 minutes * 1000 = 30000 minutes
+	
+	assume bucketing & sorting done on join column
+	
+	60 minutes to do bucketing & sorting
+	
+	now our join may take - 5 minutes
+	
+	so 5 * 1000 = 5000 minutes and we saved 25000 minutes of time.
+
+catalyst optimizer
+=================
+
+unresolved - checks for syntax errors
+resolved - checks for metadata
+optimized logical plan - 
+	predicate pushdown
+	combining filter etc
+	
+	consider you are doing aggregate
+	
+physical plan
+	plan 1 - sort aggregate
+	plan 2 - hash aggregate
+	
+	it will consider the best plan out of these and convert to low level APIs like RDD code
+	
+	if we directly write our code in RDD then there wont be catalyst optimizer
+
+
+spark.sql("select student_id from (select student_id, exam_center_id from students) where student_id < 5").explain(true)
+
+explain(true) - will give us all four differnet plans like parsed, unresolved, optimized, physical
+
+we can also see the same in spark UI SQL tab and details section
+
+dynamic partition pruning
+========================
+ex: partition the fact table
+	broadcast the dimension table
+
+speculative execution
+======================
+
+it happens when one of the task is taking longer time compared to others
+
+spark will run the same task on other node when there is an issue with the worker node like overload , about to crash
+
+it doesn't help in following cases
+
+	data skew
+	memory crisis
+
+can be speculative:
+	interval-100ms
+	multiplier - 1.5 - 1.5 times the median of other tasks
+	quantile - 0.75 - if more than 75% of tasks are complete and one task is still running
+	minTaskRuntime - 100ms - min time task should run before it is being considered for speculative execution
+	
+bydefault schedular:
+======================
+
+spark runs its jobs in FIFO fashion
+
+. first job gets highest priority
+. consumes as much as needed
+. then next jobs gets priority once the first one is over.
+
+FAIR:
+
+spark.schedular.mode= FAIR
+round robin slot allocation
+	assign one task in a slot from first job then 
+	assign one task in a slot from second job
+
+coalesce & repartition
+==========
+decrease
+avoids full shuffle but always not guaranteed
+df.coalesce(5) - it will enforce this 5 to spark.sql.shuffle.partiitions to 5 and join happens in only 5 partitions
+df.repartition(5) - it will not enforce this 5 to spark.sql.shuffle.partiitions to 5 and join happens in 200 partitions by default
+so repartition is faster than coalesce in this case.
+
+repartition with count - takes more time
+coalesce with count - takes less time - no shuffle
+
+partiition skew can be solved by:
+================================
+
+repartition
+salting

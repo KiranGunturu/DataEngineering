@@ -1,0 +1,10 @@
+refer - dataframes-18.py
+
+
+window agregations
+==================
+
+1. partition column - country
+2. ordering column - weeknum
+3. window size - first to the last row
+

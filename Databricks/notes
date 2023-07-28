@@ -1,0 +1,292 @@
+Delta lake
+==========
+open source technology
+storage framework/layer
+enabling buiding lakehouse
+
+tx or delta log
+
+ordered records of every transaction performed on the table
+single source of truth
+Json file contain commit info:
+	operation performed + predicates used (like any filters)
+	data files affected (added + removed)
+	
+delta lake pros:
+	brings ACID transactions to object storage
+	handles scalable metadata
+	full audit trail of all changes
+	builds upon standard data formats: parquet + json
+
+https://github.com/derar-alhussein/Databricks-Certified-Data-Engineer-Associate
+
+create table employess
+(id int, name string, salary DOUBLE);
+
+insert into employess
+values
+(1,"adam",3500.0),
+(2,"smith",4500.0),
+(3,"arish",5500.0),
+(4,"naik",6500.0)
+(5,"mary",7500.0)
+(6,"mike",8500.0)
+select *from employess
+
+describe detail employess //table metadata
+	location : dbfs:/user/hive/warehouse/employess
+	numfiles
+	
+%fs ls dbfs:/user/hive/warehouse/employess
+it will create 4 files as our cluster has 4 cores
+
+update employess
+set salary = salary + 100
+where name LIKE "a%"
+
+2 rows will be affected
+%fs ls dbfs:/user/hive/warehouse/employess
+this will now have 6 files as spark created 2 more files instead changing the already existing files
+and it will make the older 2 files invalid
+describe detail employess
+	numfiles = 4 as spark will consider current version files
+
+describe history employess
+it will now show three versions - create table, write and update
+
+%fs ls 'dbfs:/user/hive/warehouse/employess/_delta_log'
+
+this will show three json files representing three diff transactions and three .orc files having checksum of json files
+
+lets read most recent json file
+%fs head 'dbfs:/user/hive/warehouse/employess/_delta_log/000000000000002.json'
+
+it will show as 2 files are removed and 2 files are added
+
+advanced features:
+=================
+Time travel
+	audit data chnages
+	DESCRIBE HISTORY EMPLOYESS
+	query older version
+	select *from employess TIMESTAMP AS OF "2019-01-01"
+	select *from employess VERSION AS OF 36
+	select *from employessv@36
+Rollback versions
+	RESTORE TABLE employess to TIMESTAMP AS OF "2019-01-01"
+	RESTORE TABLE employess to VERSION AS OF 36
+	
+compact small files
+	OPTIMIZE employess
+	OPTIMIZE employess ZORDER BY column_name
+		this is to index the files
+		ex: 5 files and id columns as follows
+		file1 : 55,10
+		file2: 1,99
+		file3 : 15,50
+		file4: 75,30
+		file5: 8, 100 now the o/p will be 2 files 1 with 1 to 50 and other one with 51 to 100
+
+vacuum a delta table
+	clean up unused data files
+	files that are no longer in latest table state
+	
+	VACUUM employess [retention period] / it will delete all the files which are older than retention period specified
+	default 7 days
+	vacuum = no time travel
+	even after we did vacuum, we will have unused files till the retention period mentioned.just to support any long running jobs
+
+DROP table employess / table will be dropped and also data will be gone
+
+databases = schemas in hive metastore
+	default db
+	/user/hive/warehouse/
+create schema/database db_y
+location 'dbfs:/custom/path/db_y.db
+
+managed
+	hive manages both data and metadata
+	by default managed
+external
+	hive does not maintain data but just the metadata
+	if you specify a location when creating the table
+	
+describe extended table;
+
+delta lake tables:
+==================
+
+CTAS statement
+
+create table table_1 AS select *from table_2
+
+create table table_1
+comment "contains PII"
+partitioned  by (city, birth_date)
+location '/some/path'
+as select id, name, email, birth_date, city from users
+
+not null constraints
+check constraints
+
+cloning:
+deep clone
+	create table tgt_table deep clone source_table // fully copies data and metadata from a source table to a target
+	can sync chnages
+	take a quite qa while for large datasets as it will copy full data
+
+shallow clone 
+	quickly create a copy of a table
+	just copy the delta tx logs
+	create table table_one shallow clone src_table
+
+usuful to set up tables for testing in dev
+in either case, data modifications will not affect the source
+
+views
+=======
+just a virtual table
+
+stored views
+	create view view_name as query
+	persisted in DB
+temp views
+	create temp view view_name as query
+	attached to the spark session/notebook
+	dropped when session ends
+global temp views
+	create global temp view view_name as query
+	select *from global_temp.view_name
+	attached to the cluster
+	dropped when cluster is restarted
+	show tables in global_temp;
+	
+Query files:
+============
+select *from file_format.`/path/to/file`
+	
+select *from json.`/path/to/file`
+select *from text.`/path/to/file` (CSV, TSV, TXT, JSON)
+ex: in csv file, there is a delimiter ; instead , so above one will not work as we cannot pass any options to provide delimiter
+
+
+create table table_name as select *from json.`/path/to/file`
+this does not support file options so we below to do that
+
+create table table_name
+(col_name1 col_type1, ...)
+using csv
+options (header = "true",
+		delimiter = ";")
+location = path
+
+create table table_name
+(col_name1 col_type1, ...)
+using JDBC
+options(url = "jdbc:squite://hostname:port",
+				dbtable = "database.table",
+				user="username",
+				password="pwd")
+limitation: its not a delta table
+			we can not expect the performance guarantees associated with delta lake and lakehouse
+			having a huge database table
+
+solution to above
+================ 
+
+create a temp view temp_view_name and create a table as select *from temp_view_name
+
+spark streaming
+================
+
+data stream:
+	any data stream that grows over time
+	new files landing in cloud storage
+	updates to a database captured in a CDC field
+	events queued in a pub/sub messaging feed
+
+processing data stream:
+	Reprocess the entire source dataset each time
+	only process those new data added since last update
+		structured streaming
+
+input table / location of source data:
+streamDF = spark.readStream.table("input_table")
+target table:
+streamDF.writeStream \
+		.trigger(processingTime="2 minutes") \
+		.outputMode("append") \
+		.option("checkpointLocation", "/path") \
+		.table("target_table")
+		
+default: processingTime="500ms"
+fixed interval : processingTime="2 minutes"
+trigger batch: .trigger(once=True) /process all available data in a single batch and stop
+trigger micro batches: .trigger(availableNow=True) /process all available data in a multiple micro batches and stop
+.outputMode("append") / incrementally append to the target with each batch
+.outputMode("complete") /the target table is overwritten with each batch
+
+
+Guarantees:
+1. Fault Tolerance
+	checkpointing + write-ahead logs
+		record the offset range of data being processed during each trigger interval
+2. exactly-once guarantee
+	idempotent tasks
+
+unsupported operations:
+	sorting and deduping is not supported by streaming dataframe but can be acheived by watermarking and windowing
+	
+%run ../Includes/Copy-Datasets
+(spark.readStream.table("books").createOrReplaceTempView("books_streaming_tmp_vw"))
+
+select *from books_streaming_tmp_vw
+
+Incremental data ingestion:
+============================
+
+2 ways
+	copy into
+		SQL command
+		idempotent and incrementally load new data files
+		use when we have thousands of files
+	auto loader
+		structured streaming
+		can process billions of files
+		support near real-time ingestion of millions of files per hour.
+		
+		streamDF = spark.readStream \
+							.format("cloudfiles") \
+							.option("cloudfiles.format", <source_format>) \
+							.load('/path/to/files')
+						.writeStream \
+							.option("checkpointLocation", <checkpoint_directory>)
+							.table(<table_name>)
+							
+Multi-Hop Arch:
+================
+also called as medalion arch
+bronze
+	ingest raw data
+silver
+	filter, cleaned and augmented data
+gold
+	aggregated data
+	
+Delta Live tables:
+
+keep our code in the notebook
+in notebook - workflows- delta live tables - create pipeline and give the notebook path and it will create the pipeline
+we can create a pipeline to implement multi-hop arch
+
+
+
+	
+
+
+	
+	
+
+
+
+

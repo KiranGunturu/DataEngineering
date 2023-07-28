@@ -1,6 +1,0 @@
-2.grouping aggregation - dataframes-17.py
-=====================
-
-in this we will be doing a group by
-
-in the output there can be more than one record.

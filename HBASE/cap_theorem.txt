@@ -1,0 +1,115 @@
+CAP Theorum
+===========
+
+C - consistency
+a - availabilty
+p - partition tolerance
+
+CAP theorem says that out of above 3 we can only get 2.
+it is impossible for a distributed data store to simultaneously provide more than two out of the three guarantees.
+
+possibilities
+=============
+CA - consistency and availabilty (RDBMS) resides on single sys and there is no concept of distributed
+
+when we talk about distributed sys we need to make sure that partition tolerance is there.
+
+the trade off is always between availabilty and consistency
+that means we have to choose one of the above
+
+AP - availabilty and partition tolerance (Cassandra, DynamoDB)
+CP - consistency and partition tolerance (HBase, MongoDB)
+
+
+consistency
+============
+latest value is shown. guarantee is that it will be latest
+
+whenever we request a result, each node will have recent one.
+
+lets say you are sending a message to someone on whatsapp
+
+in offline, no msgs
+when comes to online, we have to give the data which is latest.
+
+banking -  if I am trying to take some money out from ATM it should first know what is my latest balance
+
+we want latest results. if the results are not latest give error or time-out
+
+if at all, it doesn't know that then it will deny the transaction
+
+availabilty
+============
+ - system should always give response no matter if you have the latest or not
+
+there is no guarantee that value is latest
+
+we want immediate results even if is not the latest
+
+partition tolerance
+===================
+a system will continue to operate even when there is network failure
+we should not error out
+
+if one chooses consistency over availabilty, the system will report an error or a time-out if a perticular
+piece of info is not updated due to network partitioning
+	saying I dont have to latest value but I can't give you the old value
+ex: chat application
+once the system is up, the exact msg that you had sent will be delivered to your friend's inbox
+
+
+when one chooses availabilty over consistency, the sys processes the query and returns the newest info availble even it is not the latest
+
+ex: travel portal
+if for some reason, expedia web is not able to fetch the latest price value thats fine
+my system should process the data and show the info as we dont want to loose the customer
+price may be diff of 10 or 20$ but we dont want to loose the customer 
+if system time-out, then customer may goto diff portal
+
+how to improve the performance of large scala databases
+=======================================================
+sharding - optimization technique for acheiving horizontal scaling
+			splitting the databases into multiple pieces
+
+options to increase performance
+scaling up hardware - doubling the hardware like memory and storage
+					expensive
+					dimnshing returns (even if we double the hardware, performance will not be doubled)
+					system will not scale linerly meaning scaling up and performance improvement is not directly proportional
+
+add replicas - replicate the same database into multiple instances of same
+				instead of one instance serving requests, there will be multiple instances who can serve
+				master and multiple read replicas
+				master is responsible to receive all write requests we can also config to have read requests too
+				whenever there is a write happened to master, it will propogate the same to read replicas
+				this propogation happens eventually (key is the eventually)
+				this is called eventual consistency
+				read replicas may not have most recent writes - it will cause data discrepency or stale data.
+				in banking case, might not receive most recent or accurate balance of a customer
+
+sharding - multiple database instances of same db are sitting on diff machines  holding diff set of data.
+			data is split across multiple databases
+			we use predictable key to hash and do the data distribution across multiple instances
+			key is what we use most of the time in our reporting
+			few keys (ex: customer ids) are sitting on one machine and few are sitting on other machines
+			when one machine is down due to any issue, we are still able to serve other requests as other instances are alive
+			
+			pros
+			=====
+			scalability - able to split the shards
+			availabilty + fault tolerant ( we are still serving few requests and system is still availble even there is a fault)
+			
+			
+			cons
+			====
+			complexity in partition mapping - determining to what shard our write request go
+			complexity in routing to determine to which shard our request should go
+			non-uniformity - not all shards may have same amount of records
+			reshuffling required to resolve non-uniformity issue
+			
+			
+				
+							
+
+
+

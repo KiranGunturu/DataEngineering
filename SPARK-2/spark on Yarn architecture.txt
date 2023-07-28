@@ -1,0 +1,76 @@
+===========================
+spark on Yarn architecture
+===========================
+
+1) how to execute programs on spark cluster.
+
+	through scala(spark-shell) / pyspark terminal - Interactive
+		Analyze the adhoc data / testing
+		
+	Submitting a job
+		bundle a jar and execute
+		spark-submit
+		
+2) How does spark execute our programs on the cluster?
+
+	Master/Slave architecture
+	
+	each application has driver which is the master process.
+	
+	each application has a bunch of executors which are the slave process.
+	
+	
+	Driver - is responsible for analyzing the work, divides the work in many tasks, distribute the task, schedules the task and monitors.
+	
+	Executor - is responsible for executing the code locally on that JVM(Executor Machine)
+	
+3) who gets executed where?
+
+	executors are always lanunched on the cluster. (worker nodes)
+	
+	however for the driver we have the flexibility to launch it on the  client machine or the cluster machine.
+	
+	when the driver is running on client machine - client mode
+	
+	when the driver is running on cluster - cluster mode
+	
+4) which mode is better?
+
+	client mode - only for dev activities
+	cluster mode - production ready
+	
+	as soon as client machine goes off , driver will be dead and application gets corrupted.
+	
+5) who controls the cluster and how spark gets the driver and executor?
+
+	cluster manager is the one who controlls.
+	
+	Yarn
+	Mesos
+	Kubernetes
+	Spark Standalone
+	
+	what is a spark session?
+	
+	it is like a data structure where driver maintains all the information including executor location and status.
+	
+	this is the entry point for spark application.
+	
+	In client - mode:
+	
+		1. when we launch spark-shell automatically spark session is created.
+		2. as soon as spark session is created request goes to the YARN RM.
+		3. YARN RM will create a container on one of the node manager and will launch and AM for this application
+		4. this AM will negoatiate RM for resources in the form of container
+		5. RM will create containers on the worker nodes
+		6. AM will launch executors in these containers
+		7. now the driver and executors can communicate directly
+		9. both stdout and stderr are given on the client machine itself. they are not available in spark history (on the driver node)
+		
+	In cluster - mode:
+	
+		everything is same but the driver runs on the AM which is on the cluster.
+		both stdout and stderr for driver node are given on the cluster itself. they are available in spark history (on the driver node)
+	
+	
+	

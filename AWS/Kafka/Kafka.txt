@@ -1,0 +1,844 @@
+Apache Kafka
+============
+
+https://aws.amazon.com/msk/what-is-kafka/
+
+it is highly scalable and disributed platform for creating and processing streams in real-time.
+why kafka - it provides scalability via partitions
+			it provides fault tolerance via replication factor
+			
+Data integration platform
+In the traditional messaging systems..
+if there is a producer which produces the data..
+if consumer consumes it then data is gone - no one else consumes it. meaning there can be only one consumer.
+ex: Java Messaging service(JMS), ActiveMQ, RabbitMQ - these are not designed to handle high volumns of messages and provide
+	fault tolerance
+
+structured streaming
+====================
+we used to read the data from a socket and then we used to process using apache spark
+
+socket is nothing but ip + port
+
+socket does not have any buffering capability
+
+if we have fast producer and a slow consumer then we will encounter data loss.
+
+both producer and consumer are tightly coupled. - both should be in sync
+
+Kafka will provide buffering capability
+
+if a producer is producing at a very high speed. the consumer can still consume at its own pace.
+
+using this we can get the producer and consumer decoupled
+
+1.Kafka helps to create real time streams. (kafka can also process it but we use spark to process bcoz spark can do it better way)
+2.process streaming data (apache spark)
+
+kafka can create and process streams but we mainly use kafka to create streams and process using apache spark
+
+publisher-subscriber messaging system
+
+pub-sub system
+
+Broker - is nothing but a node/machine which is running a kafka software
+
+if there are 5 brokers then we call it as a 5 node kafka cluster
+
+producer can be -> twitter application
+a Kafka cluster with multiple brokers (nodes/machines)
+consumer can be -> spark streaming application
+
+Kafka session-2
+==================
+
+Data integration platform
+In the traditional messaging systems..
+if there is a producer which produces the data..
+if consumer consumes it then data is gone - no one else consumes it. meaning there can be only one consumer.
+ex: Java Messaging service(JMS), ActiveMQ, RabbitMQ - these are not designed to handle high volumns of messages and provide
+	fault tolerance
+
+in case of kafka we can have one producer and multiple consumers
+
+the data is retained for 7 days by default
+
+producer writes to the topic
+consumer subscribes to the topic so it can pull whenever there is a new data in the topic
+
+1.Producer - Data Producer (Twitter)
+2.Consumer - Data Consumer (spark application)
+3.Broker - a node which is running kafka software
+4.Cluster - made of various brokers
+5.Topic - a unique name which holds perticular data ex:tagging data or claims data
+	if we keep this tagging data topic on a single machine then when the data grows over the time we may run out of storage
+6.Partitions - a topic can be divided into partitions and each partition can be stored on a different machine (makes sys scalable and disributed)
+	whenever we are creating a topic we need to define the number of partitions
+7.Partition offset - Inside each partition, the messages are stored in a seqence and we have a seqence id.
+if we want read perticular message, what details do we need?
+
+	topic name as we may have many topics inside kafka cluster
+	partition number as we may have many partitions inside each topic
+	offset
+	
+8.Consumer Groups - 
+
+1000's of billing counters all across the world. - 
+
+your role is to get all these generated invoices and dump them to a file system / data center
+
+producers are nothing but the billing counters
+
+these all will go to kafka cluster
+
+instead of putting more workload on one consumer , we create multiple consumers and call them as consumer groups
+
+number of consumers in a consumer group should be equal to the number of partitions inside the topic
+
+one partition cannot be handled by multiple consumers(if 2 consumers working on same partition then we dont know which consumer reads what and that can lead to dupes)
+ however a consumer can take multiple partitions.
+
+ex: 4 partitions and 2 consumers // each consumer can process 2 partitions
+
+Kafka session-3
+==================
+
+topic1 - p1, p2, p3
+
+B1 -P1
+
+B2 - p2
+
+B3 - p3
+
+what if nodes B3 goes down?
+
+here comes the replication factor - we can set the replication factor
+
+B1 -P1,p2,p3
+
+B2 - p2,p3,p1
+
+B3 - p3,p2,p1
+
+scalability - partitions
+fault tolerance - replication factor
+
+3 ways to install kafka
+========================
+
+1.Open source - Apache Kafka
+2.commecial disribution - confluent.io
+3.fully managed service - confluent.io, aws (Kinesis)
+
+zookeeper already installed..
+
+helps to coordinate the various disributed services..
+
+many brokers
+
+kafa brokers will store shared information in zookeeper
+
+this is used to coordinate various brokers
+
+Kafka community is planning to get rid of zookeeper in coming versions
+
+2 pre-requisities
+=================
+
+1.Java should be already installed
+2.zookeeper should already running
+
+In Kafka folder inside bin we have the runnable scripts
+
+config folder has configuration files which needs to be passed to the runnable scripts
+in cloudera we have Java 1.7 but we need java 1.8
+cd kafka_2.12-2.6.0
+cd bin
+./kafka-server-start.sh ../config/server.properties //it will start the kafka one node cluster
+Unsupported major.minor version 52.0 - java version problem.
+
+Kafka-session-4
+================
+
+
+how to create a topic
+
+./kafka-topics.sh --create --topic dbsro_tagging --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
+
+how to list down the topics 
+
+./kafka-topics.sh --list --bootstrap-server localhost:9092
+
+command line producer for producing the data
+
+./kafka-console-producer.sh --broker-list localhost:9092 --topic dbsro_tagging
+
+it will allow us to enter the data and that will be sent to dbsro_tagging topic
+
+command line consumer to consumer
+
+./kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic dbsro_tagging --from-beginning
+
+here we can see the data coming from the producer
+
+where is the data gets buffered
+===============================
+
+cd /tmp/kafka-logs/topic_name/0000.log files
+
+here we will see the topic names and inside will see the data
+
+Kafka-session-5
+================
+
+in a production scenario
+=========================
+
+3 brokers
+
+machine1 - broker1
+broker.id=0
+ip1:9092
+/tmp/kafka-logs //where data will be present
+
+machine2 - broker2
+broker.id=1
+ip2:9092
+/tmp/kafka-logs //where data will be present
+
+machine3 - broker3
+broker.id=2
+ip3:9092
+/tmp/kafka-logs //where data will be present
+
+how to create a multi-node kafka cluster on local machine
+===========================================================
+
+3 brokers
+
+server.properties
+machine1 - broker1
+broker.id=0
+ip1:9092
+/tmp/kafka-logs //where data will be present
+
+server1.properties
+machine1 - broker1
+broker.id=1
+ip1:9093
+/tmp/kafka-logs1 //where data will be present
+
+server2.properties
+machine1 - broker1
+broker.id=3
+ip1:9094
+/tmp/kafka-logs2 //where data will be present
+
+copy server.properties and make different copies and change the broker ids, log dirs and listeners
+
+
+ideally kafka broker run on port 9092
+
+each broker should have a different IP
+
+if we want to create a 3 node kafka cluster we will have to assign the different port number as IP will remains the same (3 brokers on local machine)
+
+open the server.properties
+broker.id=0
+listeners=PLAINTEXT://:9092
+log.dirs=/tmp/kafka-logs
+
+open the server1.properties
+broker.id=1
+listeners=PLAINTEXT://:9093
+log.dirs=/tmp/kafka-logs1
+
+open the server2.properties
+broker.id=2
+listeners=PLAINTEXT://:9094
+log.dirs=/tmp/kafka-logs2
+
+
+now start the 3 nodes
+
+./kafka-server-start.sh ../config/server.properties //starts broker1
+./kafka-server-start.sh ../config/server1.properties //starts broker2
+./kafka-server-start.sh ../config/server2.properties //starts broker3
+
+create a new topic with three partitions
+
+./kafka-topics.sh --create --topic dbsro_tagging --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1
+
+dbsro_tagging with 3 partitions
+
+dbsro_tagging-0 //partition1
+dbsro_tagging-1 //partition1
+dbsro_tagging-2 //partition1
+
+this means each broker is holding one partition
+
+
+command line producer for producing the data
+
+./kafka-console-producer.sh --broker-list localhost:9092 --topic dbsro_tagging
+
+enter the data here
+
+command line consumer to consumer
+
+./kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic dbsro_tagging --from-beginning
+
+
+Kafka-session-6
+================
+
+3 brokers
+
+we created a topic with partitions
+
+lets create a consumer group
+
+group of consumer to make it more scalable process
+
+create a new topic - customers
+
+3 partitions
+
+replication factor 1
+
+./kafka-topics.sh --create --topic customers --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1
+
+
+
+cat customers.csv | wc -l //12434
+
+./kafka-console-producer.sh --broker-list localhost:9092 --topic customers < ../../../Desktop/customers.csv
+
+./kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic customers --from beginning --group customer-group
+
+this one processed 8432 messages
+
+./kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic customers --from-beginning --group customer-group
+
+this one processed 4002 messages
+
+here we have two consumers and both are reading from same producer topic and good thing is that they both dont read same data.
+
+this is how we make use of consumer groups to scale the process
+
+
+/tmp
+
+machine		folder		partition	log file which will have actual data stored			no of msgs stored
+======		========	=========   ==========================================			==================
+broker0 - kafka-logs  		customer2  	0000000.log						4002(value of lastoffset in the .log file)
+broker1 - kafka-logs1 		customer1  	0000000.log						4004(value of lastoffset in the .log file)
+broker2 - kafka-logs2 		customer0  	0000000.log						4428(value of lastoffset in the .log file)
+
+this shows one consumer has read from 2 different partitions(customer1,customer0) and other one has read from one partition(customer2)
+
+and its not possible that two consumers can take the data from single partition
+
+we should ideally have no of consumers is equal to no of partitions as two consumers are not allowed on single partition
+
+Kafka-session-7
+================
+3 partitions and replication factor of 3
+
+Kafka storage architecutre
+
+./kafka-topics.sh --create --topic customers_new --bootstrap-server localhost:9092 --partitions 3 --replication-factor 3
+
+./kafka-console-producer.sh --broker-list localhost:9092 --topic customers_new < ../../../Desktop/customers.csv
+
+cd /tmp
+
+cd kafka-logs
+
+ls
+here we will see three partitions created 
+customers_new0
+customers_new1
+customers_new2
+
+there are two cases when there will be multiple log files in partition
+
+1 GB or 1 week of data (whicever is smaller)
+
+this means big log file is divided into segments
+
+Topic --> log files --> partitions --> replicated --> segments
+
+broker
+	topic
+		partitions
+			multiple log files
+
+3 replicas..
+===============
+
+./kafka-topics.sh --create --topic customers_new --bootstrap-server localhost:9092 --partitions 3 --replication-factor 3
+
+to know which partition is a leader versus follower, run the below one in bin folder
+
+./kafka-topics.sh --describe --topic customers_new --bootstrap-server localhost:9092
+
+topic:customers_new		partition:	0		Leader:	0		Replicas:	0,1,2	Isr:	0,1,2
+topic:customers_new		partition:	1		Leader:	2		Replicas:	2,0,1	Isr:	2,0,1
+topic:customers_new		partition:	2		Leader:	1		Replicas:	1,2,0	Isr:	1,2,0
+
+
+
+segment-offset
+==================
+
+cd /bin/tmp/kafka-logs/customer-new-0/
+
+./kafka-dump-log.sh --files *.log //to know the offsets of message
+
+each partition will have its own offset starting from zero.
+
+if we have multiple log files inside partition then their offsets will be continous
+
+partiiton1
+	000000000.log
+		baseoffset - 0
+		currentoffset-45643
+	000045643.log
+		baseoffset - 45643
+
+
+index files are useful to quickly search messages based on their offset and after certain timestamp
+
+if we want to uniquely identify a message, we would need three things
+
+1.topic name
+2.partition number
+3.offset number
+
+offset is not unique for a topic but it is unique to the partition
+
+
+Kafka-session-8
+================
+Is a kafka a master-slave architecutre?
+
+kafka cluster follows a masterless architecutre. there is no master node concept as such.
+
+if a kafka cluster do not have a master then who takes care of maintaining list of active brokers and monitoring the brokers?
+
+zookeeper does the above and acts like a database
+
+	maintains the list of active brokers etc.
+
+whenever a broker starts it creates an ephemeral node in zookeeper
+
+/brokers/ids
+
+/Kafka/bin/zookeeper-shell.sh
+
+run below which will help us query our zookeeper
+
+./zookeeper-shell.sh localhost:2181
+
+ls - gives us available ephemeral nodes at root level
+ls /brokers
+ls /brokers/ids - gives broker ids which are running
+[0,1,2]
+
+I stopped the broker 2
+
+then I queried again to see the list of active brokers in zookeeper
+
+ls /brokers/ids
+[0,1]
+
+if we want to activate the broker 2 again we first need to delete the log dir so it wont complain and unblock the port
+
+rm -rf /bin/tmp/kafka-logs2
+
+how to unlock the port
+
+sudo fuser -k 9092/tcp
+
+
+controller
+===========
+
+if we have single node kafka cluster, it will serve as both a broker and controller
+
+one of the broker from kafka cluster is elected as the controller.
+
+in a kafka cluster there can be just one controller.
+
+controller will perform the following and it will also act as normal broker also
+
+	monitoring of active brokers
+	reassigning work when active broker leaves the cluster
+
+which broker is elected as the controller?
+
+the first broker that starts in the cluster becomes the controller
+
+how zookeeper tracks it?
+
+whenever we start the first broker in the cluster, it will create an ephemeral node or an entry in the zookeeper
+
+Kafka/bin/zookeeper-shell.sh
+
+run below which will help us query our zookeeper
+
+./zookeeper-shell.sh localhost:2181
+
+ls - gives us available ephemeral nodes at root level
+ls /controller or get /controller- it will display us what broker(broker id:0) is acting as a controller.
+
+if broker node 0 goes down, all the other brokers in the cluster will try to act as controller by creating controller ephemeral node and only one will get succeded.
+
+
+Kafka-session-9
+================
+
+how the partitions of topic are distributed across various brokers?
+
+how to handle fault tolerance?
+
+we have a cluster with 6 brokers
+
+2 racks - group of sys kept in different geographical regions
+
+consider we have a topic with 10 partitions and replication factor of 3
+
+10 * 3 = 30 replicas
+
+how are these 30 partitions assigned to 6 brokers
+
+1.Even disribution (acheiving workload balance)
+2.fault tolerance (replicas should not be kept on same machine)
+
+to distribute the partitions across the brokers.. it follows 2 step process
+
+for ex we have 10 partitionss with rep factor as 3
+
+all original partitions are called as leader and replicas are called as followers
+
+leader partitions -   P0,P1,P2,P3,P4,MP5,P6,P7,P8,P9,P10 (replica 1 - origianl)
+follower partitions - P0,P1,P2,P3,P4,MP5,P6,P7,P8,P9,P10 (replica 2)
+follower partitions - P0,P1,P2,P3,P4,MP5,P6,P7,P8,P9,P10 (replica 3)
+
+1. it creates an ordered list of available brokers
+
+	R1:B0 P0 P6    P5     P4
+	R2:B3 P1 P7 P0 P6     P5
+	R1:B1 P2 P7 P1 P7 P0  P6
+	R2:B4 P3 P9 P2 P8 P1  P7
+	R1:B2 P4    P3 P9 P2  P8
+	R2:B5 P5    P4    P3  P9
+
+A broker can perform 2 kinds of activities
+
+1. Leader activity - leader partitions
+2. follower activity - follower partitions
+
+A leader is responsible for all the requests from producers and consumers
+
+if a producer wants to produce message to kafka topic ..
+
+the producer will request one of the broker in the kafka cluster and get the topic metadata
+
+this metadata will contain a list of all leader partitions of that topic
+
+po - ip1:9092
+p1 - ip2:9093
+p2 - ip3:9094
+
+so producer will directly send message to leader partitions
+
+once the message is produced.. the leader broker will send an ack
+
+consumer also reads from leader partitions.
+
+
+Kafka-session-10
+================
+
+follower partitions do not serve the producer and consumer request.
+
+followers copy the message from the leader and try to stay upto date with the messages
+
+a follower always wants to be in sync and upto date.
+
+the aim of the follower is be elected as a leader when current leader fails or dies..
+
+followers might lag behind because of many factors
+
+1. n/w congestion
+2. broker failure (broker where follower partition kept)
+
+
+ISR - in sync replicas
+
+zookeeper maintains the list of ISR - this list is maintained by leader broker.
+
+if the follower is not too far.. the leader will add the follower to the ISR list.
+
+how do we define not too far..?
+
+default value is 10 seconds..
+
+consider a scenario where you have ..
+
+1 leader and 2 follower
+
+both the followers are 12 secs behind
+
+in this case, ISR list will be empty. if leader goes down which follower will become the next leader?
+
+if we select any of the follower we miss the latest 12 secs messages..
+
+to tackle this scenario, there is a concept
+
+1. commited versus uncommited messages
+2. minimum in sync replicas
+
+if the message is succcessfully copied across all followers then message will be marked as commited
+
+leader partition - at any point of time, there wil be both commited and un-commited messages
+
+if the leader fails, the commited messages are already taken care but the un-commited messages will be lost.
+
+un-commited messages can be resent by the producer.
+
+producers can choose to receive an ack of sent messages only after message is fully commited.
+
+producer waits for ack 
+
+if producer do not get an ack till time-out interval then it will resend the message.
+
+lets say we have 3 partitions and 2 follower partition go down
+
+then single leader partition has the data and is in sync. - but it is very scary situation as we have the data only on one leader partition
+
+kafka protects this by setting minimum number of in-sync replicas of a topic
+
+min.insync.replicas=2
+
+if we do not have atleast 2 replicas in-sync.. the broker will not accept any message.
+
+in this case the leader becomes a read only partition.
+
+
+
+Kafka-session-11
+================
+
+create kafka producer in java
+
+1. setting some properties
+2. create object of kafka producer
+3. calling the send method. this takes a producer record as arg
+4. closing the producer object.
+
+
+refer .java files
+
+
+Kafka-session-12
+================
+
+producer record object takes 
+
+2 mandatory arguments.
+======================
+
+Topic name
+Message Value
+
+optional arguments
+==================
+
+Message Key - is quite important
+Target Partition
+Message Timestamp
+
+once the producer record is created its handed over to the producer using the send method.
+
+Kafka producer does not transmit the records immediately to the kafka cluster.
+
+every record goes through serialization, partitioning and then kept in the buffer.
+
+serialization - process of converting a record into bytes so we can transfer over the network
+
+kafka does not know how to serialize the key and value thats why we let kafka know thru properties
+
+producer record
+	via send method to serializer
+		partitioner
+			topic
+				partition
+		IO-Thread
+			IO thread will send the data to kafka cluster
+
+Partioner
+=========
+
+topic 1 - 4 partitions po, p1, p2, p3
+
+two ways to decide how message goes to which partition
+
+1.default mechanism to decide the partition..
+
+hash key partitioner - 17 (Key) % 4 (partitions) = 3 (key 17 goes to 3rd partition)
+round robin partitioner - whenever key is null (whenever there is no key)
+
+2.custom partitioning class - we write our custom logic.
+
+
+
+Kafka-session-13
+================
+
+Message Timestamp
+=================
+
+every message by defualt has a timestamp even if we do not specify that.
+
+2 types of timestamps
+=====================
+
+1. create or event time (time at which message was produced) 10am
+2. log append time (the time when broker receives the message) 10:01 am
+
+default is create time.
+
+message.timestamp.type = 0 (create time)
+message.timestamp.type = 1 (log append time)
+
+by default the value is 0
+
+serialization + partitioning 
+
+after this the message is put in the buffer.
+
+producer consists of partition wise buffer space.
+
+by default the size of the buffer is 32 Mb
+
+buffering helps us to give network optimization.
+
+if the buffer is full then the send method has to wait. after a certain time it might give an exception.
+
+buffer.memory
+
+Kafka-session-14
+================
+
+at least once vs at most once vs exactly once
+==============================================
+
+at least - by default
+========
+IO thread took messages from buffer and sent it to the kafka cluster
+
+the message is stored succcessfully but the IO thread didn't receive ack..
+
+IO thread will again try to send the message as per the no of re try times that we mention in the config.
+
+if the same message is sent again then the message is duplicated.
+
+
+at most once
+=============
+
+if using the producer configuration we set the number of retires = 0 then we get at most once semantics.
+
+here there might be chance that we may loose messages as we are not retrying to send the message where there is an issue.
+
+exactly once
+=============
+we should not loose any message and we should get message exactly once.
+
+how to acheive it?
+
+enable.idempotence=true
+
+1. each producer will contact the leader broker and it will request for unique producer id.
+
+broker will dynamically assign a unique id to each producer.
+
+2. message seqenence number is generated. start from 0 and increase per partition
+
+each message will be uniquely identified by producer id and seqenence number
+
+this will help the broker to find out duplicates and missing records.
+
+producerid-2 670 "Message 1"
+producerid-2 670
+
+Note: it only guarantess for producer retries but it is not valid for duplicates sent by application itself.
+
+
+Kafka-Session 15
+================
+
+when we have topic with single partition , all the messages will be published into same partition
+when we have topic with multiple partitions, messages will be published to both the partition and it is all random
+when we have topic with multiple partitions, producer can send messages to specific partition using partitioner method.
+
+partitioner method with three parameters
+key_bytes
+all_partition
+available_partition
+
+consumer group can be defined as logical grouping of one or more consumers
+it is mandatory for a consumer to register itself to a consumer group
+consumer instances are seperate process.
+consumer instance of same consumer group can be on different nodes.
+lets say we have 3 consumnersc1,c2,c3  in consumer group called "CG"
+	c1 and c2 can be on node1 and c3 can be on node2
+	
+	
+
+ex:1
+
+1 topic, 2 partition, 1 consumer
+
+messages will be published to partition randomly
+message will be consumed by consumer c1 in round robin fashion
+one consumer can consume from more than one partition
+
+ex:2
+
+1 topic, 1 partition and 2 consumers
+
+if both consumers are registered to same consumer group then only one consumer will work and other one will be sitting idle
+if consumer group is diff, then both consumers can read the data from same partition
+same partiiton can't be assigned to multiple consumer in same group
+
+ex:3
+
+1 topic, 2 partition and 2 consumers
+
+here both the consumers are registered to same consumer group
+each consumer will work on a single  partition
+
+Kafka fault tolerant
+====================
+
+ability of a system to continue operating without interruption when one or more of its components fail.
+
+each partition is replcated across multiple server for fault tolerance
+
+only one partition will be active at a time called leader
+
+other partition will only replicate message and called followers
+
+the leader handles all read and write request for the partition while followers passively replicate the leader
+
+ex: 3 broker, 1 topic, 1 partiton and 1 replication
+
+
+
+
+

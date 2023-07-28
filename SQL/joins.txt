@@ -1,0 +1,93 @@
+
+ 1
+ 1
+ 1
+ 2
+ 3
+ 3
+ 3
+ 
+ 1
+ 1
+ 2
+ 2
+ 4
+ null
+ 
+ Inner
+ =====
+ 
+ 6 + 2 = 8
+ 
+ left
+ ====
+ 
+ 6 + 2 + 3 = 11
+ 
+ right
+ =====
+ 
+ 6 + 2 + 2 = 10
+ 
+ full
+ ====
+ 
+ 6 + 2 + 3 + 2 = 13
+ 
+ natural join
+ ============
+ it does the join based on common column names and it will try to do inner join
+ 
+ 8 records if same column name exists
+ or 
+ if the same column name does not exists then output is more like a cross join - 42
+ 
+ cross join
+ ===========
+ 7 * 6 = 42
+ 
+ ==========================================
+ 
+ id
+ ====
+ 1
+ 1
+ 1
+ 1
+ 1
+ null
+ null
+ 
+ id
+ ===
+ 1
+ 1
+ 1
+ 2
+ null
+ 
+ inner 
+=======
+15
+
+left
+=====
+15 + 2 = 17
+
+right
+====
+15 + 2 = 17
+
+full
+===
+
+15 + 2 + 2 = 19
+
+natural
+=======
+15
+
+cross
+=====
+
+35

@@ -1,0 +1,303 @@
+Structured Streaming
+====================
+every 15 mins we get a new file
+15 mins
+15 mins
+will our job complete in a min or 15 mins before next instance run?
+stream processing is more complicated than batch processing
+reducing duration between the batches is what we are looking at
+thats when we go for micro batch processing
+
+spark streaming 
+1. automatic looping between the batches
+2. storing intermediate results
+3. combine results to previous batch result
+4. restart from same place in case of any failures - fault tolerance
+
+spark streaming (Dstream) - Discratized stream
+built on top of RDDs
+we were using lower constructs
+
+limitations of Dstream
+======================
+
+1.Lack of spark SQL engine optimization
+2.only supports processing time semantics and do not support event time semantics
+3.No further upgrades and enhancements expected
+
+pros of spark structured streaming
+==================================
+
+1.offers unified model for batch and stream processing
+2.runs over the spark sql engine. takes advantage of the sql based optimizations.
+3.native support for event time semantics
+4. further enhancements are expected
+
+session-10
+==========
+
+wordcount prorgram
+
+session-10
+==========
+DataStream writer allows 3 output modes
+
+1.append
+
+thats why when we do aggeregations append mode is not allowed
+
+hello how are you
+
+(hello,1)
+(how,1)
+(are,1)
+(you,1)
+
+hello kiran this side
+
+(kiran,1)
+(this,1)
+(side,1)
+
+2.update - insert and update
+
+hello how are you
+
+(hello,1)
+(how,1)
+(are,1)
+(you,1)
+
+
+hello kiran this side
+
+(hello,2)
+(kiran,1)
+(this,1)
+(side,1)
+
+
+3.complete - it will give from very bign to end
+
+hello how are you
+
+(hello,1)
+(how,1)
+(are,1)
+(you,1)
+
+hello kiran this side
+
+(hello,2)
+(kiran,1)
+(this,1)
+(side,1)
+(how,1)
+(are,1)
+(you,1)
+
+
+A spark application should run forever..
+1. we manually stop it or kill it
+2. Exception
+
+we want our spark streaming applcation to stop and then restart gracefully
+
+.config("spark.streaming.stopGracefullyOnShutdown","true")
+
+whenever we call start()
+
+.start()
+
+spark driver will take the code from readStream to writeStream and submit it to spark SQL engine.
+
+what spark sql engine will do?
+
+analyse it
+optimize it
+compile it to generate the exeution plan.
+
+exeution plan is made of stages and tasks
+
+spark will then start a background thread to execute it
+
+and this thread  will start a new job to repeat the processing and writing operations
+
+for every microbatch a new job will be created
+
+loop is created and managed by a background process/thread
+
+what is the triggering point for new micro batch?
+
+trigger for each record or is it time based?
+
+Data Stream write allows us to define the trigger
+
+there are total 4 trigger configs
+
+1.unspecified - new micro batch is triggered as soon as current microbatch is finished however microbatch will wait for new ip data
+
+2.time interval - ex: 5 mins
+
+case when the first microbatch finishes in less than 5 mins
+===========================================================
+
+the first microbatch finishes in 15 seconds
+
+the second microbatch has to wait for 4 mins 45 seconds to get triggered
+
+case when first microbatch takes more than 5 mins to process
+============================================================
+if there is any new data then the new microbatch will trigger immedidately after the first microbatch is finished
+
+3.one time - like batch processing
+
+we can spin up a cluster in cloud and process this data
+
+this will keep at track of all what is processed earlier and this will only process the new data
+
+4. continuous - it is still expermental (milli second latency)
+
+session-13
+===========
+
+spark streaming offers 4 built in data sources
+
+1.socket source 
+
+we read the streaming data from a socket (ip + port)
+if our producer is producing at a very fast pace and writing to socket
+if our consumer is reading from the same socket at a lower pace then we can have data loss.
+
+this socket source is not meant for production use case
+
+2. Rate source
+
+used for testing and benchmarking purpose
+
+if we want to generate some test data then we can generate a configurable number of key value pairs
+
+3. File source
+4. Kafka source
+
+file source
+==========
+
+we will basically have a folder
+new files are detected in this directory and processed
+
+options:
+========
+
+.option("maxFilesPerTrigger",1) #add this when you dont to read more than one file per trigger
+if we have 3 files in the i/p dir, it will process one then wait triggerProcessingTime mentioned(30 secs) and then process 2nd file
+
+over the time that no of files in the directory will keep on increasing
+
+if we have a lot of files in the folder then it will keep on becoming difficult or time consuming
+
+that is why it is recommended to clean up the older files as and then required
+
+option - cleanSource and sourceArchiveDir are often used together
+
+.option("cleanSource", "delete")
+.option("cleanSource", "archive").option("sourceArchiveDir", "/path/archivedir")
+
+rememnber that going with any of the above will increase the processing time.
+
+session-14
+===========
+
+fault tolerance and exactly once processing
+===========================================
+
+ideally a streaming applcation should run forever
+
+1.due to exception
+2.due to maintaince activity
+
+our application should be able to stop and restart gracefully
+meaning to maintain exactly once semantics..
+
+Do not miss any input record
+Do not create duplicate output record
+
+spark structured streaming provides ample support for this
+
+it maintains the state of microbatch in checkpoint location
+
+checkpoint location helps us to acheive fault tolerance
+
+checkpoint location mainly contains 2 things
+
+1.read positions (what all has read)
+2.keeps track of state info. (running total)
+
+spark structured streaming maintains all information it requires to restart the unfinished microbatch.
+
+to guarantee exactly once 4 requirements should be met -
+
+1.restart applcation with same checkpoint location
+==================================================
+lets say in 3rd microbatch we got an exception
+
+in commits (in checkpoint location) we would have 2 commits
+
+2.use a replayable source
+==========================
+
+consider there are 100 records in 3rd microbatch
+after processing 30 records it gave some exception.
+these 30 records should be available to us when we start reprocessing
+
+
+3.use deterministic computation
+================================
+
+lets say our 3rd microbatch has 100 records.
+
+while processing 30th records we got an error.
+
+whenever we start again it will start from begining of 3rd microbatch and these 30 records are also processed again
+
+the output should remain same.
+
+sqrt(4) - deterministic computation
+
+dollarsToRs(10) - 810 OR 830 (Not deterministic computation)
+
+4.use an idempotent sink
+========================
+
+lets say our 3rd microbatch has 100 records.
+
+while processing 30th records we got an error.
+
+whenever we start again it will start from begining of 3rd microbatch and these 30 records are also processed again
+
+dont we feel that we are processing these 30 records 2 times?
+
+we are writing this to output 2 times..
+
+2nd time when we are writing the same output it should not impact us.
+
+either it should discard the 2nd output or it should overwrite already written one
+
+
+summary:
+========
+
+sources: file, kafka, rate and socket
+sink: console, file, kafka
+output modes: append, update and complete
+triggers: unspecified, time interval, one time, continuous
+checkpoint: state info, read info.
+fault tolerance: exactly once guarantee (checkpoint and need to follow above 4 conditions)
+
+
+
+
+
+
+
+

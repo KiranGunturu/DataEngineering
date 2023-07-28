@@ -1,0 +1,115 @@
+broadcast join with dataframes
+===============================
+
+we will have 2 dataframes
+
+one of them is small and the other one large
+
+orders - 2.6 GB
+customers - 900KB
+
+customers - customer_id is the join column
+orders - order_customer_id is the join column
+
+spark2-shell --conf spark.dynamicAllocation.enabled=true --master yarn 
+--num-executors 21
+
+customersdf = spark.read \
+				.format("csv") \
+				.option("header",true) \
+				.option("inferSchema",true) \
+				.option("path","customers.csv") \
+				.load()
+
+
+ordersdf = spark.read \
+				.format("csv") \
+				.option("header",true) \
+				.option("inferSchema",true) \
+				.option("path","ordersdf.csv") \
+				.load()
+				
+spark.conf.set("spark.sql.autoBroadcaseJoinThreshold",-1) - set this to see how it works with normal join
+
+join_condition = "customersdf.customer_id == ordersdf.order_customer_id"
+join_type = "inner"
+
+joineddf = customersdf.join(ordersdf,join_condition,join_type)
+
+joineddf.write \
+	.format("csv") \
+	.csv("joinfile")
+
+it will now create 222 tasks and takes 1.9 mins and in that it took 32 secs just to infer the schema of large dataset which is orders
+(200 default, 21 from ordersdf, 1 from customersdf)
+
+how many partitions are there in big DF = 21 partitions (2.6 GB/128)
+
+and for small df - just one partition
+
+whenever we do shuffling incase of structured API we get 200 partitions by default.
+
+if I do groupBy on a dataframe, then we will get 200 partitions after the shuffling is done.
+
+in a rdd approach, lets say we have 500Mb file
+
+rdd - groupBy then
+before groupBy we had 4 partitions
+after groupBy the partitions remain the same that means still 4 partitions
+
+=======
+
+now lets improve this by joining broadcast and explictly specifying the schema so it wont go for shuffling and do not try to infer the schema.
+
+1. broadcast - avoid shuffling
+2. explicit schema - avoid wasting time for infering
+
+from  pyspark.sql.types import IntergerType(), TimestampType(), StringType()
+
+schema = Structtype([
+	StructField("order_id",IntergerType(),True),
+	StructField("order_date",TimestampType(),True),
+	StructField("order_customer_id",IntergerType(),True),
+	StructField("order_status",StringType(),True)
+]
+)
+
+
+spark2-shell --conf spark.dynamicAllocation.enabled=true --master yarn 
+--num-executors 21
+
+customersdf = spark.read \
+				.format("csv") \
+				.option("header",true) \
+				.option("inferSchema",true) \
+				.option("path","customers.csv") \
+				.load()
+
+
+ordersdf = spark.read \
+				.format("csv") \
+				.option("header",true) \
+				.schema(schema) \
+				.option("path","ordersdf.csv") \
+				.load()
+				
+
+join_condition = "customersdf.customer_id == ordersdf.order_customer_id"
+join_type = "inner"
+
+joineddf = customersdf.join(ordersdf,join_condition,join_type)
+
+joineddf.write \
+	.format("csv") \
+	.csv("joinfile2")
+
+now it will goto broadcast as it is the default nature. and if we want to give hints.
+
+joineddf = ordersdf.join(broadcast(customersdf),join_condition,join_type)
+
+and there will be only 22 tasks with just one stage as there is no shuffling.
+
+it took just one minute.
+
+=================
+

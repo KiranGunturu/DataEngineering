@@ -1,0 +1,67 @@
+RDS - DMS - S3
+================
+
+RDS -
+=====
+
+Provision the RDS instance say postGRESQL
+
+	type of instance
+	user name
+	pwd
+	security groups
+	end points (to connect using pgAdmin)
+
+CDC -
+======
+	in the RDS Console - create parameter groups
+	choose RDS instance family - postGRESQL13
+	type - parameter groups
+	give a name to it
+	once it is created - update the parameter with rds.logical_replication=1 (without this CDC will not work)
+	now we should attach this parameter group to postGRESQL instance under database options
+	once it is attached, then reboot is mandatory
+
+DMS -
+=====
+
+1)
+	create the subnet group
+	add subnets - depends on how available this DMS should be
+
+2)
+	create replication instance
+3)
+	create End points
+	one for source - RDS instance and db name
+	one for target - S3
+		IAM role with access to S3 bucket and dms.amazon.com as trust relation
+		give bucket name/folder
+
+
+Data Migration task
+====================
+
+In the RDS - create task 
+
+	database migration tasks
+	create task and choose replication task created above
+	give source end point and target end point
+	migratio type - 
+		migrate existing data
+		migrate existing data and replicate ongoing changes
+		replicate data changes only
+	table mappings
+		schema
+		table name
+		
+		
+		
+	
+	
+	
+
+
+	
+	
+		

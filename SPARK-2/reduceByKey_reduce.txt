@@ -1,0 +1,43 @@
+what is the difference between reduceByKey and Reduce?
+
+===========
+reduceByKey
+=========== 
+
+is a transformation
+
+val rdd1 = sc.textFile("path of file")
+val rdd2 = rdd1.flatMap(x => x.split(" "))
+val rdd3 = rdd2.map(x => (x,1))
+val rdd4 = rdd3.reduceByKey(x,y => (x+y))
+
+so whenever we call a transformation on a rdd we get resultant rdd in this case rdd4
+
+whenever we call an action on rdd we get local variable of type could be anything like array, string, dict
+
+reduceByKey can only work on paired RDD only like tuple of 2 (Key, value)
+
+=======
+reduce 
+=======
+it is an action
+
+val a = 1 to 100
+
+val baserdd = sc.paralleize(a)
+
+we cannot call reduceByKey here as baserdd is not a paired rdd
+
+baserdd.reduce(x,y => (x+y)) calculate sum of all values between 1 to 100
+
+res: Int = 5050
+
+
+why spark developpers gave reduceByKey as a transformation and reduce as an action?
+
+reduce gives us single output which is very small so it doesnt need to be distributed across the cluster and do something.
+
+where as reduceByKey gives us lot of data which should be distributed across the cluster and do furthur processing.
+
+
+

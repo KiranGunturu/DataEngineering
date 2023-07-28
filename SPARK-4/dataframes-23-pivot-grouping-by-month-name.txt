@@ -1,0 +1,21 @@
+refer dataframes-23.py
+
+debug,january 79099
+error, january 50000
+
+grouping based on logging level and month.
+
+I have 5 different logging levels and I have 12 months
+
+so basically my output should contain 60 rows (5*12)
+
+to start with I want to load hardcoded data
+
+once I get enough confidence then I will read from actual file.
+
+dec 20 to jan 20
+
+sep 1 to dec 1 - no
+
+
+

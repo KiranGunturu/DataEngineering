@@ -1,0 +1,79 @@
+issues
+======
+
+xlsx files to csv
+snowflake time issue in BDE jvm
+hudi changes times to epoch. written custome funs to handle
+scaling issues due to single subnet
+	Issue is subnet attached to EMR which is us-east-1(subnet-07832e3da705a5d2e)
+	us-east-1 will be used heavily by all North America customers of AWS and resources might not be available all the time.
+
+So we have to add more subnets of other regions so it scale horizontally.
+data load of 250M+ records into one table / partitions
+solr socketTimeout
+python 2 to 3 conversion
+vhcl data with 2014 / 54M took 11 hrs
+history in zlib and incrementals in snappy - reloaded to match zlib - challenge
+hudi tables corrupted after unsetting table properties - end up reloading all raw tables
+based on MIB code, what table should we bring in first, understand dependency so we dont keep devs wait
+
+
+
+
+https://bpcs.com/blog/databricks-vs-snowflake?utm_source=bambu&utm_medium=social&utm_campaign=advocacy&blaid=3914536
+
+hive vertex error:
+
+•	The actual issue here is the hive service uses hive-serde-3.1.3-amzn-0.jar that does not have the specific class (ColumnProjectionUtils) and method(appendReadColumns) in it. Due to this, we get the below error.
+java.lang.NoSuchMethodError: org.apache.hadoop.hive.serde2.ColumnProjectionUtils.appendReadColumns(Lorg/apache/hadoop/conf/Configuration;Ljava/util/List;Ljava/util/List;Ljava/util/List;)V
+•	Spark uses hive-serde-2.3.9-amzn-2.jar, which has the required class and method. That's you don't see the error in spark-sql CLI.
+•	We pushed the different lower versions of the serde Jar files (hive-serde-2.3.9-amzn-2.jar, hive-serde-2.2.0.jar, and hive-serde-2.1.0.jar) to hive-related directories. However, we get the same "NoSuchMethodError" error. 
+•	We have been actively working with the Support team. We will keep you posted.
+
+
+hive date issue: BIDW 			0001-01-01 00:00:00
+		spark 			0001-01-01 00:00:00
+		when hive reads same 	0000-12-30 00:00:00
+
+SET hive.metastore.disallow.incompatible.col.type.changes=true;
+
+from pyspark import SparkConf
+from pyspark.sql import SparkSession, DataFrame
+spark_conf = SparkConf().setAppName('test_date')
+spark_conf.set("spark.sql.avro.datetimeRebaseModeInWrite", "CORRECTED")
+spark_conf.set("spark.sql.parquet.int96RebaseModeInRead", "CORRECTED")
+spark_conf.set("spark.sql.parquet.int96RebaseModeInWrite", "CORRECTED")
+spark_conf.set("spark.sql.parquet.datetimeRebaseModeInRead", "CORRECTED")
+spark_conf.set("spark.sql.parquet.datetimeRebaseModeInWrite", "CORRECTED")
+sparkSession=SparkSession.builder.config(conf=spark_conf).getOrCreate()
+hudi_read_options = {'hoodie.datasource.query.type': 'snapshot'}
+hudi_df = sparkSession.read.format("org.apache.hudi").options(**hudi_read_options).load('s3://nissan-nna-bdeemrdev-dev-tcs-data-s3-us-east-1/data/raw/bidw/clndr_dm/*/*')
+from pyspark.sql.functions import from_unixtime, unix_timestamp
+test_date_df = hudi_df.select('CLNDR_DM_KY',from_unixtime(unix_timestamp('CLNDR_DT','MM/dd/yyyy HH:mm:ss.SSSSSS')).cast('date').alias('CLNDR_DT'))
+test_date_df.write.mode('overwrite').format('orc').save('s3://nissan-nna-bdeemrdev-dev-tcs-data-s3-us-east-1/data/test_date/')
+
+
+CREATE EXTERNAL TABLE `equip_refined.test_date`(
+  `CLNDR_DM_KY` string,
+  `CLNDR_DT` date
+)
+ROW FORMAT SERDE
+  'org.apache.hadoop.hive.ql.io.orc.OrcSerde'
+STORED AS INPUTFORMAT
+  'org.apache.hadoop.hive.ql.io.orc.OrcInputFormat'
+OUTPUTFORMAT
+  'org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat'
+LOCATION
+  's3://nissan-nna-bdeemrdev-dev-tcs-data-s3-us-east-1/data/test_date/';
+
+
+
+concern:
+
+oozie - yarn RM (migration team)
+step (new project team)
+
+how do we split the jobs to certain queues when we are submitting too many jobs
+
+
+

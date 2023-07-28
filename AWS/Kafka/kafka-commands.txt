@@ -1,0 +1,112 @@
+Peak number of RO transactions per second: 72
+Average number of RO transactions per second: 5.3 (5 to 6)
+Average Size of the RO transactions per second: ~40 bytes
+
+//create the topic
+sh kafka-topics.sh --create --zookeeper z-3.arqdevmsk.os8ssq.c9.kafka.us-east-1.amazonaws.com:2181,z-2.arqdevmsk.os8ssq.c9.kafka.us-east-1.amazonaws.com:2181,z-1.arqdevmsk.os8ssq.c9.kafka.us-east-1.amazonaws.com:2181 --replication-factor 3 --partitions 1 --topic ARCMSK
+//list the topics
+sh kafka-topics.sh --list --zookeeper z-3.arqdevmsk.os8ssq.c9.kafka.us-east-1.amazonaws.com:2181,z-2.arqdevmsk.os8ssq.c9.kafka.us-east-1.amazonaws.com:2181,z-1.arqdevmsk.os8ssq.c9.kafka.us-east-1.amazonaws.com:2181
+//delete the topic
+sh kafka-topics.sh --delete --zookeeper z-3.arqdevmsk.os8ssq.c9.kafka.us-east-1.amazonaws.com:2181,z-2.arqdevmsk.os8ssq.c9.kafka.us-east-1.amazonaws.com:2181,z-1.arqdevmsk.os8ssq.c9.kafka.us-east-1.amazonaws.com:2181 --topic test
+bin/zookeeper-server-start.sh ../config/zookeeper.properties
+./kafka-server-start.sh ../config/server.properties
+./kafka-console-producer.sh --broker-list localhost:9092 --topic dbsro_tagging
+./kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic dbsro_tagging --from-beginning
+echo stat | nc localhost 2181 //to see if zookeeper is running
+/users/kirangunturu/Documents/kafka/bin/kafka-dump-log.sh --files *.log
+ls -lh filename
+sudo lsof -i -P -n | grep 8080 #see who's using the port
+kill -9 <process id> # to kill (macOS) or sudo kill <process id> (windows)
+grep -rnw '/home/x071854@NMCorp.Nissan.Biz/caret/prd_cdp/' -e 'adhoc_claim_last_update'
+aws kafka describe-cluster --region us-east-1 --cluster-arn arn:aws:kafka:us-east-1:690554025895:cluster/arq-dev-msk/ea04299c-903c-4cac-8f7a-3e23ff94fdcc-9
+aws kafka get-bootstrap-brokers --cluster-arn arn:aws:kafka:us-east-1:690554025895:cluster/arq-dev-msk/ea04299c-903c-4cac-8f7a-3e23ff94fdcc-9 --region us-east-1
+aws kafka list-clusters --region us-east-1
+aws sts get-caller-identity
+
+https://github.com/luismirandad27/cheatsheets-4-fun/blob/main/big-data-programming/databricks-certifications/Databricks_Associate_Developer_Spark.md
+
+
+
+sh kafka-topics.sh --describe --topic nna.dealers.repairorders --zookeeper z-3.arqdevmsk.os8ssq.c9.kafka.us-east-1.amazonaws.com:2181,z-2.arqdevmsk.os8ssq.c9.kafka.us-east-1.amazonaws.com:2181,z-1.arqdevmsk.os8ssq.c9.kafka.us-east-1.amazonaws.com:2181
+sh kafka-topics.sh --describe --topic MSKTopicTest --zookeeper z-3.arqdevmsk.os8ssq.c9.kafka.us-east-1.amazonaws.com:2181,z-2.arqdevmsk.os8ssq.c9.kafka.us-east-1.amazonaws.com:2181,z-1.arqdevmsk.os8ssq.c9.kafka.us-east-1.amazonaws.com:2181
+
+wget https://archive.apache.org/dist/kafka/2.8.1/kafka_2.13-2.8.1.tgz
+
+tar -xzf kafka_2.13-2.8.1.tgz
+
+wget https://github.com/aws/aws-msk-iam-auth/releases/download/v1.1.1/aws-msk-iam-auth-1.1.1-all.jar
+
+aws sts assume-role --role-arn "arn:aws:iam::690554025895:role/arc-dev-emr-s3target-us-east-1-iam-role-us-east-1" --role-session-name "ARC-MSK-Testing"
+
+eval $(aws sts assume-role \
+--role-arn arn:aws:iam::690554025895:role/arc-dev-emr-s3target-us-east-1-iam-role-us-east-1 \
+--role-session-name=ARC-MSK-Testing \
+--query 'join(``, [`export `, `AWS_ACCESS_KEY_ID=`, 
+Credentials.AccessKeyId, ` ; export `, `AWS_SECRET_ACCESS_KEY=`,
+Credentials.SecretAccessKey, `; export `, `AWS_SESSION_TOKEN=`,
+Credentials.SessionToken])' \
+--output text)
+
+https://docs.aws.amazon.com/msk/latest/developerguide/msk-password.html#msk-password-tutorial-connect
+
+9096 - SASL
+9098 - IAM
+9096 - TLS
+
+with SASL
+==========
+1)create users_jaas.conf file and keep below and keep in bin folder
+	KafkaClient {
+	   org.apache.kafka.common.security.scram.ScramLoginModule required
+	   username="alice"
+	   password="alice-secret";
+	};
+	username and password are SASL auth ones;should get from admins
+
+2)export KAFKA_OPTS=-Djava.security.auth.login.config=./bin/users_jaas.conf
+
+3)run below in bin folder 
+cp /usr/lib/jvm/JDKFolder/jre/lib/security/cacerts /tmp/kafka.client.truststore.jks
+JDKFolder=java-1.8.0-openjdk-1.8.0.372.b07-1.amzn2.0.1.x86_64
+
+4)create client_sasl.properties file and keep it in bin folder
+
+security.protocol=SASL_SSL
+sasl.mechanism=SCRAM-SHA-512
+ssl.truststore.location=/tmp/kafka.client.truststore.jks
+
+sh kafka-log-dirs.sh \
+    --bootstrap-server b-1.arqdevmsk.os8ssq.c9.kafka.us-east-1.amazonaws.com:9096,b-2.arqdevmsk.os8ssq.c9.kafka.us-east-1.amazonaws.com:9096,b-3.arqdevmsk.os8ssq.c9.kafka.us-east-1.amazonaws.com:9096,b-4.arqdevmsk.os8ssq.c9.kafka.us-east-1.amazonaws.com:9096 \
+    --topic-list 'nna.dealers.repairorders' \
+	--command-config /home/x071854@NMcorp.Nissan.Biz/arc_kafka/kafka_2.13-2.8.1/bin/client_sasl.properties \
+    --describe \
+  | grep '^{' \
+  | jq '[ ..|.size? | numbers ] | add'
+  
+SASL creds
+===========
+arckafka
+ApplicationTestUser@12345
+
+export KAFKA_OPTS=-Djava.security.auth.login.config=./users_jaas.conf
+cp /usr/lib/jvm/java-1.8.0-openjdk-1.8.0.372.b07-1.amzn2.0.1.x86_64/jre/lib/security/cacerts /tmp/kafka.client.truststore.jks
+
+https://docs.aws.amazon.com/msk/latest/developerguide/msk-password.html#msk-password-tutorial-connect
+
+sh kafka-console-consumer.sh \
+	--bootstrap-server b-1.arqdevmsk.os8ssq.c9.kafka.us-east-1.amazonaws.com:9096,b-2.arqdevmsk.os8ssq.c9.kafka.us-east-1.amazonaws.com:9096,b-3.arqdevmsk.os8ssq.c9.kafka.us-east-1.amazonaws.com:9096,b-4.arqdevmsk.os8ssq.c9.kafka.us-east-1.amazonaws.com:9096 \
+	--topic nna.dealers.repairorders --from-beginning \
+	--consumer.config /home/x071854@NMcorp.Nissan.Biz/arc_kafka/kafka_2.13-2.8.1/bin/client_sasl.properties
+	
+with IAM
+========
+sh kafka-log-dirs.sh \
+>     --bootstrap-server b-1.arqdevmsk.os8ssq.c9.kafka.us-east-1.amazonaws.com:9098,b-2.arqdevmsk.os8ssq.c9.kafka.us-east-1.amazonaws.com:9098,b-3.arqdevmsk.os8ssq.c9.kafka.us-east-1.amazonaws.com:9098,b-4.arqdevmsk.os8ssq.c9.kafka.us-east-1.amazonaws.com:9098 \
+>     --topic-list 'MSKTopicTest' \
+> --command-config /home/x071854@NMcorp.Nissan.Biz/arc_kafka/kafka_2.13-2.8.1/libs/client.properties \
+>     --describe \
+>   | grep '^{' \
+>   | jq '[ ..|.size? | numbers ] | add'
+
+
+/data/caret/archive/vhcl_dspstn_rgstrn_sts_archive

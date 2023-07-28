@@ -1,0 +1,67 @@
+data quality / validation checks
+================================
+data quality checks refers to the process of ensuring the data reliability, accuracy and qualified data to enter into our data pipelines
+
+these checks are necessary to catch the stale / wrong data at the earlier stages of processing so that the final reporting is not effected.
+
+Upstream data - data engineers - data processing - reports generated - stakeholders
+
+1. Entry code checks
+
+	INR and its value
+	timezone, country codee, stock code, industry code.
+	
+	timezone - snowflake to bde timezone - jvm - hive
+
+2. consistency check
+
+	if we are dealing with purchase data - order placed datetime should be less than order dispatched datetime
+	ex: repair order date is less than the car sold date
+	
+3. Data profiling checks
+
+	what column should have only unique values
+	what column can have dupes
+	what column can have nulls
+	In what columns combination , I shouldn't have nulls
+	what should be the data type
+	any min and max values for a perticular column
+	data length checks
+	any known or must column values
+
+4. Null data
+5. Duplicate or uniqueness check
+6. Repeated data
+7. Early arriving facts vs late arriving dimensions
+9. Range Check
+	To determine any outliers
+10. source data upto date
+11. source data drop percentage
+	full load tables
+	yday count versus today's count
+	ex: if drop is more than 10%, root cause should be investigated
+
+What checks should you be using?
+
+You have the “basic” checks that don’t require aggregation:
+- not empty
+- column not null
+- correct format
+
+You have the “intermediate” checks that require an aggregation and/or a join.
+
+- column is unique
+- column matches business rules of another table
+- column doesn’t have too many weird values
+
+You have the “advanced” checks that require aggregation and time series statistics
+
+- week over week row count checks
+- machine learning / seasonality anomaly detection
+
+
+All pipelines should have basic and intermediate checks. Only gold-tier pipelines should have advanced checks.
+
+
+
+

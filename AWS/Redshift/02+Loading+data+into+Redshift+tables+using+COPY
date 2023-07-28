@@ -107,3 +107,4 @@ copy from dynamodb
 copy favoritemovies from 'dynamodb://ProductCatalog'
 iam_role 'arn:aws:iam::0123456789012:role/MyRedshiftRole'
 readratio 50;
+

@@ -1,0 +1,59 @@
+refer Dataframes-12.py
+
+1. dataframe reader - taking the data from source
+2. tranformations to process data
+3. dataframe writer - to write data to target location
+
+2. tranformations to process data
+=====================================
+
+1. low level tranformations
+=============================
+
+map
+filter
+groupByKey
+
+we can perform low level tranformations using raw rdds
+
+some of these are even possible with dataframes and datasets.
+
+2.Hgher level tranformations
+============================
+
+select
+where
+groupBy
+
+these are supported by dataframes and datasets.
+
+
+since this is an unstructred file
+
+I will load this file as a rdd.
+
+use a map tranformation which is a low level tranformation.
+
+input to the map tranformation is:
+
+1 2013-07-25   11599,CLOSED
+
+output:
+
+1,2013-07-25,11599,CLOSED
+
+in my map tranformation I will use a regular expression
+
+I will associate the output with the case class so that we have a structure associated.
+
+
+input to the map is a raw line.
+
+output from the map will be structured line.
+
+
+if we have schema associated we can convert our rdd to a dataset.
+
+
+=============
+how to refer the colum

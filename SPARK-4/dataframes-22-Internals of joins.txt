@@ -1,0 +1,17 @@
+Broadcast join
+==================
+
+1. simple - shuffle
+2. broadcase - this does not require a shuffle
+
+whenever we are joining 2 large dataframes then it will invoke a simple join and shuffle will be required
+
+
+when we have one large dataframe and the other dataframe is smaller. in that case we can go for broadcast join.
+
+in this case small dataframe data will be sent to each executor.
+
+what if both the dataframes are pretty small - then dont use spark as spark is mainly used for big data.
+
+
+
