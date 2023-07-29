@@ -1,3 +1,77 @@
+databricks
+===========
+data and AI company
+foundars of spark
+they need a platform to run spark to they started databricks.
+DEs, Danalysts and data scientists. databricks unifies all these people
+
+
+Arch
+=====
+
+Data plane 
+	cloud provider account (provides compute and storage)
+control plane
+	managed by databricks
+software as a service - databricks people just have a software
+in order to run that software, they need some place called cloud provider
+azure, aws, gcp
+
+cluster
+=======
+group of machines
+
+types of cluster
+================
+all purpose / interactive - used for dev activities
+job cluster - pipeline execution / auto termination
+
+standard/premium/enrerprise
+all purpose compute and all purpose compute with photon
+
+deployement in databricks
+=========================
+with azure - platform as a service
+we have to manage all the compute
+
+with aws - software as a service
+we dont need to do anything and aws will take care of all
+integration with version control tools like github
+
+define the schema
+=================
+list or struct 
+
+Lakehouse - combination of data lake and data warehouse
+delta lake - parquet with transaction logs
+
+medalion arch - https://delta.io/
+
+delta lake features
+===================
+ACID transactions
+scalable metadata - handle petabyte scale tables with billions of partitions and files with ease
+Time travel
+open source
+batch and streaming
+schema evolution / enforcement - prevent bad data from causing data corruption
+aufit history
+DMl operations
+
+DBFS
+====
+databricks file system
+
+Repos
+=====
+version control on notebooks (revision history on left side)
+
+workflow - jobs  and 
+
+delta live tables - declarative framework for building reliable, maintainable and testable data processing pipeline.
+https://docs.databricks.com/delta-live-tables/index.html
+
+
 Delta lake
 ==========
 open source technology
