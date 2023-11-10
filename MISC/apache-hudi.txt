@@ -1,6 +1,6 @@
 pyspark --conf "spark.dynamicAllocation.minExecutors=1" --conf "spark.dynamicAllocation.maxExecutors=50" --conf "spark.sql.avro.datetimeRebaseModeInWrite=CORRECTED" --conf "spark.serializer=org.apache.spark.serializer.KryoSerializer" --conf "spark.sql.catalog.spark_catalog=org.apache.spark.sql.hudi.catalog.HoodieCatalog" --conf "spark.sql.extensions=org.apache.spark.sql.hudi.HoodieSparkSessionExtension" --jars /usr/lib/hudi/hudi-spark-bundle.jar
 tableName = "hudi_trips_cow"
-basePath = "s3://nissan-nna-bdeemrdev-dev-tcs-data-s3-us-east-1/data/refined/bidw/hudi-test/"
+basePath = "s3://gh/hudi-test/"
 dataGen = sc._jvm.org.apache.hudi.QuickstartUtils.DataGenerator()
 
 #inserts
