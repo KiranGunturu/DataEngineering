@@ -47,10 +47,10 @@ spark_conf.set("spark.sql.parquet.datetimeRebaseModeInRead", "CORRECTED")
 spark_conf.set("spark.sql.parquet.datetimeRebaseModeInWrite", "CORRECTED")
 sparkSession=SparkSession.builder.config(conf=spark_conf).getOrCreate()
 hudi_read_options = {'hoodie.datasource.query.type': 'snapshot'}
-hudi_df = sparkSession.read.format("org.apache.hudi").options(**hudi_read_options).load('s3://nissan-nna-bdeemrdev-dev-tcs-data-s3-us-east-1/data/raw/bidw/clndr_dm/*/*')
+hudi_df = sparkSession.read.format("org.apache.hudi").options(**hudi_read_options).load('s3://bucket_table/*/*')
 from pyspark.sql.functions import from_unixtime, unix_timestamp
 test_date_df = hudi_df.select('CLNDR_DM_KY',from_unixtime(unix_timestamp('CLNDR_DT','MM/dd/yyyy HH:mm:ss.SSSSSS')).cast('date').alias('CLNDR_DT'))
-test_date_df.write.mode('overwrite').format('orc').save('s3://nissan-nna-bdeemrdev-dev-tcs-data-s3-us-east-1/data/test_date/')
+test_date_df.write.mode('overwrite').format('orc').save('s3://bucket/data/test_date/')
 
 
 CREATE EXTERNAL TABLE `equip_refined.test_date`(
@@ -64,7 +64,7 @@ STORED AS INPUTFORMAT
 OUTPUTFORMAT
   'org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat'
 LOCATION
-  's3://nissan-nna-bdeemrdev-dev-tcs-data-s3-us-east-1/data/test_date/';
+  's3://bucket/data/test_date/';
 
 
 
