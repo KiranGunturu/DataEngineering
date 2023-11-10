@@ -142,12 +142,12 @@ hdfs.copyToLocalFile(hdfs_path, local_path)
 ls -ltr /data/1/projects/nna_tcs_bde_dads/data/arc/epsilon/drba/ada_dealer_t
 
 %sh
-for file in /data/1/projects/nna_tcs_bde_dads/data/arc/epsilon/drba/ada_dealer_t/*.gz ; do gpg --encrypt --recipient "PSN2QUALITY_PROD20220316 <ISEFTPPGPAdminSystem@NMCorp.Nissan.Biz>" --trust-model always $file; done
+for file in /data/1/projects/nna_tcs_bde_dads/data/arc/epsilon/drba/ada_dealer_t/*.gz ; do gpg --encrypt --recipient "PSN2QUALITY_PROD20220316 <ISEFTPPGPAdminSystem@>" --trust-model always $file; done
 #rm /tmp/epsilon/drba/svc_wol_comn_t/*.csv.gz
 #ls -lR /tmp/epsilon/drba
 
 %sh
-ls /data/1/projects/nna_tcs_bde_dads/data/arc/epsilon/drba//*
+ls /data/1/data//*
 
 import java.io.{File, FileInputStream, IOException, InputStream, OutputStream}
 import org.apache.commons.net.ftp.{FTPClient, FTPClientConfig, FTPReply, FTP}
@@ -155,10 +155,10 @@ import org.apache.commons.net.ftp.{FTPClient, FTPClientConfig, FTPReply, FTP}
 
 def createFTPClient(/*server_url: String , user: String, pass:, int type */): FTPClient = {
     
-    val server_url= "eftp.na.nissan.biz"
-    val username= "quality"
-    val password= "Px6mPuzF5SHPBV"
-    val target_directory = "outbound/EpsilonEconomics"
+    val server_url= "hosyz"
+    val username= "test"
+    val password= "password"
+    val target_directory = "folder"
     
     val ftp: FTPClient = new FTPClient();
     val conf: FTPClientConfig = new FTPClientConfig(FTPClientConfig.SYST_UNIX);
@@ -188,11 +188,11 @@ def createFTPClient(/*server_url: String , user: String, pass:, int type */): FT
 val ftpClient = createFTPClient()
 
 /*** LISTING FTP DIRECTORY CONTENT ***/
-//ftpClient.listFiles("./outbound/EpsilonEconomics").toList.foreach( file => println(file/*.getName*/))
+//ftpClient.listFiles("./outbound/").toList.foreach( file => println(file/*.getName*/))
 
 import java.io.{File, FileInputStream, IOException, InputStream, OutputStream, FilenameFilter}
 
-val dir: File = new File("/data/1/projects/nna_tcs_bde_dads/data/arc/epsilon/drba/ada_dealer_t/");
+val dir: File = new File("/data/1//");
 
 val allFiles = dir.listFiles(new FilenameFilter {
         override def accept(dir: File, name: String): Boolean = {
@@ -206,6 +206,6 @@ allFiles.foreach( file => {
     ftpClient.storeFile(s"./outbound/EpsilonEconomics/${file.getName}", inputStream)
 })
 
-ftpClient.listFiles("./outbound/EpsilonEconomics").toList.foreach( file => println(file))
+ftpClient.listFiles("./outboun").toList.foreach( file => println(file))
 
 
