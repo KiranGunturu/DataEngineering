@@ -1,0 +1,43 @@
+EC2 - Elastic cloud compute
+    Elastic - Can scale up and down
+    Compute - CPU Cores, RAM and Disk (requesting aws to give virtual server)
+
+install hypervisor and divide the big physical server into multiple virtual servers
+
+EC2 Types -
+    General
+    Compute Optimized
+    Memory
+    Storage
+    Accelarated
+AMI - operating sys
+Free tire includes like t2.micro - we will only get 750 hours (per one month per one instance)
+public ip - used to access ec2 instance from outside world
+private ip- used to access ec2 instance within the aws
+
+chnage permission of pem file to 600
+connect to ec2 = ssh -i aws_login.pem ubuntu@ipaddress
+you will be logged in as ubuntu user
+chnage to root user = sudo su -
+to update the packages = sudo apt update and just apt update if we are on a root user
+install java - sudo apt install openjdk-11-jdk
+java --version
+
+
+install jenkins - https://www.jenkins.io/doc/book/installing/linux/
+
+sudo wget -O /usr/share/keyrings/jenkins-keyring.asc \
+  https://pkg.jenkins.io/debian/jenkins.io-2023.key
+echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
+  https://pkg.jenkins.io/debian binary/ | sudo tee \
+  /etc/apt/sources.list.d/jenkins.list > /dev/null
+sudo apt-get update
+sudo apt-get install jenkins
+
+to verify if jenkins is running
+    sudo systemctl jenkins status
+    by default, jenkins app will not run due to security groups
+    edit the security grup and allow traffic on port 8080 as it is default port where jenkins will run
+    then we should be able to see the application running and it shows file path.
+    do cat on that file being on a root user on ec2 instacne to see the password
+    enter the same password on application where there is an option to enter passwsord right below the file path and we should be able to see the jenkins UI
