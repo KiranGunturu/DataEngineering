@@ -1,10 +1,16 @@
 VPC
     Define cidr to get range of ip addresses
     subnets within the VPC
+    subnet - partition of a VPC
     private and public subnets
     private subnets - do not have internet connectivity
     public subnets - do have connectivity to internet
-    internet gateway - to access VPC over the internet
+    internet gateway - component that allows communication between your VPC and the internet
+        enables inbound and outbound access to the internet
+        not a physical device
+        one to one mapping between VPC and internet gateway (one igw per one VPC)
+        NO cost
+        different than NAT gateway
     NACL - to allow or deny traffic at the subnets level
         we can create inbound and outbound at one subnet and we can assign them to multiple subnets as well
     lets say we created an EC2 instance in the public subnet of VPC - 
@@ -14,3 +20,25 @@ VPC
     security rules at the security group level with lowest rule number takes the effect.
         ex: rule number 100 - traffic as allow will take precedence on rule number 101 - traffic as deny
     
+    NAT gateway - ip masking - act as a bridge between private subnet anb internet gateway
+        ex: lets say if there is a RDS instance which is in private subnet and it wants to communicate to internet for getting patches / updates.
+        they can't just communicate directly with igw as they will not have punlic ip addresses
+        so the request first gies to NAT gateway which is on public subnet (ip masking will be done) - goes to internet gateway then public internet. samething when traffic coming inbound for this request
+        direct inbound traffic from public internet to private subnet is not allowed 
+    if an EC2 instance hosted in public subnet wants to communicate to internet, this will not go directly but will go thru internet gateway. In this case, NAT transalation happens at the igw
+
+    Route tables - holds lot of rules to distribute the traffic from internet gateway to subnets or viceversa
+
+    vpc cidr - 10.0.0.0./16
+    route table
+    ===========
+    destination     target
+    10.0.0.0/16     local
+    0.0.0.0/0       igw
+ 
+    destination 10.0.0.0/16 means whenever someone wants to communicate that matches this criteria (10.0.0..0/16) then it should goto local
+    meaning instance to instance communication within the VPC is allowed
+
+    destination 10.0.0.0/0 means whenever someone wants to talk public internet, we are gonna pass thru igw
+
+
