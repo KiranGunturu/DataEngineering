@@ -37,7 +37,7 @@ sudo apt-get install jenkins
 to verify if jenkins is running
     sudo systemctl jenkins status
     by default, jenkins app will not run due to security groups
-    edit the security grup and allow traffic on port 8080 as it is default port where jenkins will run
+    go to the ec2 instance, security tab and edit the security grup and allow traffic on port 8080 as it is default port where jenkins will run
     then we should be able to see the application running and it shows file path.
     do cat on that file being on a root user on ec2 instacne to see the password
     enter the same password on application where there is an option to enter passwsord right below the file path and we should be able to see the jenkins UI
