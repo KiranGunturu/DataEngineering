@@ -1,0 +1,16 @@
+VPC
+    Define cidr to get range of ip addresses
+    subnets within the VPC
+    private and public subnets
+    private subnets - do not have internet connectivity
+    public subnets - do have connectivity to internet
+    internet gateway - to access VPC over the internet
+    NACL - to allow or deny traffic at the subnets level
+        we can create inbound and outbound at one subnet and we can assign them to multiple subnets as well
+    lets say we created an EC2 instance in the public subnet of VPC - 
+        by default, at the security group level, aws will deny all inbound traffic to that ec2 instance and allow all outbound traffic except port 25 (SMTP)
+    so this is like securiting our systems both at the subnet level and also individaul EC2 instacnes where teams will host their apps
+    security rules at the subnet level takes precedence.
+    security rules at the security group level with lowest rule number takes the effect.
+        ex: rule number 100 - traffic as allow will take precedence on rule number 101 - traffic as deny
+    
