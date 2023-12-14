@@ -1,0 +1,37 @@
+IAM -
+    Users
+    Policies
+    Groups
+    Roles
+
+User comes under authentication so user can login and what all user can do is determined by Policies (autherization)
+Groups - will have multiple Users
+    DEV Group
+    QA Group
+    DBA Group
+
+so when ever user joined a company, based on what group he belongs to, we can just create user and assign him to a perticular group instead we keep creating policies for whenever there is a new user joined
+
+Roles - are used to communicate between different services within the AWS
+    Roles are not associated to specific person
+    instead of being uniquely associated with one person, a role is intended to be assumable by anyone
+
+ex:
+
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:*",
+                "s3-object-lambda:*"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+
+Effect can be either Allow or Deny
+Actions section we mentioned what all services this user has access like s3 , ec2 (in above example user has full access on s3)
+Resource section we mention - if we want to restrict the user only to certain bucket ex: bucket starts with "payments"
