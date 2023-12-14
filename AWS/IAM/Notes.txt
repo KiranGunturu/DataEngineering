@@ -14,7 +14,7 @@ so when ever user joined a company, based on what group he belongs to, we can ju
 
 Roles - are used to communicate between different services within the AWS
     Roles are not associated to specific person
-    instead of being uniquely associated with one person, a role is intended to be assumable by anyone
+    instead of being uniquely associated with one person, a role is intended to be assumable by anyone, taken away after sometime(temporary)
 
 ex:
 
@@ -34,4 +34,61 @@ ex:
 
 Effect can be either Allow or Deny
 Actions section we mentioned what all services this user has access like s3 , ec2 (in above example user has full access on s3)
-Resource section we mention - if we want to restrict the user only to certain bucket ex: bucket starts with "payments"
+Resource section we mention - if we want to restrict the user only to certain bucket ex: bucket starts with "payments" by giving ARN of the bucket
+
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {   
+            "Sid": "createFunction"
+            "Effect": "Allow",
+            "Action": [
+                "lambda:createFunction"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+
+Acess denied - This is called implicit denial as no one gave access initially
+"Effect": "Allow" - Explicit Allow
+"Effect": "Deny" -  Explicit Deny
+
+
+ex: DynamoDB table read only access to specific columns
+
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {   
+            "Sid": "ReadOnlyAccess"
+            "Effect": "Allow",
+            "Action": [
+                "dynamodb:BatchGet*",
+                "dynamodb:GetItem*",
+                "dynamodb:Query*",
+                "dynamodb:Scan*",
+            ],
+            "Resource": "arn:aws:dynamodb:accountno:region:table/Mytable",
+            "Condition": {
+                "ForAllValues:StringEquals": |
+                "dynamodb:Attributes": [
+                    "column-1",
+                    "column-2",
+                    "column-3"
+                ]
+            },
+            "StringEqualsIfExists": {"dynamodb:Select": "SPECIFIC_ATTRIBUTES"}
+        }
+    ]
+}
+
+Trust Relationships (I trsut you and you trust me) - to get access to aws account from another aws account
+
+Pro Tips:
+=========
+- protect your root account at all costs
+- Explicit Effect: "Deny" wins over Effect: "Allow" (scenarion when policy doc has both)
+- Use the least privilage model (avoid using wildcards but be specific to the scope)
+https://policysim.aws.amazon.com/home/index.jsp?#
+
