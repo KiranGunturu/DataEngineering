@@ -41,4 +41,25 @@ VPC
 
     destination 10.0.0.0/0 means whenever someone wants to talk public internet, we are gonna pass thru igw
 
+    when we create a VPC in aws - aws will by default create subnets (4 subnets, one private and public in two AZs with in same region), route tables, internet gateway and s3 end point.
+
+    cidr range - 10.0.1.0/8 - 16,771K ips (255*255*255)
+    cidr range - 10.0.1.0/16 - 65,536 ips (255*255)
+    cidr range - 10.0.1.0/24 - 256 ips (255)
+     cidr range - 10.0.1.0/32 - 1 ip
+
+    Lets say if we want to connect to S3 from ec2 instance which is in private subnet -
+        there are two ways.
+        1) EC2 instance can't just communicate directly s3 but thur igw
+        so the request first gies to NAT gateway which is on public subnet (ip masking will be done) - goes to internet gateway then public internet then to s3
+        so here we are technically leaving VPC and also aws cloud and reaching s3 over the internet
+
+        2) other is to connect to s3 from within vpc instead over the public internet
+            this reduces latency and very secure
+    
+    why s3 is outside of vpc -
+        aws s3 buckets are designed to be outside of VPC because s3 is intended to be a global service that can be accesses from anywhere on the internet.
+        by keeping s3 outside of vpc, it allows for simpler and more flexiable access to the buckets
+        additioanlly, this design allows for better scalability and performance, as s3 can leverage the aws global network infrastructure to provide and fast and reliable access to the buckets
+        however, its important to note that aws provides vpc endpoints for s3, which allows for secure and direct access to to s3 from within a vpc without going over the internet
 

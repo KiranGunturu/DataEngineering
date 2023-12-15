@@ -22,6 +22,7 @@ chnage to root user = sudo su -
 to update the packages = sudo apt update and just apt update if we are on a root user
 install java - sudo apt install openjdk-11-jdk
 java --version
+run simple http server on ec2 - python -m http.server 8000
 
 
 install jenkins - https://www.jenkins.io/doc/book/installing/linux/
