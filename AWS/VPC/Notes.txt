@@ -23,7 +23,7 @@ VPC
     NAT gateway - ip masking - act as a bridge between private subnet anb internet gateway
         ex: lets say if there is a RDS instance which is in private subnet and it wants to communicate to internet for getting patches / updates.
         they can't just communicate directly with igw as they will not have punlic ip addresses
-        so the request first gies to NAT gateway which is on public subnet (ip masking will be done) - goes to internet gateway then public internet. samething when traffic coming inbound for this request
+        so the request first gies to NAT gateway which is on public subnet (ip masking will be done - nat gateway will send the request with its public up instead of exposing private ip of ec2) - goes to internet gateway then public internet. samething when traffic coming inbound for this request
         direct inbound traffic from public internet to private subnet is not allowed 
     if an EC2 instance hosted in public subnet wants to communicate to internet, this will not go directly but will go thru internet gateway. In this case, NAT transalation happens at the igw
 
