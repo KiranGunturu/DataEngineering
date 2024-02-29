@@ -1,0 +1,5 @@
+pipenv install apache-airflow
+docker compose up -d
+pip install kafka-python
+pip install cassandra-driver
+pip install spark pyspark
